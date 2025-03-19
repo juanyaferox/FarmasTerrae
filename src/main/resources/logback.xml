@@ -1,0 +1,20 @@
+<configuration>    
+	<!-- Appender para la salida en consola -->    
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">        
+		<encoder>            
+			<pattern>                %d{HH:mm:ss} %highlight([%level]) %msg %n            </pattern>        
+			</encoder>    
+			</appender>    <!-- Appender para la salida en archivo -->    
+			<appender name="FILE" class="ch.qos.logback.core.FileAppender">        
+				<file>logs/miaplicacion.log</file> <!-- Ruta del archivo de log -->        
+				<append>false</append> <!-- Para que  sobreescriba el archivo -->        
+				<encoder>            
+					<pattern>                %d{yyyy-MM-dd HH:mm:ss} [%level] %msg%n            </pattern>        
+					</encoder>    
+					</appender>    <root level="INFO">         
+						<appender-ref ref="STDOUT" />        
+						<appender-ref ref="FILE" />    
+						</root>    <!-- Reducir los logs de Spring y otros frameworks -->    
+	<logger name="org.springframework" level="WARN" />    
+	<logger name="org.hibernate" level="WARN" />
+</configuration>
