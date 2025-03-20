@@ -20,27 +20,9 @@ public class LoginController {
     @Autowired
     LoginService ls;
 
-    /**
-     * @return vista de Login
-     */
-    @GetMapping
-    public ModelAndView getLogin(){
-        return new ModelAndView("login");
-    }
-
-    /**
-     * @param loginRequest información de login recibida de la vista
-     */
-    @PostMapping
-    public ResponseEntity<LoginResponseDTO> setLogin(@RequestBody LoginDTO loginRequest) {
-        boolean isValidLogin = ls.verifyLogin(loginRequest);
-        return ResponseEntity.ok(new LoginResponseDTO(isValidLogin,
-                isValidLogin ? "Login exitoso" : "Usuario o contraseña incorrectos, vuelva a intentarlo"));
-    }
-
     @GetMapping("/forgotPassword")
     public ModelAndView getPassword(){
-        return new ModelAndView("login");
+        return new ModelAndView("auth/forgotPassword");
     }
 
     @PostMapping("/forgotPassword")

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title, cssPath)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${title}">Farmasterrae</title>
+    <link rel="icon" th:href="@{/icons/favicons/favicon.ico}" type="image/x-icon">
+    <link rel="manifest" th:href="@{/icons/favicons/site.webmanifest}">
+    <link rel="stylesheet" th:href="@{${cssPath}}">
+</head>
+</html>

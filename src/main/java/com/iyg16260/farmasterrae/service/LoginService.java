@@ -20,25 +20,6 @@ public class LoginService {
     @Autowired
     UserRepository ur;
 
-    @Autowired
-    AuthUserService auth;
-
-
-    /**
-     * Verifica que el usuario exista y que las credenciales sean correctas
-     * @param login usuario y contraseña a verificar
-     * @return usuario si las credenciales eran correctas
-     */
-    public boolean verifyLogin(LoginDTO login) {
-        String username = login.getUsername();
-        Optional<User> dbUser = ur.findByUsername(username)
-                .filter(user -> verifyPassword(user.getPassword(), login.getPassword()));
-
-        auth.setAuthUser(dbUser.orElse(null));
-
-        return dbUser.isPresent();
-    }
-
     /**
      *
      * @param email correo a recuperar
