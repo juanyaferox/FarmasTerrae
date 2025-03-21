@@ -1,20 +1,14 @@
-2025-03-20 20:11:50 [INFO] Starting FarmasterraeApplication using Java 21.0.1 with PID 34612 (C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae\target\classes started by hulke in C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae)
-2025-03-20 20:11:50 [INFO] No active profile set, falling back to 1 default profile: "default"
-2025-03-20 20:11:52 [INFO] Initializing ProtocolHandler ["http-nio-8080"]
-2025-03-20 20:11:52 [INFO] Starting service [Tomcat]
-2025-03-20 20:11:52 [INFO] Starting Servlet engine: [Apache Tomcat/10.1.34]
-2025-03-20 20:11:52 [INFO] Initializing Spring embedded WebApplicationContext
-2025-03-20 20:11:52 [INFO] HikariPool-1 - Starting...
-2025-03-20 20:11:52 [INFO] HikariPool-1 - Added connection org.mariadb.jdbc.Connection@6318d68b
-2025-03-20 20:11:52 [INFO] HikariPool-1 - Start completed.
-2025-03-20 20:11:54 [WARN] 
-
-Using generated security password: 1e101b5e-1ff7-486f-941f-efda91c406ed
-
-This generated password is for development use only. Your security configuration must be updated before running your application in production.
-
-2025-03-20 20:11:57 [INFO] Starting ProtocolHandler ["http-nio-8080"]
-2025-03-20 20:11:57 [INFO] Started FarmasterraeApplication in 7.657 seconds (process running for 8.549)
-2025-03-20 20:11:57 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-03-20 20:24:20 [INFO] HikariPool-1 - Shutdown initiated...
-2025-03-20 20:24:20 [INFO] HikariPool-1 - Shutdown completed.
+2025-03-21 12:53:45 [INFO] Starting FarmasterraeApplication using Java 21.0.1 with PID 22940 (C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae\target\classes started by hulke in C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae)
+2025-03-21 12:53:45 [INFO] No active profile set, falling back to 1 default profile: "default"
+2025-03-21 12:53:47 [INFO] Initializing ProtocolHandler ["http-nio-8080"]
+2025-03-21 12:53:47 [INFO] Starting service [Tomcat]
+2025-03-21 12:53:47 [INFO] Starting Servlet engine: [Apache Tomcat/10.1.34]
+2025-03-21 12:53:47 [INFO] Initializing Spring embedded WebApplicationContext
+2025-03-21 12:53:47 [INFO] HikariPool-1 - Starting...
+2025-03-21 12:53:47 [INFO] HikariPool-1 - Added connection org.mariadb.jdbc.Connection@6f87a3e8
+2025-03-21 12:53:47 [INFO] HikariPool-1 - Start completed.
+2025-03-21 12:53:52 [INFO] Starting ProtocolHandler ["http-nio-8080"]
+2025-03-21 12:53:52 [INFO] Started FarmasterraeApplication in 7.164 seconds (process running for 7.824)
+2025-03-21 12:53:55 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-03-21 12:54:08 [INFO] HikariPool-1 - Shutdown initiated...
+2025-03-21 12:54:08 [INFO] HikariPool-1 - Shutdown completed.

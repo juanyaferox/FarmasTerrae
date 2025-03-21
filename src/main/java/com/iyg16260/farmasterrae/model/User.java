@@ -5,13 +5,22 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 @Entity
 @Data
 @Table(name = "users")
-public class User {
+public class User implements UserDetails, Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,8 +38,8 @@ public class User {
 
     String address;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="profileId")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name="profileId", nullable = false)
     Profile profile;
 
     @OneToMany(mappedBy = "userModified",fetch = FetchType.LAZY)
@@ -42,4 +51,29 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     List<Review> reviewList;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + profile.getType()));
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return UserDetails.super.isAccountNonExpired();
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return UserDetails.super.isAccountNonLocked();
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return UserDetails.super.isCredentialsNonExpired();
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return UserDetails.super.isEnabled();
+    }
 }

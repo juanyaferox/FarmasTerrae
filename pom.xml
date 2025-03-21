@@ -79,7 +79,7 @@
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>3.3.2</version>  <!-- Usa la última versión disponible -->
+			<version>3.3.2</version>
 		</dependency>
 	</dependencies>
 

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Farmasterrae', '/dist/output.css')"></head>
+<head th:replace="~{fragments/head :: head('Farmasterrae', '/dist/output.css')}"></head>
 <body>
 <header>
     <h1>Welcome to Farmasterrae</h1>

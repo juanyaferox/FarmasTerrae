@@ -31,7 +31,6 @@ public class Order {
 
     LocalDateTime createdAt;
 
-
     LocalDateTime updatedAt;
 
     @PrePersist

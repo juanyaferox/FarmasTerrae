@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.UserRepository;
 import com.iyg16260.farmasterrae.utils.EncryptionUtils;
@@ -7,54 +8,79 @@ import com.iyg16260.farmasterrae.validation.ObjectValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
-    private UserRepository ur;
+    UserRepository userRepository;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+    }
 
     // Crear usuario
-    public User createUser(User user) {
+    public User createUser(User user) throws IllegalArgumentException {
         if (!ObjectValidator.isValid(user)) {
             throw new IllegalArgumentException("Usuario inválido");
         }
-        return ur.save(user);
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
+    }
+
+    public void changePassword(Long id, String uncryptedPassword) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        user.setPassword(passwordEncoder.encode(uncryptedPassword));
+        userRepository.save(user);
     }
 
     // Obtener usuario por ID
     public Optional<User> getUserById(Long id) {
-        return ur.findById(id);
+        return userRepository.findById(id);
     }
 
     // Obtener todos los usuarios
     public List<User> getAllUsers() {
-        return ur.findAll();
+        return userRepository.findAll();
     }
 
     // Actualizar usuario
-    public User updateUser(Long id, User userDetails) {
-        return ur.findById(id).map(user -> {
+    public User updateUser(Long id, UserDTO userDetails) throws RuntimeException {
+        return userRepository.findById(id).map(user -> {
             if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
             if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
-            if (userDetails.getPassword() != null) user.setPassword(EncryptionUtils.hashPassword(userDetails.getPassword()));
             if (userDetails.getPhone() != null) user.setPhone(userDetails.getPhone());
             if (userDetails.getAddress() != null) user.setAddress(userDetails.getAddress());
-            if (userDetails.getProfile() != null) user.setProfile(userDetails.getProfile());
 
-            return ur.save(user);
+            return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
     // Eliminar usuario por ID
-    public void deleteUser(Long id) {
-        if (ur.existsById(id)) {
-            ur.deleteById(id);
+    public void deleteUser(Long id) throws RuntimeException {
+        if (userRepository.existsById(id)) {
+            userRepository.deleteById(id);
         } else {
             throw new RuntimeException("Usuario no encontrado");
         }
     }
 }
+
+

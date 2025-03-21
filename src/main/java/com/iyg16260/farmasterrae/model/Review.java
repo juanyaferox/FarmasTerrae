@@ -17,8 +17,10 @@ public class Review {
     Integer scoring;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="productId")
     Product product;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="userId")
     User user;
 }
