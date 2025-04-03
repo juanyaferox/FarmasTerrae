@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.model;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,7 @@ public class Order {
     User user;
 
     @OneToMany(mappedBy = "order",fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<OrderDetails> orderDetails;
 
     LocalDateTime createdAt;

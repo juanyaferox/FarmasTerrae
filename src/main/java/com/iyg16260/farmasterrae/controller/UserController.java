@@ -7,8 +7,10 @@ import com.iyg16260.farmasterrae.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -23,14 +25,34 @@ public class UserController {
     @Autowired
     OrderService orderService;
 
+
     @GetMapping("/dashboard")
-    public ModelAndView getInfoUser(@AuthenticationPrincipal User user) {
+    public ModelAndView showDashboard(@AuthenticationPrincipal User user) {
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(user, userDTO);
+        System.out.println(userDTO.toString());
         return new ModelAndView("user/dashboard").addObject("user", userDTO);
     }
 
-    @PostMapping("/dashboard")
+    @GetMapping("/dashboard/{section}")
+    public ModelAndView changeSection(@PathVariable String section, @AuthenticationPrincipal User user) {
+
+        ModelAndView model = new ModelAndView("user/dashboard")
+                .addObject("section", section);
+
+        System.out.println(section);
+        if (section.equals("info-user")) {
+            UserDTO userDTO = new UserDTO();
+            BeanUtils.copyProperties(user, userDTO);
+            return model.addObject("userView", userDTO);
+        }
+        else if (section.equals("orders"))
+            return model.addObject("orders",user.getOrderList());
+
+        return model;
+    }
+
+    @PostMapping("/dashboard/info-user")
     public String setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute UserDTO userdto) {
         try {
             userService.updateUser(user.getId(), userdto);

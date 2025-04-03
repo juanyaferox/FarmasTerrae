@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.io.Serial;
@@ -25,6 +26,7 @@ public class Profile implements GrantedAuthority, Serializable {
     String description;
 
     @OneToMany (mappedBy = "profile", fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<User> userList;
 
     @Override

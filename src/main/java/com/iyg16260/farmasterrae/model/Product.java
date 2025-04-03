@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 
 import java.util.List;
 
@@ -38,8 +39,10 @@ public class Product {
     User userModified;
 
     @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<OrderDetails> orderDetails;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<Review> reviewList;
 }

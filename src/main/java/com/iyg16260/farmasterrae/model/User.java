@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,12 +45,15 @@ public class User implements UserDetails, Serializable {
 
     @OneToMany(mappedBy = "userModified",fetch = FetchType.LAZY)
     @JsonIgnore
+    @ToString.Exclude
     List<Product> productList;
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    @ToString.Exclude
     List<Order> orderList;
 
     @OneToMany(mappedBy = "user")
+    @ToString.Exclude
     List<Review> reviewList;
 
     @Override
