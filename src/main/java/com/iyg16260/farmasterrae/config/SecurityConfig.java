@@ -36,7 +36,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 )
                 .formLogin(form -> form
                         .loginPage("/login")  // Configuramos la URL de la página de login personalizada
-                        .defaultSuccessUrl("/home", true)
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout

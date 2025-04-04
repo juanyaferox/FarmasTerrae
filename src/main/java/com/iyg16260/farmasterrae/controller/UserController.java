@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.UserService;
@@ -8,6 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -35,7 +39,8 @@ public class UserController {
     }
 
     @GetMapping("/dashboard/{section}")
-    public ModelAndView changeSection(@PathVariable String section, @AuthenticationPrincipal User user) {
+    public ModelAndView changeSection(@PathVariable String section, @AuthenticationPrincipal User user,
+                                      @RequestParam(defaultValue = "0", required = false) int pageOrders) {
 
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
@@ -46,8 +51,10 @@ public class UserController {
             BeanUtils.copyProperties(user, userDTO);
             return model.addObject("userView", userDTO);
         }
-        else if (section.equals("orders"))
-            return model.addObject("orders",user.getOrderList());
+        else if (section.equals("orders")) {
+            Page<Order> orders = orderService.getOrders(user, pageOrders);
+            return model.addObject("orders", orders);
+        }
 
         return model;
     }
@@ -62,14 +69,6 @@ public class UserController {
         return "redirect:/user/dashboard";
     }
 
-    @GetMapping("/orders")
-    public ModelAndView getOrderList(
-            @AuthenticationPrincipal User user,
-            @RequestParam (defaultValue = "0") int page) {
-        return new ModelAndView("user/order-list")
-                .addObject("orders", orderService.getOrders(user, page));
-    }
-
     @GetMapping("/order")
     public ModelAndView getOrder(
             @AuthenticationPrincipal User user,
@@ -77,6 +76,4 @@ public class UserController {
         return new ModelAndView("user/order-details")
                 .addObject("order", orderService.getOrder(user, orderId));
     }
-
-
 }

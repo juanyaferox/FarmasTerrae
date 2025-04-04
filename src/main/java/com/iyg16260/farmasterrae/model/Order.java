@@ -17,6 +17,8 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    Double totalPrice;
+
     @Enumerated (EnumType.ORDINAL)
     SaleEnum.SaleStatus status;
 
