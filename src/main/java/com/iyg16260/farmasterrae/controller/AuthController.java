@@ -1,9 +1,7 @@
 package com.iyg16260.farmasterrae.controller;
 
-import com.iyg16260.farmasterrae.dto.auth.LoginDTO;
-import com.iyg16260.farmasterrae.dto.auth.LoginResponseDTO;
 import com.iyg16260.farmasterrae.dto.auth.PasswordRecoveryDTO;
-import com.iyg16260.farmasterrae.service.LoginService;
+import com.iyg16260.farmasterrae.service.AuthService;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +13,10 @@ import org.springframework.web.servlet.ModelAndView;
 @Slf4j
 @Controller
 @RequestMapping ("/login")
-public class LoginController {
+public class AuthController {
 
     @Autowired
-    LoginService ls;
+    AuthService authService;
 
     @GetMapping("/forgotPassword")
     public ModelAndView getPassword(){
@@ -30,7 +28,7 @@ public class LoginController {
 
         try {
             String email = passwordRequest.getEmail();
-            if (!ls.recoverPassword(email)) {
+            if (!authService.recoverPassword(email)) {
                 passwordRequest.setMessage("No existe el email en la base de datos.");
                 passwordRequest.setMessageType("error");
             } else {

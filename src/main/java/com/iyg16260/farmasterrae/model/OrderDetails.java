@@ -6,6 +6,7 @@ import lombok.Data;
 @Entity
 @Data
 public class OrderDetails {
+
     @EmbeddedId
     OrderDetailsId id;
 
