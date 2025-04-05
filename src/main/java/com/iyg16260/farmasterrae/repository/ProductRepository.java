@@ -4,6 +4,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.iyg16260.farmasterrae.model.Product;
 
-public interface ProductRepository extends JpaRepository <Product, Long> {
+import java.util.Optional;
 
+public interface ProductRepository extends JpaRepository <Product, Long> {
+    Optional<Product> findByReference(String reference);
 }
