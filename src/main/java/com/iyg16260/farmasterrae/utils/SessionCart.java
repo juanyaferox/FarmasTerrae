@@ -2,12 +2,16 @@ package com.iyg16260.farmasterrae.utils;
 
 import com.iyg16260.farmasterrae.model.Product;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class CartSession implements Serializable {
+public class SessionCart implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
 
     private final List<Product> products = new ArrayList<>();
 
