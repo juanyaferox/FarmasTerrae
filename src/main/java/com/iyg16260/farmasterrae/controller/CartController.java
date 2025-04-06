@@ -6,10 +6,8 @@ import com.iyg16260.farmasterrae.service.ProductsService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 @RequestMapping ("/cart")
@@ -21,8 +19,14 @@ public class CartController {
     @Autowired
     ProductsService productsService;
 
+    @GetMapping
+    public ModelAndView viewCart (HttpSession session) {
+        return new ModelAndView("cart/cart-view")
+                .addObject("cart", cartService.getCart(session));
+    }
+
     @PostMapping ("/add/{reference}")
-    public String addToCart(@PathVariable String reference, HttpSession session) {
+    public String addToCart (@PathVariable String reference, HttpSession session) {
         Product product = productsService.getProductByReference(reference);
         cartService.addProductToCart(product, session);
 
@@ -30,7 +34,7 @@ public class CartController {
     }
 
     @PostMapping ("/delete/{reference}")
-    public String deleteFromCart(@PathVariable String reference,
+    public String deleteFromCart (@PathVariable String reference,
                                  @RequestParam (defaultValue = "false", required = false) boolean deleteAll,
                                  HttpSession session) {
         Product product = productsService.getProductByReference(reference);
@@ -40,6 +44,12 @@ public class CartController {
         else
             cartService.deleteProductFromCart(product.getId(),session);
 
-        return "redirect:/cart/view";
+        return "redirect:/cart";
+    }
+
+    @PostMapping ("/clear")
+    public String clearCart (HttpSession session) {
+        cartService.clearCart(session);
+        return "redirect:/cart";
     }
 }

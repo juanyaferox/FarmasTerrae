@@ -32,7 +32,7 @@ public class ProductsController {
 
         return new ModelAndView("products/product-details")
                 .addObject("product", productDTO)
-                .addObject("added",added);
+                .addObject("added", added);
     }
 
 }
