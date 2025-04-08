@@ -29,7 +29,7 @@ public class Order {
     @JoinColumn(name="userId")
     User user;
 
-    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @ToString.Exclude
     List<OrderDetails> orderDetails;
 

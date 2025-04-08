@@ -1,9 +1,12 @@
 package com.iyg16260.farmasterrae.controller;
 
+import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.CartService;
 import com.iyg16260.farmasterrae.service.OrderService;
+import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
@@ -37,25 +40,29 @@ public class OrderController {
         }
 
         return new ModelAndView("/order/order-details")
-                .addObject("products", cart.getProducts());
+                .addObject("products", cartService.getDetailedProducts(cart));
     }
 
     @PostMapping ("/confirm")
-    public ModelAndView confirmOrder(HttpSession session, RedirectAttributes redirectAttributes) {
+    public ModelAndView confirmOrder(HttpSession session, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
         SessionCart cart = cartService.getCart(session);
-        List<Product> productsToOrder = cart.getProducts();
+        var productsToOrder = cart.getProducts();
 
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("El carrito está vacío");
+            redirectAttributes.addFlashAttribute("emptyCart","El carrito está vacío");
             return new ModelAndView("redirect:/order");
         }
-        // añadir logica del carrito, caso algo resulte mal por algun motivo throwear un error.
-        // recordar que al hacer llamada, resta 1 de stock.
-        return new ModelAndView();
+
+        Order order = orderService.setOrder
+                (user, cart, SaleEnum.SaleStatus.PENDING, SaleEnum.PaymentMethod.CREDIT_CARD);
+        redirectAttributes.addFlashAttribute("order", order);
+
+        return new ModelAndView("redirect:/order/success");
     }
 
     @GetMapping("/success")
-    public ModelAndView successOrder() {
-        return new ModelAndView();
+    public ModelAndView successOrder(@ModelAttribute Order order) {
+        return new ModelAndView("/order/success")
+                .addObject("order", order);
     }
 }

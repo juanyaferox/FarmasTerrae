@@ -38,11 +38,10 @@ public class CartController {
                                  @RequestParam (defaultValue = "false", required = false) boolean deleteAll,
                                  HttpSession session) {
         Product product = productsService.getProductByReference(reference);
-
         if (deleteAll == true)
-            cartService.deleteAllSameProductFromCart(product.getId(), session);
+            cartService.deleteAllSameProductFromCart(reference, session);
         else
-            cartService.deleteProductFromCart(product.getId(),session);
+            cartService.deleteProductFromCart(reference,session);
 
         return "redirect:/cart";
     }

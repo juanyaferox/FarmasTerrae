@@ -1,7 +1,9 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,12 @@ public class ProductsService {
     public Product getProductByReference(String reference) {
         return productRepository.findByReference(reference)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+    }
+
+    public ProductDTO getProductDTOByReference(String reference) {
+        ProductDTO productDTO = new ProductDTO();
+        BeanUtils.copyProperties(getProductByReference(reference), productDTO);
+        return productDTO;
     }
 
 }

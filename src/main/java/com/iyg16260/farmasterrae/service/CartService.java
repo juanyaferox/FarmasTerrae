@@ -1,12 +1,19 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CartService {
+
+    @Autowired
+    ProductsService productsService;
 
     public static final String CART_SESSION_KEY = "cart";
 
@@ -22,17 +29,17 @@ public class CartService {
 
     public void addProductToCart (Product product, HttpSession session) {
         SessionCart cart = getCart(session);
-        cart.addProduct(product);
+        cart.addProduct(product.getReference());
     }
 
-    public void deleteProductFromCart (long idProduct, HttpSession session) {
+    public void deleteProductFromCart (String refProduct, HttpSession session) {
         SessionCart cart = getCart(session);
-        cart.deleteOneProduct(idProduct);
+        cart.deleteOneProduct(refProduct);
     }
 
-    public void deleteAllSameProductFromCart (long idProduct, HttpSession session) {
+    public void deleteAllSameProductFromCart (String refProduct, HttpSession session) {
         SessionCart cart = getCart(session);
-        cart.deleteAllSameProduct(idProduct);
+        cart.deleteAllSameProduct(refProduct);
     }
 
     public void clearCart (HttpSession session) {
@@ -43,5 +50,11 @@ public class CartService {
     public void getCartSize (HttpSession session) {
         SessionCart cart = getCart(session);
         cart.getSize();
+    }
+
+    public List<ProductDTO> getDetailedProducts(SessionCart cart) {
+        return cart.getProducts().keySet().stream()
+                .map(reference -> productsService.getProductDTOByReference(reference))
+                .toList();
     }
 }

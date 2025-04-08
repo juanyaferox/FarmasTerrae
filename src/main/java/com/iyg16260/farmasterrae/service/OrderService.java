@@ -1,7 +1,10 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.model.*;
+import com.iyg16260.farmasterrae.repository.OrderDetailsRepository;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
+import com.iyg16260.farmasterrae.utils.SessionCart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Service
@@ -22,6 +24,10 @@ public class OrderService {
     @Autowired
     OrderRepository orderRepository;
 
+    @Autowired
+    ProductsService productsService;
+
+    // No utilizar repositorio de OrderDetails, no es necesario.
 
     /**
      * @param user usuario a obtener pedidos
@@ -53,6 +59,11 @@ public class OrderService {
         return order;
     }
 
+    /**
+     * Obtiene una lista de productos a partir de un pedido
+     * @param idOrder
+     * @return
+     */
     public List<Product> getProductsFromOrder(long idOrder) {
 
         Order order = orderRepository.findById(idOrder)
@@ -62,5 +73,53 @@ public class OrderService {
                 .flatMap(o -> IntStream.range(0, o.getAmount())
                         .mapToObj(i -> o.getProduct()))
                 .toList();
+    }
+
+    /**
+     * Guarda un pedido
+     * @param user
+     * @param cart
+     * @param saleStatus
+     * @param paymentMethod
+     * @return
+     */
+    public Order setOrder(User user, SessionCart cart,
+                          SaleEnum.SaleStatus saleStatus, SaleEnum.PaymentMethod paymentMethod) {
+        var products = cart.getProducts();
+
+        if (products == null || products.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found");
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setStatus(saleStatus);
+        order.setPaymentMethod(paymentMethod);
+        order.setOrderDetails(setOrderDetails(products, order));
+
+        return orderRepository.save(order);
+    }
+
+    /**
+     * Función para complementar el pedido
+     * @param cartProducts
+     * @param order
+     * @return
+     */
+    private List<OrderDetails> setOrderDetails (Map<String, Integer> cartProducts, Order order) {
+
+        List<OrderDetails> detailsList = new ArrayList<>();
+
+        cartProducts.forEach((reference, quantity) -> {
+            Product product = productsService.getProductByReference(reference);
+            if (product == null)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with referece: "+reference);
+            OrderDetails details = new OrderDetails();
+            details.setProduct(product);
+            details.setOrder(order);
+            details.setAmount(quantity);
+            detailsList.add(details);
+        });
+
+        return detailsList;
     }
 }

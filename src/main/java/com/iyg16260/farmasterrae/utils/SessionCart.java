@@ -4,44 +4,64 @@ import com.iyg16260.farmasterrae.model.Product;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class SessionCart implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final List<Product> products = new ArrayList<>();
+    // Posible mejora, usar ProductoDTO dentro de un CartDTO para asi tener la info del producto en caché
 
-    public void addProduct(Product product) {
-        products.add(product);
+    // Usando MAP puedo evitar tener que recorrer la lista contando los productos para conocer la cantidad
+    private final Map<String, Integer> products = new HashMap<>();
+
+    /**
+     * Añade producto a la cesta, aumentando en uno la cantidad si está repetido
+     * @param productReference
+     */
+    public void addProduct(String productReference) {
+        products.merge(productReference, 1, Integer::sum);
     }
 
-    public void deleteOneProduct(long idProduct) {
-        Iterator<Product> iterator = products.iterator();
-        while(iterator.hasNext()) {
-            var p = iterator.next();
-            if (p.getId()==idProduct) {
-                iterator.remove();
-                break;
-            }
-        }
+    /**
+     * Borra una unidad del producto del Map
+     * @param productReference
+     */
+    public void deleteOneProduct(String productReference) {
+        products.merge(productReference, 1, (oldQuantity, value) -> {
+            int newQuantity = oldQuantity - 1;
+            return newQuantity > 0 ? newQuantity : null;
+        });
     }
 
-    public void deleteAllSameProduct(long idProduct) {
-        products.removeIf(p -> p.getId()==idProduct);
+    /**
+     * Borra todas las unidades del producto del Map
+     * @param productReference
+     */
+    public void deleteAllSameProduct(String productReference) {
+        products.remove(productReference);
     }
 
+    /**
+     * Borra todo_ el contendido del carrito
+     */
     public void clear() {
         products.clear();
     }
 
-    public List<Product> getProducts() {
+    /**
+     * Obtiene todos los productos del carrito
+     * @return
+     */
+    public Map<String, Integer> getProducts() {
         return products;
     }
 
+    /**
+     * Obtiene el tamaño del carrito
+     * @return
+     */
     public int getSize() {
         return products.size();
     }
