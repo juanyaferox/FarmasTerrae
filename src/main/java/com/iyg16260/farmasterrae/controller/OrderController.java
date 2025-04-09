@@ -1,5 +1,8 @@
 package com.iyg16260.farmasterrae.controller;
 
+import com.iyg16260.farmasterrae.dto.payment.PaymentCardRequestDTO;
+import com.iyg16260.farmasterrae.dto.payment.PaymentPaypalRequestDTO;
+import com.iyg16260.farmasterrae.dto.payment.PaymentTransferenceRequestDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.Product;
@@ -40,25 +43,29 @@ public class OrderController {
         }
 
         return new ModelAndView("/order/order-details")
-                .addObject("products", cartService.getDetailedProducts(cart));
+                .addObject("products", cartService.getDetailedProducts(cart))
+                .addObject("paymentMethod", SaleEnum.PaymentMethod.values());
     }
 
-    @PostMapping ("/confirm")
-    public ModelAndView confirmOrder(HttpSession session, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+    @GetMapping ("/payment")
+    public ModelAndView getPayment(@ModelAttribute SaleEnum.PaymentMethod paymentMethod) {
+        return new ModelAndView("order/payment-gateway");
+    }
+
+    @PostMapping ("/payment")
+    public ModelAndView setPayment(@ModelAttribute Object paymentDTO, @AuthenticationPrincipal User user, HttpSession session, RedirectAttributes redirectAttributes) {
         SessionCart cart = cartService.getCart(session);
-        var productsToOrder = cart.getProducts();
 
-        if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("emptyCart","El carrito está vacío");
-            return new ModelAndView("redirect:/order");
-        }
-
-        Order order = orderService.setOrder
-                (user, cart, SaleEnum.SaleStatus.PENDING, SaleEnum.PaymentMethod.CREDIT_CARD);
-        redirectAttributes.addFlashAttribute("order", order);
-
+        if (paymentDTO instanceof PaymentTransferenceRequestDTO)
+            orderService.setOrder(user, cart, SaleEnum.SaleStatus.PENDING, SaleEnum.PaymentMethod.TRANSFER);
+        if (paymentDTO instanceof PaymentPaypalRequestDTO)
+            orderService.setOrder(user, cart, SaleEnum.SaleStatus.COMPLETED, SaleEnum.PaymentMethod.PAYPAL);
+        if (paymentDTO instanceof PaymentCardRequestDTO)
+            orderService.setOrder(user, cart, SaleEnum.SaleStatus.COMPLETED, SaleEnum.PaymentMethod.CREDIT_CARD);
         return new ModelAndView("redirect:/order/success");
     }
+
+
 
     @GetMapping("/success")
     public ModelAndView successOrder(@ModelAttribute Order order) {

@@ -1,4 +1,4 @@
-package com.iyg16260.farmasterrae.dto.user;
+package com.iyg16260.farmasterrae.dto.payment;
 
 import lombok.Data;
 
