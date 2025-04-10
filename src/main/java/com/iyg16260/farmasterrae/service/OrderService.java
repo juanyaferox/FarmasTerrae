@@ -3,7 +3,6 @@ package com.iyg16260.farmasterrae.service;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.json.PaymentDetails;
 import com.iyg16260.farmasterrae.model.*;
-import com.iyg16260.farmasterrae.repository.OrderDetailsRepository;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,5 +1,9 @@
 package com.iyg16260.farmasterrae.utils;
 
+import org.springframework.beans.BeanUtils;
+
+import java.lang.reflect.InvocationTargetException;
+
 public class GenericUtils {
     /**
      * Comprueba si un DNI es válido
@@ -17,5 +21,15 @@ public class GenericUtils {
         char letraCorrecta = letras_DNI.charAt(numeroDNI % 23);
 
         return letraDNI == letraCorrecta;
+    }
+
+    public static <T>T mapper(Object object, Class<T> targetClass) {
+        try {
+            T targetObject = targetClass.getDeclaredConstructor().newInstance();
+            BeanUtils.copyProperties(object, targetObject);
+            return targetObject;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }
