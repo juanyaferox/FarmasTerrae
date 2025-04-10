@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.json.PaymentDetails;
 import com.iyg16260.farmasterrae.model.*;
 import com.iyg16260.farmasterrae.repository.OrderDetailsRepository;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -93,7 +96,9 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
-        order.setPaymentMethod(paymentMethod);
+        order.setPaymentDetails(
+                new PaymentDetails(paymentMethod, LocalDateTime.now(Clock.systemUTC()))
+        );
         order.setOrderDetails(setOrderDetails(products, order));
 
         return orderRepository.save(order);

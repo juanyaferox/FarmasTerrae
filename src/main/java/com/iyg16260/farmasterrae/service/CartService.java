@@ -6,8 +6,11 @@ import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class CartService {
@@ -47,12 +50,13 @@ public class CartService {
         cart.clear();
     }
 
-    public void getCartSize (HttpSession session) {
+    public int getCartSize (HttpSession session) {
         SessionCart cart = getCart(session);
-        cart.getSize();
+        return cart.getSize();
     }
 
-    public List<ProductDTO> getDetailedProducts(SessionCart cart) {
+    public List<ProductDTO> getDetailedProducts(HttpSession session) {
+        SessionCart cart = getCart(session);
         return cart.getProducts().keySet().stream()
                 .map(reference -> productsService.getProductDTOByReference(reference))
                 .toList();

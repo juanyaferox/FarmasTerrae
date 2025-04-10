@@ -1,10 +1,14 @@
 package com.iyg16260.farmasterrae.model;
 
 import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.json.PaymentDetails;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -22,8 +26,9 @@ public class Order {
     @Enumerated (EnumType.ORDINAL)
     SaleEnum.SaleStatus status;
 
-    @Enumerated (EnumType.ORDINAL)
-    SaleEnum.PaymentMethod paymentMethod;
+    @JdbcTypeCode (SqlTypes.JSON)
+    @Column(columnDefinition = "json")
+    private PaymentDetails paymentDetails;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="userId")
@@ -39,11 +44,11 @@ public class Order {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDateTime.now(Clock.systemUTC());
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now(Clock.systemUTC());
     }
 }
