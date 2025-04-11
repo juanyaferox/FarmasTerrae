@@ -48,18 +48,19 @@ public class Order {
     LocalDateTime updatedAt;
 
     @PrePersist
-    void onCreate() {
+    void onCreate() throws JsonProcessingException {
         createdAt = LocalDateTime.now(Clock.systemUTC());
+
+        if (paymentDetails != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            this.paymentDetailsJson = objectMapper.writeValueAsString(paymentDetails);
+        }
     }
 
     @PreUpdate
-    void onUpdate() {
+    void onUpdate()  throws JsonProcessingException {
         updatedAt = LocalDateTime.now(Clock.systemUTC());
-    }
 
-    @PrePersist
-    @PreUpdate
-    void convertPaymentDetailsToJson() throws JsonProcessingException {
         if (paymentDetails != null) {
             ObjectMapper objectMapper = new ObjectMapper();
             this.paymentDetailsJson = objectMapper.writeValueAsString(paymentDetails);

@@ -32,6 +32,12 @@ public class OrderController {
     @Autowired
     CartService cartService;
 
+    /**
+     * Genera una version inicial del pedido
+     * @param session
+     * @param redirectAttributes
+     * @return la vista con el listado de productos y un array paymentMethod
+     */
     @GetMapping
     public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes) {
         SessionCart cart = cartService.getCart(session);
@@ -45,11 +51,24 @@ public class OrderController {
                         .addObject("paymentMethod", SaleEnum.PaymentMethod.values());
     }
 
+    /**
+     * Direcciona a la vista de pago con él metodo de pago
+     * @param paymentMethod
+     * @return
+     */
     @GetMapping ("/payment")
     public ModelAndView getPayment(@ModelAttribute SaleEnum.PaymentMethod paymentMethod) {
         return new ModelAndView("order/payment-gateway");
     }
 
+    /**
+     * Realiza el pago
+     * @param paymentMethod metodo de pago ya incluido en la vista
+     * @param user
+     * @param session
+     * @param redirectAttributes
+     * @return redirecciona al success o al carrito si por algo está vacio
+     */
     @PostMapping ("/payment")
     public ModelAndView setPayment(@ModelAttribute SaleEnum.PaymentMethod paymentMethod,
                                    @AuthenticationPrincipal User user, HttpSession session,
@@ -65,8 +84,12 @@ public class OrderController {
         return new ModelAndView("redirect:/order/success");
     }
 
-
-
+    /**
+     * Confirmación del pedido si fue exitoso
+     * @param order
+     * @param session
+     * @return vista con resumen del pedido
+     */
     @GetMapping("/success")
     public ModelAndView successOrder(@ModelAttribute Order order, HttpSession session) {
         cartService.getCart(session).clear();

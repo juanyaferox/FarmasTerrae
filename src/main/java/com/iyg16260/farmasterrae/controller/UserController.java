@@ -32,14 +32,16 @@ public class UserController {
      * @param pageOrders pagina actual de la seccion de pedido, no obligatorio
      * @return dashboard + seccion solicitada, caso no coincida solo el dashboard
      */
-    @GetMapping("/dashboard/{section}")
+    @GetMapping({"/dashboard/{section}", "/dashboard"})
     public ModelAndView changeSection(@PathVariable(required = false) String section, @AuthenticationPrincipal User user,
                                       @RequestParam(defaultValue = "0", required = false) int pageOrders) {
 
+        System.out.println("prueba");
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
 
-        System.out.println(section);
+        if (section==null)
+            return model;
         if (section.equals("info-user")) {
             UserDTO userDTO = new UserDTO();
             BeanUtils.copyProperties(user, userDTO);
@@ -49,8 +51,8 @@ public class UserController {
             Page<Order> orders = orderService.getOrders(user, pageOrders);
             return model.addObject("orders", orders);
         }
-
         return model;
+
     }
 
     /**

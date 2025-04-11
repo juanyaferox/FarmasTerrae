@@ -29,10 +29,14 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/login",
                                 "/styles/**",
                                 "/js/**",
-                                "/dist/**" ).permitAll()
+                                "/dist/**",
+                                "/cart/**",
+                                "/products/**",
+                                "/"
+                                ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasRole("USER")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/user/**").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/order/**").authenticated()
                 )
                 .formLogin(form -> form
                         .loginPage("/login")  // Configuramos la URL de la página de login personalizada
