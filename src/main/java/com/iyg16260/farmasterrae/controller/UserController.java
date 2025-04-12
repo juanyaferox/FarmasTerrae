@@ -83,6 +83,6 @@ public class UserController {
                 //.addObject("order", orderService.getOrder(user, idOrder))
                 //.addObject("products", orderService.getProductsFromOrder(idOrder));
                 .addObject("order",
-                        orderService.getOrderDetailsDTO(orderService.getOrder(user, idOrder)));
+                        orderService.getOrder(user.getId(), idOrder));
     }
 }

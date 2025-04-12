@@ -41,22 +41,4 @@ public class GenericUtils {
         }
     }
 
-    public static OrderDetailsDTO getOrderDetailsDTO(Order order) {
-        var orderDTO = new OrderDetailsDTO();
-        orderDTO.setCreatedAt(order.getCreatedAt().format(new DateTimeFormatterBuilder().toFormatter().localizedBy(Locale.getDefault())));
-        orderDTO.setUpdatedAt(order.getUpdatedAt().format(new DateTimeFormatterBuilder().toFormatter().localizedBy(Locale.getDefault())));
-        orderDTO.setPaymentMethod(order.getPaymentDetails()!=null ? order.getPaymentDetails().getMethod() : null);
-        orderDTO.setStatus(order.getStatus()!=null ? order.getStatus().getValue(): null);
-        orderDTO.setTotalPrice(order.getTotalPrice());
-        Map<ProductDTO, Integer> productDTOIntegerMap = new HashMap<>();
-
-        order.getOrderDetails().stream().forEach(o -> {
-            var productDTO = new ProductDTO();
-            BeanUtils.copyProperties(o.getProduct(),productDTO);
-            productDTOIntegerMap.put(productDTO,o.getAmount());
-        });
-        orderDTO.setProducts(productDTOIntegerMap);
-
-        return orderDTO;
-    }
 }

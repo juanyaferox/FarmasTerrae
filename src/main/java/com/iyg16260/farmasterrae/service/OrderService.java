@@ -4,6 +4,8 @@ import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.json.PaymentDetails;
+import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
+import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
 import com.iyg16260.farmasterrae.model.*;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.utils.SessionCart;
@@ -38,6 +40,12 @@ public class OrderService {
     @Autowired
     UserService userService;
 
+    @Autowired
+    OrderMapper orderMapper;
+
+    @Autowired
+    ProductMapper productMapper;
+
     // No utilizar repositorio de OrderDetails, no es necesario.
 
     /**
@@ -53,23 +61,24 @@ public class OrderService {
     }
 
     /**
-     * @param user
+     * @param idUser
      * @param idOrder
      * @return pedido coincidiente con el id, si es del usuario actual
      * @throws ResponseStatusException NOTFOUND o FORBIDDEN
      */
-    public Order getOrder(User user, long idOrder) throws ResponseStatusException{
+    @Transactional
+    public OrderDetailsDTO getOrder(long idUser, long idOrder) throws ResponseStatusException{
 
         Order order = orderRepository.findById(idOrder)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
-        user = userService.getUser(user.getId());
+        User user = userService.getUser(idUser);
 
         if (user.getOrderList().stream().anyMatch(o -> !Objects.equals(o.getId(), order.getId())))
             throw new ResponseStatusException
                     (HttpStatus.FORBIDDEN, "You do not have permission to access this resource.");
 
-        return order;
+        return orderMapper.orderToOrderDetailsDTO(order, productMapper);
     }
 
     /**
@@ -137,34 +146,5 @@ public class OrderService {
         });
 
         return detailsList;
-    }
-
-    @Transactional
-    public OrderDetailsDTO getOrderDetailsDTO(Order order2) {
-        Order order = orderRepository.findById(order2.getId())
-                .orElseThrow(() -> new RuntimeException("Order not found"));
-        // Forzamos la carga de la colección dentro de la transacción
-        order.getOrderDetails().size();
-
-        OrderDetailsDTO orderDTO = new OrderDetailsDTO();
-        DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
-                .localizedBy(Locale.getDefault());
-        orderDTO.setCreatedAt(order.getCreatedAt().format(formatter));
-        orderDTO.setUpdatedAt(order.getUpdatedAt().format(formatter));
-        orderDTO.setPaymentMethod(order.getPaymentDetails() != null
-                ? order.getPaymentDetails().getMethod()
-                : null);
-        orderDTO.setStatus(order.getStatus() != null ? order.getStatus().getValue() : null);
-        orderDTO.setTotalPrice(order.getTotalPrice());
-
-        Map<ProductDTO, Integer> productDTOIntegerMap = new HashMap<>();
-        order.getOrderDetails().forEach(o -> {
-            var productDTO = new ProductDTO();
-            BeanUtils.copyProperties(o.getProduct(), productDTO);
-            productDTOIntegerMap.put(productDTO, o.getAmount());
-        });
-        orderDTO.setProducts(productDTOIntegerMap);
-
-        return orderDTO;
     }
 }
