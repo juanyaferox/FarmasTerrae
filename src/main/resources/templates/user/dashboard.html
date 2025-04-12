@@ -76,6 +76,7 @@
                     <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Última actualización</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Estado</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -84,6 +85,12 @@
                     <td class="px-4 py-2" th:text="${order.createdAt}"></td>
                     <td class="px-4 py-2" th:text="${order.totalPrice}"></td>
                     <td class="px-4 py-2" th:text="${order.status.value}"></td>
+                    <td class="px-4 py-2">
+                        <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
+                           class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
+                            Ver Detalles
+                        </a>
+                    </td>
                 </tr>
                 </tbody>
             </table>

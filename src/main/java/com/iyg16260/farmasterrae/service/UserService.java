@@ -81,6 +81,15 @@ public class UserService implements UserDetailsService {
             throw new RuntimeException("Usuario no encontrado");
         }
     }
+
+    @Transactional
+    public User getUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        // Forzamos la inicialización de la colección mientras la sesión está abierta
+        user.getOrderList().size();
+        return user;
+    }
+
 }
 
 

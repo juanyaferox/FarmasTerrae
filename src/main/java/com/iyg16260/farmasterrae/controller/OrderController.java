@@ -80,7 +80,7 @@ public class OrderController {
             return new ModelAndView("redirect:/cart");
         }
 
-        orderService.setOrder(user, cart, SaleEnum.SaleStatus.COMPLETED, paymentMethod);
+        redirectAttributes.addFlashAttribute(orderService.setOrder(user, cart, SaleEnum.SaleStatus.COMPLETED, paymentMethod));
         return new ModelAndView("redirect:/order/success");
     }
 

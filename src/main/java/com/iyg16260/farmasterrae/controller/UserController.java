@@ -5,6 +5,7 @@ import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.UserService;
+import com.iyg16260.farmasterrae.utils.GenericUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,10 +77,12 @@ public class UserController {
      * @param user
      * @return
      */
-    @GetMapping
+    @GetMapping ("/dashboard/orders/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user){
         return new ModelAndView("user/order-details")
-                .addObject("order", orderService.getOrder(user, idOrder))
-                .addObject("products", orderService.getProductsFromOrder(idOrder));
+                //.addObject("order", orderService.getOrder(user, idOrder))
+                //.addObject("products", orderService.getProductsFromOrder(idOrder));
+                .addObject("order",
+                        orderService.getOrderDetailsDTO(orderService.getOrder(user, idOrder)));
     }
 }
