@@ -1,11 +1,6 @@
 package com.iyg16260.farmasterrae.controller;
 
-import com.iyg16260.farmasterrae.dto.products.ProductDTO;
-import com.iyg16260.farmasterrae.model.Product;
-import com.iyg16260.farmasterrae.service.CartService;
 import com.iyg16260.farmasterrae.service.ProductsService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -24,14 +19,12 @@ public class ProductsController {
                 .addObject("products", productsService.getProductList(page));
     }
 
-    @GetMapping("/{idProduct}")
-    public ModelAndView getProductDetails(@PathVariable long idProduct,
+    @GetMapping("/{reference}")
+    public ModelAndView getProductDetails(@PathVariable String reference,
                                           @RequestParam (defaultValue = "false", required = false) boolean added) {
-        ProductDTO productDTO = new ProductDTO();
-        BeanUtils.copyProperties(productsService.getProductById(idProduct), productDTO);
 
         return new ModelAndView("products/product-details")
-                .addObject("product", productDTO)
+                .addObject("product", productsService.getProductDTOByReference(reference))
                 .addObject("added", added);
     }
 

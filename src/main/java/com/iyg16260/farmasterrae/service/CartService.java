@@ -1,16 +1,12 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
-import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CartService {
@@ -30,9 +26,9 @@ public class CartService {
         return cartObject;
     }
 
-    public void addProductToCart (Product product, HttpSession session) {
+    public void addProductToCart (String refProduct, HttpSession session) {
         SessionCart cart = getCart(session);
-        cart.addProduct(product.getReference());
+        cart.addProduct(refProduct);
     }
 
     public void deleteProductFromCart (String refProduct, HttpSession session) {

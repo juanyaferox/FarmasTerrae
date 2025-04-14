@@ -7,6 +7,7 @@ import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import org.mapstruct.*;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,17 +16,20 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = {ProductMapper.class})
-public interface OrderMapper {
+public abstract class OrderMapper {
+
+    @Autowired
+    ProductMapper productMapper;
 
     @Mapping(target = "totalPrice", source = "totalPrice")
     @Mapping(target = "status", source = "status")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
     @Mapping(target = "paymentMethod", source = "paymentDetails.method")
-    OrderDetailsDTO orderToOrderDetailsDTO(Order order, @Context ProductMapper productMapper);
+    public abstract OrderDetailsDTO orderToOrderDetailsDTO(Order order);
 
     @AfterMapping
-    default void setProducts(Order order, @MappingTarget OrderDetailsDTO dto, @Context ProductMapper productMapper) {
+    void setProducts(Order order, @MappingTarget OrderDetailsDTO dto) {
         Map<ProductDTO, Integer> map = new HashMap<>();
         for (OrderDetails od : order.getOrderDetails()) {
             ProductDTO productDTO = productMapper.productToProductDTO(od.getProduct());

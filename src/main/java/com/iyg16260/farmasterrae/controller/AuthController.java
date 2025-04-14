@@ -1,14 +1,18 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.auth.PasswordRecoveryDTO;
+import com.iyg16260.farmasterrae.dto.auth.RegisterFormDTO;
 import com.iyg16260.farmasterrae.service.AuthService;
 import jakarta.mail.MessagingException;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
@@ -19,28 +23,35 @@ public class AuthController {
     AuthService authService;
 
     @GetMapping("/forgotPassword")
-    public ModelAndView getPassword(){
-        return new ModelAndView("auth/forgotPassword");
+    public ModelAndView getPasswordRecovery(){
+        return new ModelAndView("auth/forgot-password")
+                .addObject("password-recovery", new PasswordRecoveryDTO());
     }
 
     @PostMapping("/forgotPassword")
-    public ResponseEntity<PasswordRecoveryDTO> setPassword(@RequestBody PasswordRecoveryDTO passwordRequest) {
-
-        try {
-            String email = passwordRequest.getEmail();
-            if (!authService.recoverPassword(email)) {
-                passwordRequest.setMessage("No existe el email en la base de datos.");
-                passwordRequest.setMessageType("error");
-            } else {
-                passwordRequest.setMessage("Correo enviado correctamente. Revisa tu bandeja de entrada.");
-                passwordRequest.setMessageType("success");
-            }
-        } catch (MessagingException e) {
-            log.error("Error al mandar el mensaje a la dirección de correo: {}", passwordRequest.getEmail(), e);
-            passwordRequest.setMessage("Hubo un error al enviar el correo. Inténtalo de nuevo.");
-            passwordRequest.setMessageType("error");
-        }
-        return ResponseEntity.ok(passwordRequest);
+    public ModelAndView setPasswordRecovery(@ModelAttribute PasswordRecoveryDTO passwordRequest) {
+        return new ModelAndView("auth/forgot-password")
+                .addObject("password-recovery", authService.setPassword(passwordRequest));
     }
 
+    @GetMapping("/register")
+    public ModelAndView getRegisterForm() {
+        return new ModelAndView("auth/register")
+                .addObject("registerForm", new RegisterFormDTO());
+    }
+
+    @PostMapping("/register")
+    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO,
+                                        BindingResult bindingResult) {
+        if (bindingResult.hasErrors())
+            return new ModelAndView("auth/register");
+        try {
+            authService.setRegister(registerFormDTO);
+            return new ModelAndView("redirect:/login");
+        } catch (ResponseStatusException e) {
+            return new ModelAndView("auth/register")
+                    .addObject("registerForm", registerFormDTO)
+                    .addObject("error", e.getMessage());
+        }
+    }
 }

@@ -15,10 +15,7 @@ public class CartController {
 
     @Autowired
     CartService cartService;
-
-    @Autowired
-    ProductsService productsService;
-
+    
     @GetMapping
     public ModelAndView viewCart (HttpSession session) {
         return new ModelAndView("cart/cart-view")
@@ -27,18 +24,16 @@ public class CartController {
 
     @PostMapping ("/add/{reference}")
     public String addToCart (@PathVariable String reference, HttpSession session) {
-        Product product = productsService.getProductByReference(reference);
-        cartService.addProductToCart(product, session);
+        cartService.addProductToCart(reference, session);
 
-        return "redirect:/products/" + product.getId() + "?added=true";
+        return "redirect:/products/" + reference + "?added=true";
     }
 
     @PostMapping ("/delete/{reference}")
     public String deleteFromCart (@PathVariable String reference,
                                  @RequestParam (defaultValue = "false", required = false) boolean deleteAll,
                                  HttpSession session) {
-        Product product = productsService.getProductByReference(reference);
-        if (deleteAll == true)
+        if (deleteAll)
             cartService.deleteAllSameProductFromCart(reference, session);
         else
             cartService.deleteProductFromCart(reference,session);

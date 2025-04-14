@@ -1,15 +1,12 @@
 package com.iyg16260.farmasterrae.service;
 
-import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.json.PaymentDetails;
-import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
 import com.iyg16260.farmasterrae.model.*;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.utils.SessionCart;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,8 +17,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -42,9 +37,6 @@ public class OrderService {
 
     @Autowired
     OrderMapper orderMapper;
-
-    @Autowired
-    ProductMapper productMapper;
 
     // No utilizar repositorio de OrderDetails, no es necesario.
 
@@ -78,7 +70,7 @@ public class OrderService {
             throw new ResponseStatusException
                     (HttpStatus.FORBIDDEN, "You do not have permission to access this resource.");
 
-        return orderMapper.orderToOrderDetailsDTO(order, productMapper);
+        return orderMapper.orderToOrderDetailsDTO(order);
     }
 
     /**
@@ -105,22 +97,24 @@ public class OrderService {
      * @param paymentMethod
      * @return
      */
-    public Order setOrder(User user, SessionCart cart,
-                          SaleEnum.SaleStatus saleStatus, SaleEnum.PaymentMethod paymentMethod) {
+    public OrderDetailsDTO setOrder(User user, SessionCart cart,
+                                    SaleEnum.SaleStatus saleStatus, SaleEnum.PaymentMethod paymentMethod)
+            throws ResponseStatusException {
         var products = cart.getProducts();
 
         if (products == null || products.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found");
-
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
         order.setPaymentDetails(
                 new PaymentDetails(paymentMethod, LocalDateTime.now(Clock.systemUTC()))
         );
-        order.setOrderDetails(setOrderDetails(products, order));
+        order.setOrderDetails(
+                getOrderDetailsFromCart(products, order)
+        );
 
-        return orderRepository.save(order);
+        return orderMapper.orderToOrderDetailsDTO(orderRepository.save(order));
     }
 
 
@@ -130,14 +124,13 @@ public class OrderService {
      * @param order
      * @return
      */
-    private List<OrderDetails> setOrderDetails (Map<String, Integer> cartProducts, Order order) {
+    private List<OrderDetails> getOrderDetailsFromCart(Map<String, Integer> cartProducts, Order order)
+            throws ResponseStatusException {
 
         List<OrderDetails> detailsList = new ArrayList<>();
 
         cartProducts.forEach((reference, quantity) -> {
             Product product = productsService.getProductByReference(reference);
-            if (product == null)
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with referece: "+reference);
             OrderDetails details = new OrderDetails();
             details.setProduct(product);
             details.setOrder(order);
