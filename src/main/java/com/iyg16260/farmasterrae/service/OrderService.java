@@ -2,7 +2,6 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
-import com.iyg16260.farmasterrae.json.PaymentDetails;
 import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
 import com.iyg16260.farmasterrae.model.*;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
@@ -107,9 +106,7 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
-        order.setPaymentDetails(
-                new PaymentDetails(paymentMethod, LocalDateTime.now(Clock.systemUTC()))
-        );
+        order.setPaymentMethod(paymentMethod);
         order.setOrderDetails(
                 getOrderDetailsFromCart(products, order)
         );

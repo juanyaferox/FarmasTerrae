@@ -25,7 +25,7 @@ public abstract class OrderMapper {
     @Mapping(target = "status", source = "status")
     @Mapping(target = "createdAt", source = "createdAt")
     @Mapping(target = "updatedAt", source = "updatedAt")
-    @Mapping(target = "paymentMethod", source = "paymentDetails.method")
+    @Mapping(target = "paymentMethod", source = "paymentMethod")
     public abstract OrderDetailsDTO orderToOrderDetailsDTO(Order order);
 
     @AfterMapping

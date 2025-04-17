@@ -3,7 +3,6 @@ package com.iyg16260.farmasterrae.model;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
-import com.iyg16260.farmasterrae.json.PaymentDetails;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -26,14 +25,11 @@ public class Order {
 
     Double totalPrice;
 
-    @Enumerated (EnumType.ORDINAL)
+    @Enumerated (EnumType.STRING)
     SaleEnum.SaleStatus status;
 
-    @Column(columnDefinition = "json")
-    String paymentDetailsJson;
-
-    @Transient
-    PaymentDetails paymentDetails;
+    @Enumerated (EnumType.STRING)
+    SaleEnum.PaymentMethod paymentMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="userId")
@@ -50,28 +46,10 @@ public class Order {
     @PrePersist
     void onCreate() throws JsonProcessingException {
         createdAt = LocalDateTime.now(Clock.systemUTC());
-
-        if (paymentDetails != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.paymentDetailsJson = objectMapper.writeValueAsString(paymentDetails);
-        }
     }
 
     @PreUpdate
     void onUpdate()  throws JsonProcessingException {
         updatedAt = LocalDateTime.now(Clock.systemUTC());
-
-        if (paymentDetails != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.paymentDetailsJson = objectMapper.writeValueAsString(paymentDetails);
-        }
-    }
-
-    @PostLoad
-    void convertJsonToPaymentDetails() throws IOException {
-        if (paymentDetailsJson != null) {
-            ObjectMapper objectMapper = new ObjectMapper();
-            this.paymentDetails = objectMapper.readValue(paymentDetailsJson, PaymentDetails.class);
-        }
     }
 }

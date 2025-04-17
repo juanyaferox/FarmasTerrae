@@ -9,11 +9,9 @@ import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.lang.module.ResolutionException;
 
 import static com.iyg16260.farmasterrae.utils.EmailUtils.*;
 import static com.iyg16260.farmasterrae.utils.GeneratorUtils.*;
@@ -26,7 +24,7 @@ public class AuthService {
     UserRepository userRepository;
 
     @Autowired
-    BCryptPasswordEncoder bCryptPasswordEncoder;
+    PasswordEncoder passwordEncoder;
 
 
     public void setRegister(RegisterFormDTO registerForm) throws ResponseStatusException {
@@ -39,7 +37,7 @@ public class AuthService {
         User user = new User();
         user.setUsername(registerForm.getUsername());
         user.setEmail(registerForm.getEmail());
-        user.setPassword(bCryptPasswordEncoder.encode(registerForm.getPassword()));
+        user.setPassword(passwordEncoder.encode(registerForm.getPassword()));
         user.setPhone(registerForm.getPhone());
     }
 

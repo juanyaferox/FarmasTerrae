@@ -1,3 +1,13 @@
-2025-04-13 22:13:53 [INFO] Starting FarmasterraeApplication using Java 21.0.4 with PID 19440 (C:\Users\juanimar\IdeaProjects\FarmasTerrae\target\classes started by juanimar in C:\Users\juanimar\IdeaProjects\FarmasTerrae)
-2025-04-13 22:13:53 [INFO] No active profile set, falling back to 1 default profile: "default"
-2025-04-13 22:13:56 [INFO] HikariPool-1 - Starting...
+2025-04-17 13:29:01 [INFO] Starting FarmasterraeApplication using Java 21.0.4 with PID 24696 (C:\Users\juanimar\IdeaProjects\FarmasTerrae\target\classes started by juanimar in C:\Users\juanimar\IdeaProjects\FarmasTerrae)
+2025-04-17 13:29:01 [INFO] No active profile set, falling back to 1 default profile: "default"
+2025-04-17 13:29:03 [INFO] Initializing ProtocolHandler ["http-nio-8080"]
+2025-04-17 13:29:03 [INFO] Starting service [Tomcat]
+2025-04-17 13:29:03 [INFO] Starting Servlet engine: [Apache Tomcat/10.1.34]
+2025-04-17 13:29:03 [INFO] Initializing Spring embedded WebApplicationContext
+2025-04-17 13:29:04 [INFO] HikariPool-1 - Starting...
+2025-04-17 13:29:04 [INFO] HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb user=SA
+2025-04-17 13:29:04 [INFO] HikariPool-1 - Start completed.
+2025-04-17 13:29:04 [WARN] HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-04-17 13:29:07 [INFO] Starting ProtocolHandler ["http-nio-8080"]
+2025-04-17 13:29:07 [INFO] Started FarmasterraeApplication in 7.125 seconds (process running for 8.151)
+2025-04-17 13:29:39 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
