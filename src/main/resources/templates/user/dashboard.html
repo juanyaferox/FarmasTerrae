@@ -33,10 +33,10 @@
         <!-- Sección Info User -->
         <div th:if="${section == 'info-user'}" class="bg-white shadow-md rounded-md p-6 max-w-2xl mx-auto">
             <h2 class="text-2xl font-bold mb-4 text-green-700">Actualizar Información</h2>
-            <form th:action="@{/user/dashboard/info}" method="post" class="space-y-4">
+            <form th:action="@{/user/dashboard/info-user}" th:method="post" method="post" class="space-y-4">
                 <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input type="text" id="name" name="nombre" th:value="${userView.username}"
+                    <label for="username" class="block text-sm font-medium text-gray-700">Nombre</label>
+                    <input type="text" id="username" name="username" th:value="${userView.username}"
                            class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm"
                            required>
                 </div>
@@ -48,12 +48,12 @@
                 </div>
                 <div>
                     <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                    <input type="text" id="phone" name="telefono" th:value="${userView.phone}"
+                    <input type="text" id="phone" name="phone" th:value="${userView.phone}"
                            class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm">
                 </div>
                 <div>
                     <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-                    <input type="text" id="address" name="direccion" th:value="${userView.address}"
+                    <input type="text" id="address" name="address" th:value="${userView.address}"
                            class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm">
                 </div>
                 <div>
@@ -84,7 +84,7 @@
                     <td class="px-4 py-2" th:text="${order.id}"></td>
                     <td class="px-4 py-2" th:text="${order.createdAt}"></td>
                     <td class="px-4 py-2" th:text="${order.totalPrice}"></td>
-                    <td class="px-4 py-2" th:text="${order.status.value}"></td>
+                    <td class="px-4 py-2" th:text="${order.status}"></td>
                     <td class="px-4 py-2">
                         <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
                            class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">

@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.controller;
 
+import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -37,19 +39,21 @@ public class UserController {
     public ModelAndView changeSection(@PathVariable(required = false) String section, @AuthenticationPrincipal User user,
                                       @RequestParam(defaultValue = "0", required = false) int pageOrders) {
 
-        System.out.println("prueba");
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
 
         if (section==null)
             return model;
+
         if (section.equals("info-user")) {
             UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
+            //TODO: Obtener el usuario nuevamente desde la bbdd forzosamente para asegurarse
+            User updatedUser = userService.getUserById(user.getId());
+            BeanUtils.copyProperties(updatedUser, userDTO);
             return model.addObject("userView", userDTO);
         }
         else if (section.equals("orders")) {
-            Page<Order> orders = orderService.getOrders(user, pageOrders);
+            Page<OrderDTO> orders = orderService.getOrders(user, pageOrders);
             return model.addObject("orders", orders);
         }
         return model;
@@ -63,12 +67,13 @@ public class UserController {
      * @return redirecciona al dashboard
      */
     @PostMapping("/dashboard/info-user")
-    public void setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute UserDTO userdto) {
+    public ModelAndView setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute("userView") UserDTO userdto) {
         try {
             userService.updateUser(user.getId(), userdto);
         } catch (RuntimeException e) {
             log.error(e.getMessage());
         }
+        return new ModelAndView("redirect:/user/dashboard/info-user");
     }
 
     /**

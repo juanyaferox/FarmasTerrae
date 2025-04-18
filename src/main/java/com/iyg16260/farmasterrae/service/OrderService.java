@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
@@ -43,12 +44,14 @@ public class OrderService {
      * @param user usuario a obtener pedidos
      * @return paginas con los pedidos, 50 para admin 10 para usuarios
      */
-    public Page<Order> getOrders(User user, int page) {
+    public Page<OrderDTO> getOrders(User user, int page) {
         int pageSize = "ADMIN".equals(user.getProfile().getType()) ? PAGE_SIZE_ADMIN : PAGE_SIZE_USER;
             Pageable pageable = Pageable
                     .ofSize(pageSize)
                     .withPage(page);
-            return orderRepository.findByUser(user, pageable);
+
+            return orderRepository.findByUser(user, pageable)
+                    .map(orderMapper::orderToOrderDTO);
     }
 
     /**

@@ -52,8 +52,8 @@ public class UserService implements UserDetailsService {
     }
 
     // Obtener usuario por ID
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public User getUserById(Long id) {
+        return userRepository.findById(id).orElseThrow(RuntimeException::new);
     }
 
     // Obtener todos los usuarios
@@ -68,7 +68,9 @@ public class UserService implements UserDetailsService {
             if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
             if (userDetails.getPhone() != null) user.setPhone(userDetails.getPhone());
             if (userDetails.getAddress() != null) user.setAddress(userDetails.getAddress());
-
+            System.out.println("Se ha llegado a guardar");
+            System.out.println("User: "+user);
+            System.out.println("UserDTO: "+userDetails);
             return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }

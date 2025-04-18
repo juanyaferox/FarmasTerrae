@@ -21,6 +21,6 @@ public class OrderDetailsDTO {
     }
 
     public void setPaymentMethod(SaleEnum.PaymentMethod paymentMethod) {
-        this.paymentMethod = paymentMethod !=null ? paymentMethod.getValue() : null;
+        this.paymentMethod = paymentMethod != null ? paymentMethod.getValue() : null;
     }
 }
