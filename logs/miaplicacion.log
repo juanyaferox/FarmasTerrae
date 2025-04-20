@@ -11,3 +11,6 @@
 2025-04-18 17:40:37 [INFO] Starting ProtocolHandler ["http-nio-8080"]
 2025-04-18 17:40:37 [INFO] Started FarmasterraeApplication in 8.056 seconds (process running for 9.215)
 2025-04-18 17:40:37 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-04-18 17:42:14 [WARN] Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-232]
+2025-04-18 17:42:14 [INFO] HikariPool-1 - Shutdown initiated...
+2025-04-18 17:42:14 [INFO] HikariPool-1 - Shutdown completed.

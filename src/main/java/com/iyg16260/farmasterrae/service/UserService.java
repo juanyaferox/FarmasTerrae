@@ -68,9 +68,7 @@ public class UserService implements UserDetailsService {
             if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
             if (userDetails.getPhone() != null) user.setPhone(userDetails.getPhone());
             if (userDetails.getAddress() != null) user.setAddress(userDetails.getAddress());
-            System.out.println("Se ha llegado a guardar");
-            System.out.println("User: "+user);
-            System.out.println("UserDTO: "+userDetails);
+
             return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }

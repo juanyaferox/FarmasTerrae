@@ -42,16 +42,22 @@ public class OrderService {
 
     /**
      * @param user usuario a obtener pedidos
-     * @return paginas con los pedidos, 50 para admin 10 para usuarios
+     * @return paginas con los pedidos del user, si eres admin de todos
      */
     public Page<OrderDTO> getOrders(User user, int page) {
-        int pageSize = "ADMIN".equals(user.getProfile().getType()) ? PAGE_SIZE_ADMIN : PAGE_SIZE_USER;
-            Pageable pageable = Pageable
-                    .ofSize(pageSize)
-                    .withPage(page);
+        String userType = user.getProfile().getType();
+        int pageSize = "ADMIN".equals(userType) ? PAGE_SIZE_ADMIN : PAGE_SIZE_USER;
+        Pageable pageable = Pageable
+                .ofSize(pageSize)
+                .withPage(page);
 
+        if (!"ADMIN".equals(userType))
             return orderRepository.findByUser(user, pageable)
                     .map(orderMapper::orderToOrderDTO);
+        else
+            return orderRepository.findAll(pageable)
+                    .map(orderMapper::orderToOrderDTO);
+
     }
 
     /**
