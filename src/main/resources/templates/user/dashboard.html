@@ -24,94 +24,24 @@
                         <span class="mr-2">📋</span> Pedidos
                     </a>
                 </li>
+                <li>
+                    <a th:href="@{/user/dashboard/products}"
+                       th:classappend="${section == 'products'} ? 'bg-green-100 text-green-800' : ''"
+                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
+                        <span class="mr-2">🌿</span> Productos
+                    </a>
+                </li>
             </ul>
         </nav>
     </aside>
 
     <!-- Main Content -->
     <section class="w-full md:flex-1 p-4 md:p-10 overflow-auto">
-        <!-- Sección Info User -->
-        <div th:if="${section == 'info-user'}" class="bg-white shadow-md rounded-md p-6 max-w-2xl mx-auto">
-            <h2 class="text-2xl font-bold mb-4 text-green-700">Actualizar Información</h2>
-            <form th:action="@{/user/dashboard/info-user}" th:method="post" method="post" class="space-y-4">
-                <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700">Nombre</label>
-                    <input type="text" id="username" name="username" th:value="${userView.username}"
-                           class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm"
-                           required>
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico</label>
-                    <input type="email" id="email" name="email" th:value="${userView.email}"
-                           class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm"
-                           required>
-                </div>
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700">Teléfono</label>
-                    <input type="text" id="phone" name="phone" th:value="${userView.phone}"
-                           class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm">
-                </div>
-                <div>
-                    <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
-                    <input type="text" id="address" name="address" th:value="${userView.address}"
-                           class="mt-1 block w-full rounded-md border-0 ring-1 ring-gray-300 focus:ring-2 focus:ring-green-500 shadow-sm">
-                </div>
-                <div>
-                    <button type="submit"
-                            class="mt-4 bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md hover:bg-[#8ce6a8] transition-colors duration-300">
-                        Guardar cambios
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Sección Orders -->
-        <div th:if="${section == 'orders'}" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
-            <h2 class="text-2xl font-bold mb-4 text-green-700">Tus Pedidos</h2>
-            <table class="min-w-full table-auto border border-gray-200">
-                <thead>
-                <tr class="bg-green-100">
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800"># Pedido</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Fecha</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Última actualización</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Estado</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="order : ${orders}" class="border-t border-gray-200 even:bg-green-50">
-                    <td class="px-4 py-2" th:text="${order.id}"></td>
-                    <td class="px-4 py-2" th:text="${order.createdAt}"></td>
-                    <td class="px-4 py-2" th:text="${order.totalPrice}"></td>
-                    <td class="px-4 py-2" th:text="${order.status}"></td>
-                    <td class="px-4 py-2">
-                        <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
-                           class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                            Ver Detalles
-                        </a>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-            <!-- Paginación -->
-            <div class="mt-4 flex justify-center space-x-2">
-                <a th:if="${orders.hasPrevious()}" th:href="@{/dashboard/orders(pageOrders=${orders.number - 1})}"
-                   class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-                    Anterior
-                </a>
-                <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${orders.number + 1}]]</span>
-                <a th:if="${orders.hasNext()}" th:href="@{/dashboard/orders(pageOrders=${orders.number + 1})}"
-                   class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-                    Siguiente
-                </a>
-            </div>
-        </div>
-
-        <!-- Sección Home -->
-        <div th:if="${section == 'home'}" class="bg-white shadow-md rounded-md p-6">
-            <h2 class="text-3xl font-bold text-green-700">Bienvenido al panel de administración</h2>
-            <p class="text-gray-600 mt-2">Aquí puedes gestionar la información de tu aplicación.</p>
+        <div th:if="${section == 'info-user'}" th:replace="~{fragments/dashboard/info-user :: infoUserSection(${userView})}"></div>
+        <div th:if="${section == 'orders'}" th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></div>
+        <div th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
+            <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido a tu Dashboard</h2>
+            <p class="text-gray-600">Selecciona una opción del menú lateral para comenzar.</p>
         </div>
     </section>
 </main>

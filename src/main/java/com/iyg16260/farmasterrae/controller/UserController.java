@@ -1,6 +1,8 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
@@ -32,32 +34,44 @@ public class UserController {
      * Para acceder al dashboard y cambiar entre secciones
      * @param section nombre de la seccion a validar en el if ternario de la vista, no obligatorio
      * @param user
-     * @param pageOrders pagina actual de la seccion de pedido, no obligatorio
+     * @param page pagina actual de la seccion de pedido, no obligatorio
      * @return dashboard + seccion solicitada, caso no coincida solo el dashboard
      */
     @GetMapping({"/dashboard/{section}", "/dashboard"})
     public ModelAndView changeSection(@PathVariable(required = false) String section, @AuthenticationPrincipal User user,
-                                      @RequestParam(defaultValue = "0", required = false) int pageOrders) {
+                                      @RequestParam(defaultValue = "0", required = false) int page) {
 
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
 
-        if (section==null)
+        return processSection(section, model, user, page);
+    }
+
+    /**
+     * Método_ para añadir secciones sin modificar el GetMapping, manteniendo el principio SOLID
+     * @param section seccion del pathvariable
+     * @param model model
+     * @param user user
+     * @param page page
+     * @return vista de la seccion deseada
+     */
+    private ModelAndView processSection(String section, ModelAndView model,
+                                        User user, int page) {
+        if (section == null)
             return model;
 
-        if (section.equals("info-user")) {
-            UserDTO userDTO = new UserDTO();
-            //TODO: Obtener el usuario nuevamente desde la bbdd forzosamente para asegurarse
-            User updatedUser = userService.getUserById(user.getId());
-            BeanUtils.copyProperties(updatedUser, userDTO);
-            return model.addObject("userView", userDTO);
+        switch (section) {
+            case "orders" -> {
+                Page<OrderDTO> orders = orderService.getOrders(user, page);
+                model.addObject("orders", orders);
+            }
+            case "info-user" -> {
+                UserDTO userDTO = userService.getUserById(user.getId());
+                return model.addObject("userView", userDTO);
+            }
         }
-        else if (section.equals("orders")) {
-            Page<OrderDTO> orders = orderService.getOrders(user, pageOrders);
-            return model.addObject("orders", orders);
-        }
-        return model;
 
+        return model;
     }
 
     /**
@@ -84,10 +98,10 @@ public class UserController {
      */
     @GetMapping ("/dashboard/orders/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user){
+
+        OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
+
         return new ModelAndView("user/order-details")
-                //.addObject("order", orderService.getOrder(user, idOrder))
-                //.addObject("products", orderService.getProductsFromOrder(idOrder));
-                .addObject("order",
-                        orderService.getOrder(user.getId(), idOrder));
+                .addObject("order", orderDetails);
     }
 }

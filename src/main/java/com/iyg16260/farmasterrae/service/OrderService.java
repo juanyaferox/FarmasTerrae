@@ -15,8 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.IntStream;
 
@@ -61,16 +59,15 @@ public class OrderService {
     }
 
     /**
-     * @param idUser
-     * @param idOrder
+     * @param idUser idUser
+     * @param idOrder idOrder
      * @return pedido coincidiente con el id, si es del usuario actual
      * @throws ResponseStatusException NOTFOUND o FORBIDDEN
      */
     @Transactional
     public OrderDetailsDTO getOrder(long idUser, long idOrder) throws ResponseStatusException{
 
-        Order order = orderRepository.findById(idOrder)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        Order order = getOrderById(idOrder);
 
         User user = userService.getUser(idUser);
 
@@ -81,15 +78,19 @@ public class OrderService {
         return orderMapper.orderToOrderDetailsDTO(order);
     }
 
+    private Order getOrderById (long idOrder) throws ResponseStatusException {
+        return orderRepository.findById(idOrder)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+    }
+
     /**
      * Obtiene una lista de productos a partir de un pedido
-     * @param idOrder
-     * @return
+     * @param idOrder idOrder
+     * @return lista de productos de un pedido
      */
     public List<Product> getProductsFromOrder(long idOrder) {
 
-        Order order = orderRepository.findById(idOrder)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        Order order = getOrderById(idOrder);
 
         return order.getOrderDetails().stream()
                 .flatMap(o -> IntStream.range(0, o.getAmount())
@@ -99,15 +100,15 @@ public class OrderService {
 
     /**
      * Guarda un pedido
-     * @param user
-     * @param cart
-     * @param saleStatus
-     * @param paymentMethod
-     * @return
+     * @param user usuario
+     * @param cart carrito
+     * @param saleStatus saleStatus
+     * @param paymentMethod paymentMethod
+     * @return detalles del pedido guardado
      */
     public OrderDetailsDTO setOrder(User user, SessionCart cart,
-                                    SaleEnum.SaleStatus saleStatus, SaleEnum.PaymentMethod paymentMethod)
-            throws ResponseStatusException {
+                                    SaleEnum.SaleStatus saleStatus,
+                                    SaleEnum.PaymentMethod paymentMethod) throws ResponseStatusException {
         var products = cart.getProducts();
 
         if (products == null || products.isEmpty())
@@ -126,9 +127,9 @@ public class OrderService {
 
     /**
      * Función para complementar el pedido
-     * @param cartProducts
-     * @param order
-     * @return
+     * @param cartProducts productos del carrito
+     * @param order pedido
+     * @return lista de detalles del pedido para guardar en el pedido
      */
     private List<OrderDetails> getOrderDetailsFromCart(Map<String, Integer> cartProducts, Order order)
             throws ResponseStatusException {
@@ -145,5 +146,17 @@ public class OrderService {
         });
 
         return detailsList;
+    }
+
+    public void deleteOrderById (long idOrder) throws ResponseStatusException {
+        Order order = getOrderById(idOrder);
+        orderRepository.delete(order);
+    }
+
+    public OrderDTO updateOrder (long idOrder) throws ResponseStatusException {
+        Order order = getOrderById(idOrder);
+        return orderMapper.orderToOrderDTO(
+                orderRepository.save(order)
+        );
     }
 }

@@ -1,7 +1,9 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
+import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,29 @@ public class ProductsService {
         return productRepository.findByReference(reference)
                 .orElseThrow(() ->  new ResponseStatusException
                         (HttpStatus.NOT_FOUND, "Product not found with referece: "+reference));
+    }
+
+    public void deleteProduct (String reference) throws ResponseStatusException {
+        Product product = getProductByReference(reference);
+        productRepository.delete(product);
+    }
+
+    public ProductDTO updateProduct (String reference) throws ResponseStatusException {
+        Product product = getProductByReference(reference);
+        return productMapper.productToProductDTO(
+                productRepository.save(product)
+        );
+    }
+
+    public Product saveProduct(ProductDTO productDTO) {
+        Product product = productMapper.productDTOToProduct(productDTO);
+
+        if (productRepository.existsByReference(product.getReference())) {
+            throw new ResponseStatusException
+                    (HttpStatus.NOT_FOUND, "Product already exists by: "+ product.getReference());
+        }
+
+        return productRepository.save(product);
     }
 
 }

@@ -10,5 +10,4 @@ public class ProductDTO {
     Double price;
     Integer stock;
     String reference;
-
 }
