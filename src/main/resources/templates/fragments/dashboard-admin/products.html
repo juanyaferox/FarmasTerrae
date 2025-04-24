@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="productsSection(products)" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+    <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Productos</h2>
+    <table class="min-w-full table-auto border border-gray-200">
+        <thead>
+        <tr class="bg-green-100">
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Imagen</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Descripción</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Precio</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Stock</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Referencia</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}" class="border-t border-gray-200 even:bg-green-50">
+            <td class="px-4 py-2">
+                <img th:src="${product.imagePath}" class="w-12 h-12 object-cover" alt="Product Image"/>
+            </td>
+            <td class="px-4 py-2" th:text="${product.name}"></td>
+            <td class="px-4 py-2" th:text="${product.description}"></td>
+            <td class="px-4 py-2" th:text="${'€' + product.price}"></td>
+            <td class="px-4 py-2" th:text="${product.stock}"></td>
+            <td class="px-4 py-2" th:text="${product.reference}"></td>
+            <td class="px-4 py-2">
+                <a th:href="@{/admin/dashboard/products/{ref}(ref=${product.reference})}"
+                   class="inline-block bg-[#a4fcc4] text-gray-800 px-3 py-1 rounded-md hover:bg-[#8ce6a8] transition-colors duration-300">
+                    Ver Detalles
+                </a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- Paginación -->
+    <div class="mt-6 flex justify-center space-x-2">
+        <a th:if="${products.hasPrevious()}"
+           th:href="@{/admin/dashboard/products(page=${products.number - 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Anterior
+        </a>
+        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${products.number + 1}]]</span>
+        <a th:if="${products.hasNext()}"
+           th:href="@{/admin/dashboard/products(page=${products.number + 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Siguiente
+        </a>
+    </div>
+</div>
+</body>
+</html>

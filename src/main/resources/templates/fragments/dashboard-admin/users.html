@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="usersSection(users)" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+    <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Usuarios</h2>
+    <table class="min-w-full table-auto border border-gray-200">
+        <thead>
+        <tr class="bg-green-100">
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre de Usuario</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Email</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Teléfono</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Dirección</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}" class="border-t border-gray-200 even:bg-green-50">
+            <td class="px-4 py-2" th:text="${user.username}"></td>
+            <td class="px-4 py-2" th:text="${user.email}"></td>
+            <td class="px-4 py-2" th:text="${user.phone}"></td>
+            <td class="px-4 py-2" th:text="${user.address}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <!-- Paginación -->
+    <div class="mt-6 flex justify-center space-x-2">
+        <a th:if="${users.hasPrevious()}" th:href="@{/admin/dashboard/users(page=${users.number - 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Anterior
+        </a>
+        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${users.number + 1}]]</span>
+        <a th:if="${users.hasNext()}" th:href="@{/admin/dashboard/users(page=${users.number + 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Siguiente
+        </a>
+    </div>
+</div>
+</body>
+</html>

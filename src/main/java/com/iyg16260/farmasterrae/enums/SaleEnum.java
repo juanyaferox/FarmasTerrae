@@ -1,7 +1,6 @@
 package com.iyg16260.farmasterrae.enums;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 public class SaleEnum {
 
@@ -9,7 +8,8 @@ public class SaleEnum {
     public enum SaleStatus {
         PENDING("Pendiente"),
         CANCELLED("Cancelado"),
-        COMPLETED("Completado");
+        COMPLETED("Completado"),
+        SHIPPED("Enviado");
 
         private final String value;
 

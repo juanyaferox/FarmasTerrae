@@ -3,23 +3,20 @@ package com.iyg16260.farmasterrae.controller;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
-import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.UserService;
-import org.h2.engine.Mode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping ("/admin")
 public class AdminController {
 
     @Autowired
@@ -44,20 +41,21 @@ public class AdminController {
 
     /**
      * Método_ para añadir secciones sin modificar el GetMapping, manteniendo el principio SOLID
+     *
      * @param section seccion del pathvariable
-     * @param model model
-     * @param user user
-     * @param page page
+     * @param model   model
+     * @param user    user
+     * @param page    page
      * @return vista de la seccion deseada
      */
-    private ModelAndView processSection (String section, ModelAndView model,
+    private ModelAndView processSection(String section, ModelAndView model,
                                         User user, int page) {
         if (section == null)
             return model;
 
         switch (section) {
             case "orders" -> {
-                Page<OrderDTO> orders = orderService.getOrders(user, page);
+                Page<OrderDTO> orders = orderService.getAllOrders(page);
                 model.addObject("orders", orders);
             }
             case "products" -> {
@@ -73,7 +71,7 @@ public class AdminController {
     }
 
     @PutMapping ("/dashboard/orders/update")
-    public String updateOrder (@RequestParam long idOrder, RedirectAttributes ra) {
+    public String updateOrder(@RequestParam long idOrder, RedirectAttributes ra) {
         return handleFlash(() -> orderService.updateOrder(idOrder),
                 ra,
                 "Pedido actualizado con éxito.",
@@ -81,7 +79,7 @@ public class AdminController {
     }
 
     @DeleteMapping ("/dashboard/orders/delete")
-    public String deleteOrder (@RequestParam long idOrder, RedirectAttributes ra) {
+    public String deleteOrder(@RequestParam long idOrder, RedirectAttributes ra) {
         return handleFlash(() -> orderService.deleteOrderById(idOrder),
                 ra,
                 "Pedido eliminado con éxito.",
@@ -89,7 +87,7 @@ public class AdminController {
     }
 
     @PostMapping ("/dashboard/products/add")
-    public String addProduct (@ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
+    public String addProduct(@ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
 //        return handleFlash(() -> productsService.saveProduct(productDTO),
 //                ra,
 //                "Producto creado con éxito.",
@@ -100,15 +98,15 @@ public class AdminController {
     }
 
     @PutMapping ("/dashboard/products/update")
-    public String updateProduct (@RequestParam String reference, RedirectAttributes ra) {
+    public String updateProduct(@RequestParam String reference, RedirectAttributes ra) {
         return handleFlash(() -> productsService.updateProduct(reference),
                 ra,
                 "Producto actualizado con éxito.",
                 "/dashboard/products");
     }
 
-    @DeleteMapping("/dashboard/products/delete")
-    public String deleteProduct (@RequestParam String reference, RedirectAttributes ra) {
+    @DeleteMapping ("/dashboard/products/delete")
+    public String deleteProduct(@RequestParam String reference, RedirectAttributes ra) {
         return handleFlash(() -> productsService.deleteProduct(reference),
                 ra,
                 "Producto eliminado con éxito.",
@@ -125,9 +123,9 @@ public class AdminController {
     }
 
     private String handleFlash(Runnable action,
-                              RedirectAttributes ra,
-                              String successMsg,
-                              String redirectPath) {
+                               RedirectAttributes ra,
+                               String successMsg,
+                               String redirectPath) {
         try {
             action.run();
             ra.addFlashAttribute("successMessage", successMsg);

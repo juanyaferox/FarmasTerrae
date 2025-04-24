@@ -25,13 +25,6 @@
                         <span class="mr-2">📋</span> Pedidos
                     </a>
                 </li>
-                <li>
-                    <a th:href="@{/user/dashboard/products}"
-                       th:classappend="${section == 'products'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">🌿</span> Productos
-                    </a>
-                </li>
             </ul>
         </nav>
     </aside>
@@ -39,7 +32,7 @@
     <!-- Main Content -->
     <section class="w-full md:flex-1 p-4 md:p-10 overflow-auto">
         <th:block th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
-            <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido a tu Dashboard</h2>
+            <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido a tu panel de control</h2>
             <p class="text-gray-600">Selecciona una opción del menú lateral para comenzar.</p>
         </th:block>
         <th:block th:if="${section == 'info-user'}">

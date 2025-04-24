@@ -18,9 +18,9 @@
             <!-- Panel de control según rol -->
             <a sec:authorize="hasRole('ROLE_ADMIN')" th:href="@{/admin/dashboard}"
                class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                Panel de control
+                Panel de administración
             </a>
-            <a sec:authorize="hasRole('ROLE_USER')" th:href="@{/user/dashboard}"
+            <a sec:authorize="isAuthenticated()" th:href="@{/user/dashboard}"
                class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
                 Panel de control
             </a>
@@ -28,10 +28,10 @@
                 <a th:href="@{/login}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Iniciar sesión</a>
                 <a th:href="@{/register}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Registrarse</a>
             </div>
-            
+
             <a sec:authorize="isAuthenticated()" th:href="@{/logout}"
-               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Cerrar
-                sesión</a>
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
+                Cerrar sesión</a>
         </nav>
     </div>
 </header>

@@ -4,7 +4,10 @@ import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
-import com.iyg16260.farmasterrae.model.*;
+import com.iyg16260.farmasterrae.model.Order;
+import com.iyg16260.farmasterrae.model.OrderDetails;
+import com.iyg16260.farmasterrae.model.Product;
+import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.IntStream;
 
 @Service
@@ -43,29 +49,31 @@ public class OrderService {
      * @return paginas con los pedidos del user, si eres admin de todos
      */
     public Page<OrderDTO> getOrders(User user, int page) {
-        String userType = user.getProfile().getType();
-        int pageSize = "ADMIN".equals(userType) ? PAGE_SIZE_ADMIN : PAGE_SIZE_USER;
         Pageable pageable = Pageable
-                .ofSize(pageSize)
+                .ofSize(PAGE_SIZE_USER)
                 .withPage(page);
 
-        if (!"ADMIN".equals(userType))
-            return orderRepository.findByUser(user, pageable)
-                    .map(orderMapper::orderToOrderDTO);
-        else
-            return orderRepository.findAll(pageable)
-                    .map(orderMapper::orderToOrderDTO);
+        return orderRepository.findByUser(user, pageable)
+                .map(orderMapper::orderToOrderDTO);
+    }
 
+    public Page<OrderDTO> getAllOrders(int page) {
+        Pageable pageable = Pageable
+                .ofSize(PAGE_SIZE_ADMIN)
+                .withPage(page);
+
+        return orderRepository.findAll(pageable)
+                .map(orderMapper::orderToOrderDTO);
     }
 
     /**
-     * @param idUser idUser
+     * @param idUser  idUser
      * @param idOrder idOrder
      * @return pedido coincidiente con el id, si es del usuario actual
      * @throws ResponseStatusException NOTFOUND o FORBIDDEN
      */
     @Transactional
-    public OrderDetailsDTO getOrder(long idUser, long idOrder) throws ResponseStatusException{
+    public OrderDetailsDTO getOrder(long idUser, long idOrder) throws ResponseStatusException {
 
         Order order = getOrderById(idOrder);
 
@@ -78,13 +86,14 @@ public class OrderService {
         return orderMapper.orderToOrderDetailsDTO(order);
     }
 
-    private Order getOrderById (long idOrder) throws ResponseStatusException {
+    private Order getOrderById(long idOrder) throws ResponseStatusException {
         return orderRepository.findById(idOrder)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
     }
 
     /**
      * Obtiene una lista de productos a partir de un pedido
+     *
      * @param idOrder idOrder
      * @return lista de productos de un pedido
      */
@@ -100,9 +109,10 @@ public class OrderService {
 
     /**
      * Guarda un pedido
-     * @param user usuario
-     * @param cart carrito
-     * @param saleStatus saleStatus
+     *
+     * @param user          usuario
+     * @param cart          carrito
+     * @param saleStatus    saleStatus
      * @param paymentMethod paymentMethod
      * @return detalles del pedido guardado
      */
@@ -127,8 +137,9 @@ public class OrderService {
 
     /**
      * Función para complementar el pedido
+     *
      * @param cartProducts productos del carrito
-     * @param order pedido
+     * @param order        pedido
      * @return lista de detalles del pedido para guardar en el pedido
      */
     private List<OrderDetails> getOrderDetailsFromCart(Map<String, Integer> cartProducts, Order order)
@@ -148,12 +159,12 @@ public class OrderService {
         return detailsList;
     }
 
-    public void deleteOrderById (long idOrder) throws ResponseStatusException {
+    public void deleteOrderById(long idOrder) throws ResponseStatusException {
         Order order = getOrderById(idOrder);
         orderRepository.delete(order);
     }
 
-    public OrderDTO updateOrder (long idOrder) throws ResponseStatusException {
+    public OrderDTO updateOrder(long idOrder) throws ResponseStatusException {
         Order order = getOrderById(idOrder);
         return orderMapper.orderToOrderDTO(
                 orderRepository.save(order)
