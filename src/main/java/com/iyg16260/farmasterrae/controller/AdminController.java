@@ -73,58 +73,46 @@ public class AdminController {
     }
 
     @PutMapping ("/dashboard/orders/update")
-    public String updateOrder (@PathVariable long idOrder, RedirectAttributes redirectAttributes) {
-        try {
-            orderService.updateOrder(idOrder);
-            redirectAttributes.addFlashAttribute("successMessage", "Pedido actualizado con éxito.");
-        } catch (ResponseStatusException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hubo un error al actualizar el pedido.");
-        }
-        return "redirect:/dashboard/orders";
+    public String updateOrder (@RequestParam long idOrder, RedirectAttributes ra) {
+        return handleFlash(() -> orderService.updateOrder(idOrder),
+                ra,
+                "Pedido actualizado con éxito.",
+                "/dashboard/orders");
     }
 
     @DeleteMapping ("/dashboard/orders/delete")
-    public String deleteOrder (@PathVariable long idOrder, RedirectAttributes redirectAttributes) {
-        try {
-            orderService.deleteOrderById(idOrder);
-            redirectAttributes.addFlashAttribute("successMessage", "Pedido eliminado con éxito.");
-        } catch (ResponseStatusException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hubo un error al eliminar el pedido.");
-        }
-        return "redirect:/dashboard/orders";
+    public String deleteOrder (@RequestParam long idOrder, RedirectAttributes ra) {
+        return handleFlash(() -> orderService.deleteOrderById(idOrder),
+                ra,
+                "Pedido eliminado con éxito.",
+                "/dashboard/orders");
     }
 
     @PostMapping ("/dashboard/products/add")
-    public String addProduct (@ModelAttribute ProductDTO productDTO, RedirectAttributes redirectAttributes) {
-        try {
-            productsService.saveProduct(productDTO);
-            redirectAttributes.addFlashAttribute("successMessage", "Pedido creado con éxito.");
-        } catch (ResponseStatusException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hubo un error al crear el producto.");
-        }
+    public String addProduct (@ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
+//        return handleFlash(() -> productsService.saveProduct(productDTO),
+//                ra,
+//                "Producto creado con éxito.",
+//                "/dashboard/products");
+        productsService.saveProduct(productDTO);
+        ra.addFlashAttribute("successMessage", "Pedido eliminado con éxito.");
         return "redirect:/dashboard/products";
     }
 
     @PutMapping ("/dashboard/products/update")
-    public String updateProduct (@PathVariable String reference, RedirectAttributes redirectAttributes) {
-        try {
-            productsService.updateProduct(reference);
-            redirectAttributes.addFlashAttribute("successMessage", "Pedido actualizado con éxito.");
-        } catch (ResponseStatusException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hubo un error al actualizar el pedido.");
-        }
-        return "redirect:/dashboard/products";
+    public String updateProduct (@RequestParam String reference, RedirectAttributes ra) {
+        return handleFlash(() -> productsService.updateProduct(reference),
+                ra,
+                "Producto actualizado con éxito.",
+                "/dashboard/products");
     }
 
     @DeleteMapping("/dashboard/products/delete")
-    public String deleteProduct (@PathVariable String reference, RedirectAttributes redirectAttributes) {
-        try {
-            productsService.deleteProduct(reference);
-            redirectAttributes.addFlashAttribute("successMessage", "Producto eliminado con éxito.");
-        } catch (ResponseStatusException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Hubo un error al eliminar el producto.");
-        }
-        return "redirect:/dashboard/products";
+    public String deleteProduct (@RequestParam String reference, RedirectAttributes ra) {
+        return handleFlash(() -> productsService.deleteProduct(reference),
+                ra,
+                "Producto eliminado con éxito.",
+                "/dashboard/products");
         /*
         <div th:if="${successMessage}" class="bg-green-100 text-green-800 p-2 rounded">
             <span th:text="${successMessage}"></span>
@@ -134,5 +122,18 @@ public class AdminController {
             <span th:text="${errorMessage}"></span>
         </div>
          */
+    }
+
+    private String handleFlash(Runnable action,
+                              RedirectAttributes ra,
+                              String successMsg,
+                              String redirectPath) {
+        try {
+            action.run();
+            ra.addFlashAttribute("successMessage", successMsg);
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:" + redirectPath;
     }
 }

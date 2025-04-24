@@ -1,28 +1,54 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Farmasterrae - Iniciar Sesión', '/dist/output.css')}"></head>
+<body class="bg-white min-h-screen flex flex-col">
+<!-- Header -->
+<header th:replace="~{fragments/header :: header}"></header>
 
-<head th:replace="~{fragments/head :: head('Farmasterrae', '/dist/output.css')}"></head>
-
-<body class="bg-gray-200 flex items-center justify-center h-screen">
-<div class="p-6 max-w-sm bg-white rounded-xl shadow-md space-y-4">
-    <h2 class="text-2xl font-bold text-gray-800">Iniciar Sesión</h2>
-
-    <form th:action="@{/login}" method="post" class="space-y-4">
-        <div>
-            <label class="block text-gray-700">Usuario:</label>
-            <input type="text" name="username" class="w-full px-3 py-2 border rounded-md">
-        </div>
-        <div>
-            <label class="block text-gray-700">Contraseña:</label>
-            <input type="password" name="password" class="w-full px-3 py-2 border rounded-md">
-        </div>
-        <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-700">
+<!-- Contenido Principal -->
+<main class="flex-grow flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md bg-white rounded-md shadow-md p-8 space-y-6">
+        <!-- Título -->
+        <h2 class="text-3xl font-bold text-green-800 text-center">
             Iniciar Sesión
-        </button>
-    </form>
+        </h2>
 
-    <p th:if="${param.error}" class="text-red-500">Usuario o contraseña incorrectos</p>
-    <p th:if="${param.logout}" class="text-green-500">Sesión cerrada correctamente</p>
-</div>
+        <!-- Formulario -->
+        <form th:action="@{/login}" method="post" class="space-y-6">
+            <div>
+                <label for="username" class="block text-gray-700 font-medium mb-1">Usuario</label>
+                <input
+                        id="username" name="username" type="text"
+                        class="block w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
+                        placeholder="Tu usuario">
+            </div>
+            <div>
+                <label for="password" class="block text-gray-700 font-medium mb-1">Contraseña</label>
+                <input
+                        id="password" name="password" type="password"
+                        class="block w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
+                        placeholder="••••••••">
+            </div>
+            <button
+                    type="submit"
+                    class="w-full bg-[#a4fcc4] text-gray-800 px-6 py-3 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
+                Entrar
+            </button>
+        </form>
+
+        <!-- Enlaces Auxiliares -->
+        <div class="flex justify-between text-sm text-green-700">
+            <a th:href="@{/forgot-password}" class="hover:text-green-800 hover:underline">¿Olvidaste tu contraseña?</a>
+            <a th:href="@{/register}" class="hover:text-green-800 hover:underline">Crear cuenta</a>
+        </div>
+
+        <!-- Mensajes de Error / Logout -->
+        <p th:if="${param.error}" class="text-red-500 text-center">Usuario o contraseña incorrectos</p>
+        <p th:if="${param.logout}" class="text-green-700 text-center">Sesión cerrada correctamente</p>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

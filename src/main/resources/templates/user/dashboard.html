@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<html th:attr="lang=${#locale.language}"
+      xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Farmasterrae', '/dist/output.css')}"></head>
 
 <body class="bg-green-50">
@@ -37,12 +38,16 @@
 
     <!-- Main Content -->
     <section class="w-full md:flex-1 p-4 md:p-10 overflow-auto">
-        <div th:if="${section == 'info-user'}" th:replace="~{fragments/dashboard/info-user :: infoUserSection(${userView})}"></div>
-        <div th:if="${section == 'orders'}" th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></div>
-        <div th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
+        <th:block th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
             <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido a tu Dashboard</h2>
             <p class="text-gray-600">Selecciona una opción del menú lateral para comenzar.</p>
-        </div>
+        </th:block>
+        <th:block th:if="${section == 'info-user'}">
+            <th:block th:replace="~{fragments/dashboard/info-user :: infoUserSection(${userView})}"></th:block>
+        </th:block>
+        <th:block th:if="${section == 'orders'}">
+            <th:block th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></th:block>
+        </th:block>
     </section>
 </main>
 <footer th:replace="~{fragments/footer :: footer}"></footer>

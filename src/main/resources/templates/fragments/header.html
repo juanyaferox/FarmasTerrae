@@ -1,17 +1,37 @@
-<!-- fragments/header.html -->
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<header th:fragment="header" class="bg-white shadow-md w-full">
+<header
+        th:fragment="header"
+        xmlns:th="http://www.thymeleaf.org"
+        xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+        class="bg-white shadow-md w-full">
     <div class="container mx-auto px-4 py-4 flex justify-between items-center">
         <!-- Logo o título -->
-        <a href="/" class="text-2xl font-semibold text-green-700">Farmasterrae</a>
-        <!-- Navegación para pantallas grandes -->
-        <nav class="hidden md:flex space-x-4">
-            <a th:href="@{/}" class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Inicio</a>
-            <a th:href="@{/products}" class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Productos</a>
-            <a th:href="@{/cart}" class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Carrito</a>
-            <a th:href="@{/user/dashboard}" class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Panel de control</a>
+        <a th:href="@{/}" class="text-2xl font-semibold text-green-700">Farmasterrae</a>
+        <!-- Navegación principal -->
+        <nav class="hidden md:flex space-x-4 items-center">
+            <a th:href="@{/}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Inicio</a>
+            <a th:href="@{/products}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Productos</a>
+            <a th:href="@{/cart}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Carrito</a>
+
+            <!-- Panel de control según rol -->
+            <a sec:authorize="hasRole('ROLE_ADMIN')" th:href="@{/admin/dashboard}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
+                Panel de control
+            </a>
+            <a sec:authorize="hasRole('ROLE_USER')" th:href="@{/user/dashboard}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
+                Panel de control
+            </a>
+            <div sec:authorize="isAnonymous()">
+                <a th:href="@{/login}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Iniciar sesión</a>
+                <a th:href="@{/register}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Registrarse</a>
+            </div>
+            
+            <a sec:authorize="isAuthenticated()" th:href="@{/logout}"
+               class="py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">Cerrar
+                sesión</a>
         </nav>
     </div>
 </header>
-</html>

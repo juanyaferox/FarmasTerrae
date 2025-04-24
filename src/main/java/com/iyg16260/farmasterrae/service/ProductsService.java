@@ -60,7 +60,7 @@ public class ProductsService {
 
         if (productRepository.existsByReference(product.getReference())) {
             throw new ResponseStatusException
-                    (HttpStatus.NOT_FOUND, "Product already exists by: "+ product.getReference());
+                    (HttpStatus.CONFLICT, "Product already exists by: "+ product.getReference());
         }
 
         return productRepository.save(product);
