@@ -164,10 +164,18 @@ public class OrderService {
         orderRepository.delete(order);
     }
 
-    public OrderDTO updateOrder(long idOrder) throws ResponseStatusException {
-        Order order = getOrderById(idOrder);
-        return orderMapper.orderToOrderDTO(
-                orderRepository.save(order)
-        );
+    @Transactional
+    public OrderDTO updateOrder(long idOrder, String status) throws ResponseStatusException {
+        try {
+            System.out.println("idOrder: " + idOrder + ", status: " + status);
+            Order order = getOrderById(idOrder);
+            order.setStatus(SaleEnum.SaleStatus.valueOf(status.toUpperCase()));
+            return orderMapper.orderToOrderDTO(
+                    orderRepository.save(order)
+            );
+        } catch (IllegalArgumentException e) {
+            System.out.println(e);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado inválido: " + status);
+        }
     }
 }

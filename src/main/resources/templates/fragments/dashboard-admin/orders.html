@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="ordersSection(orders)" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+<div
+        th:if="${successMessage}"
+        class="mb-4 px-4 py-3 rounded bg-green-100 border border-green-400 text-green-700"
+        role="alert"
+>
+    <span th:text="${successMessage}"></span>
+</div>
+
+<!-- Mensaje de error -->
+<div
+        th:if="${errorMessage}"
+        class="mb-4 px-4 py-3 rounded bg-red-100 border border-red-400 text-red-700"
+        role="alert"
+>
+    <span th:text="${errorMessage}"></span>
+</div>
+<div th:fragment="ordersSection(orders)" x-data="{ showModal: false, selectedOrder: null }"
+     class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
     <h2 class="text-2xl font-bold mb-4 text-green-700">Tus Pedidos</h2>
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
@@ -19,16 +36,74 @@
             <td class="px-4 py-2" th:text="${order.id}"></td>
             <td class="px-4 py-2" th:text="${order.createdAt}"></td>
             <td class="px-4 py-2" th:text="${order.totalPrice}"></td>
-            <td class="px-4 py-2" th:text="${order.status == null ? 'Sin estado' : order.status}"></td>
-            <td class="px-4 py-2">
-                <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
-                   class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                    Ver Detalles
-                </a>
+            <td class="px-4 py-2" th:text="${order.updatedAt}"></td>
+            <td class="px-4 py-2" th:text="${order.status == null ? 'Sin estado' : order.status.value}"></td>
+            <td class="px-4 py-2 space-x-2">
+                <button type="button"
+                        class="bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
+                        th:data-order-id="${order.id}"
+                        th:data-order-status="${order.status}"
+                        @click="selectedOrder = { id: $el.dataset.orderId, status: $el.dataset.orderStatus }; showModal = true">
+                    Editar
+                </button>
+                <button type="button"
+                        class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
+                        @click="if(confirm('¿Estás seguro que deseas eliminar este pedido?')) { /* Acción de eliminar aquí */ }">
+                    Eliminar
+                </button>
             </td>
         </tr>
         </tbody>
     </table>
+
+    <!-- Modal de edición -->
+    <div x-show="showModal" class="fixed inset-0 flex items-center justify-center bg-grey bg-opacity-30 z-50"
+         style="display: none;">
+        <template x-if="selectedOrder">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+                <h3 class="text-xl font-semibold mb-4 text-green-700">
+                    Editar Pedido #<span x-text="selectedOrder.id"></span>
+                </h3>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <select x-model="selectedOrder.status" class="w-full border rounded p-2">
+                        <option th:each="status : ${saleStatuses}"
+                                th:value="${status.name()}"
+                                th:text="${status.value}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" @click="showModal = false"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                        Cancelar
+                    </button>
+
+                    <button type="button" @click="$refs.updateOrderForm.submit()"
+                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <form x-ref="updateOrderForm" th:action="@{/admin/dashboard/orders/update}" method="post" style="display: none;">
+        <!-- Spring Security CSRF -->
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}"
+                th:if="${_csrf}"
+        />
+        <input type="hidden" name="_method" value="put"/>
+        <input type="hidden" name="idOrder" :value="selectedOrder.id"/>
+        <input type="hidden" name="status" :value="selectedOrder.status"/>
+    </form>
+
+
     <!-- Paginación -->
     <div class="mt-4 flex justify-center space-x-2">
         <a th:if="${orders.hasPrevious()}" th:href="@{/dashboard/orders(page=${orders.number - 1})}"

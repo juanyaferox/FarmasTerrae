@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.controller;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
@@ -57,6 +58,7 @@ public class AdminController {
             case "orders" -> {
                 Page<OrderDTO> orders = orderService.getAllOrders(page);
                 model.addObject("orders", orders);
+                model.addObject("saleStatuses", SaleEnum.SaleStatus.values());
             }
             case "products" -> {
                 Page<ProductDTO> products = productsService.getProductList(page);
@@ -71,11 +73,11 @@ public class AdminController {
     }
 
     @PutMapping ("/dashboard/orders/update")
-    public String updateOrder(@RequestParam long idOrder, RedirectAttributes ra) {
-        return handleFlash(() -> orderService.updateOrder(idOrder),
+    public String updateOrder(@RequestParam long idOrder, @RequestParam String status, RedirectAttributes ra) {
+        return handleFlash(() -> orderService.updateOrder(idOrder, status),
                 ra,
                 "Pedido actualizado con éxito.",
-                "/dashboard/orders");
+                "orders");
     }
 
     @DeleteMapping ("/dashboard/orders/delete")
@@ -83,7 +85,7 @@ public class AdminController {
         return handleFlash(() -> orderService.deleteOrderById(idOrder),
                 ra,
                 "Pedido eliminado con éxito.",
-                "/dashboard/orders");
+                "orders");
     }
 
     @PostMapping ("/dashboard/products/add")
@@ -94,7 +96,7 @@ public class AdminController {
 //                "/dashboard/products");
         productsService.saveProduct(productDTO);
         ra.addFlashAttribute("successMessage", "Pedido eliminado con éxito.");
-        return "redirect:/dashboard/products";
+        return "redirect:/admin/dashboard/products";
     }
 
     @PutMapping ("/dashboard/products/update")
@@ -102,7 +104,7 @@ public class AdminController {
         return handleFlash(() -> productsService.updateProduct(reference),
                 ra,
                 "Producto actualizado con éxito.",
-                "/dashboard/products");
+                "products");
     }
 
     @DeleteMapping ("/dashboard/products/delete")
@@ -110,7 +112,7 @@ public class AdminController {
         return handleFlash(() -> productsService.deleteProduct(reference),
                 ra,
                 "Producto eliminado con éxito.",
-                "/dashboard/products");
+                "products");
         /*
         <div th:if="${successMessage}" class="bg-green-100 text-green-800 p-2 rounded">
             <span th:text="${successMessage}"></span>
@@ -132,6 +134,6 @@ public class AdminController {
         } catch (Exception e) {
             ra.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:" + redirectPath;
+        return "redirect:/admin/dashboard/" + redirectPath;
     }
 }
