@@ -48,7 +48,11 @@
                 </button>
                 <button type="button"
                         class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
-                        @click="if(confirm('¿Estás seguro que deseas eliminar este pedido?')) { /* Acción de eliminar aquí */ }">
+                        th:data-order-id="${order.id}"
+                        @click="selectedOrder = { id: $el.dataset.orderId };
+                         if (confirm('¿Estás seguro que deseas eliminar este pedido?')) {
+                            $nextTick(() => $refs.deleteForm.submit());
+                         }">
                     Eliminar
                 </button>
             </td>
@@ -90,14 +94,14 @@
         </template>
     </div>
 
+    <form x-ref="deleteForm" th:action="@{/admin/dashboard/orders/delete}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+        <input type="hidden" name="_method" value="delete">
+        <input type="hidden" name="idOrder" :value="selectedOrder.id">
+    </form>
+
     <form x-ref="updateOrderForm" th:action="@{/admin/dashboard/orders/update}" method="post" style="display: none;">
-        <!-- Spring Security CSRF -->
-        <input
-                type="hidden"
-                th:name="${_csrf.parameterName}"
-                th:value="${_csrf.token}"
-                th:if="${_csrf}"
-        />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
         <input type="hidden" name="_method" value="put"/>
         <input type="hidden" name="idOrder" :value="selectedOrder.id"/>
         <input type="hidden" name="status" :value="selectedOrder.status"/>

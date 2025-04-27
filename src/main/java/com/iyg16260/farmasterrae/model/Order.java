@@ -1,26 +1,22 @@
 package com.iyg16260.farmasterrae.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
-import java.io.IOException;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
 @Data
-@Table(name = "orders")
+@Table (name = "orders")
 public class Order {
-    
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     Long id;
 
     Double totalPrice;
@@ -31,11 +27,11 @@ public class Order {
     @Enumerated (EnumType.STRING)
     SaleEnum.PaymentMethod paymentMethod;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="userId")
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name = "userId")
     User user;
 
-    @OneToMany(mappedBy = "order",fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+    @OneToMany (mappedBy = "order", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     @ToString.Exclude
     List<OrderDetails> orderDetails;
 
@@ -49,7 +45,7 @@ public class Order {
     }
 
     @PreUpdate
-    void onUpdate()  throws JsonProcessingException {
+    void onUpdate() throws JsonProcessingException {
         updatedAt = LocalDateTime.now(Clock.systemUTC());
     }
 }

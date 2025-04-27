@@ -95,7 +95,7 @@ public class AdminController {
 //                "Producto creado con éxito.",
 //                "/dashboard/products");
         productsService.saveProduct(productDTO);
-        ra.addFlashAttribute("successMessage", "Pedido eliminado con éxito.");
+        ra.addFlashAttribute("successMessage", "Producto añadido con éxito.");
         return "redirect:/admin/dashboard/products";
     }
 

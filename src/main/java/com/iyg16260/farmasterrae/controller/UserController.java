@@ -60,7 +60,6 @@ public class UserController {
 
         if (section == null)
             return model;
-        log.error("Aquí no deberia llegar");
 
         switch (section) {
             case "orders" -> {
