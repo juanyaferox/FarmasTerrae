@@ -34,4 +34,6 @@
                 Cerrar sesión</a>
         </nav>
     </div>
+    <div th:if="${errorMessage}" x-data th:attr="x-init=|alert('${errorMessage}')|" style="display: none;"></div>
+    <div th:if="${successMessage}" x-data th:attr="x-init=|alert('${successMessage}')|" style="display: none;"></div>
 </header>

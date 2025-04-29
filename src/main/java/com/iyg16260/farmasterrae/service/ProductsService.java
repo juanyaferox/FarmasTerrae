@@ -1,9 +1,7 @@
 package com.iyg16260.farmasterrae.service;
 
-import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
-import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +10,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Objects;
 
 @Service
 public class ProductsService {
@@ -33,23 +33,31 @@ public class ProductsService {
     public ProductDTO getProductDTOByReference(String reference) {
         return productMapper.productToProductDTO(
                 productRepository.findByReference(reference)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"))
+                        .orElseThrow(() -> new RuntimeException("Producto no encontrado"))
         );
     }
 
     public Product getProductByReference(String reference) throws ResponseStatusException {
         return productRepository.findByReference(reference)
-                .orElseThrow(() ->  new ResponseStatusException
-                        (HttpStatus.NOT_FOUND, "Product not found with referece: "+reference));
+                .orElseThrow(() -> new ResponseStatusException
+                        (HttpStatus.NOT_FOUND, "Product not found with referece: " + reference));
     }
 
-    public void deleteProduct (String reference) throws ResponseStatusException {
+    public void deleteProduct(String reference) throws ResponseStatusException {
+        System.out.println("++++++ Reference: " + reference);
         Product product = getProductByReference(reference);
         productRepository.delete(product);
     }
 
-    public ProductDTO updateProduct (String reference) throws ResponseStatusException {
-        Product product = getProductByReference(reference);
+    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference) throws ResponseStatusException {
+        Product product = productMapper.productDTOToProduct(productDTO);
+
+        if (!Objects.equals(product.getReference(), oldReference) && productRepository.existsByReference(product.getReference()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Already exists a product with that reference");
+
+        product.setId(productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
+                (HttpStatus.NOT_FOUND, "Product not found with referece: " + oldReference)).getId());
+
         return productMapper.productToProductDTO(
                 productRepository.save(product)
         );
@@ -60,7 +68,7 @@ public class ProductsService {
 
         if (productRepository.existsByReference(product.getReference())) {
             throw new ResponseStatusException
-                    (HttpStatus.CONFLICT, "Product already exists by: "+ product.getReference());
+                    (HttpStatus.CONFLICT, "Product already exists by: " + product.getReference());
         }
 
         return productRepository.save(product);

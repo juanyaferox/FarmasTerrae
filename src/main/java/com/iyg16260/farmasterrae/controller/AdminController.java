@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
 import com.iyg16260.farmasterrae.model.User;
@@ -28,6 +29,10 @@ public class AdminController {
 
     @Autowired
     UserService userService;
+
+    private final String ORDER_PATH = "redirect:/admin/dashboard/orders";
+    private final String PRODUCT_PATH = "redirect:/admin/dashboard/products";
+    private final String USER_PATH = "redirect:/admin/dashboard/users";
 
     @GetMapping ({"/dashboard/{section}", "/dashboard"})
     public ModelAndView getDashboard(@PathVariable (required = false) String section,
@@ -72,68 +77,75 @@ public class AdminController {
         return model;
     }
 
-    @PutMapping ("/dashboard/orders/update")
+    @GetMapping ("/dashboard/orders/{idOrder}")
+    public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
+
+        OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
+
+        return new ModelAndView("user/order-details")
+                .addObject("order", orderDetails);
+    }
+
+    @PutMapping ("/dashboard/orders")
     public String updateOrder(@RequestParam long idOrder, @RequestParam String status, RedirectAttributes ra) {
-        return handleFlash(() -> orderService.updateOrder(idOrder, status),
-                ra,
-                "Pedido actualizado con éxito.",
-                "orders");
+        orderService.updateOrder(idOrder, status);
+        buildSuccessMessage(ra, "products", "put");
+        return ORDER_PATH;
     }
 
-    @DeleteMapping ("/dashboard/orders/delete")
+    @DeleteMapping ("/dashboard/orders")
     public String deleteOrder(@RequestParam long idOrder, RedirectAttributes ra) {
-        return handleFlash(() -> orderService.deleteOrderById(idOrder),
-                ra,
-                "Pedido eliminado con éxito.",
-                "orders");
+        orderService.deleteOrderById(idOrder);
+        buildSuccessMessage(ra, "products", "delete");
+        return ORDER_PATH;
     }
 
-    @PostMapping ("/dashboard/products/add")
+    @PostMapping ("/dashboard/products")
     public String addProduct(@ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
-//        return handleFlash(() -> productsService.saveProduct(productDTO),
-//                ra,
-//                "Producto creado con éxito.",
-//                "/dashboard/products");
         productsService.saveProduct(productDTO);
-        ra.addFlashAttribute("successMessage", "Producto añadido con éxito.");
-        return "redirect:/admin/dashboard/products";
+        buildSuccessMessage(ra, "products", "post");
+        return PRODUCT_PATH;
     }
 
-    @PutMapping ("/dashboard/products/update")
-    public String updateProduct(@RequestParam String reference, RedirectAttributes ra) {
-        return handleFlash(() -> productsService.updateProduct(reference),
-                ra,
-                "Producto actualizado con éxito.",
-                "products");
+    @PutMapping ("/dashboard/products")
+    public String updateProduct(@ModelAttribute ProductDTO productDTO, @RequestParam String oldReference, RedirectAttributes ra) {
+        productsService.updateProduct(productDTO, oldReference);
+        buildSuccessMessage(ra, "products", "put");
+        return PRODUCT_PATH;
     }
 
-    @DeleteMapping ("/dashboard/products/delete")
+    @DeleteMapping ("/dashboard/products")
     public String deleteProduct(@RequestParam String reference, RedirectAttributes ra) {
-        return handleFlash(() -> productsService.deleteProduct(reference),
-                ra,
-                "Producto eliminado con éxito.",
-                "products");
-        /*
-        <div th:if="${successMessage}" class="bg-green-100 text-green-800 p-2 rounded">
-            <span th:text="${successMessage}"></span>
-        </div>
-
-        <div th:if="${errorMessage}" class="bg-red-100 text-red-800 p-2 rounded">
-            <span th:text="${errorMessage}"></span>
-        </div>
-         */
+        productsService.deleteProduct(reference);
+        buildSuccessMessage(ra, "products", "delete");
+        return PRODUCT_PATH;
     }
 
-    private String handleFlash(Runnable action,
-                               RedirectAttributes ra,
-                               String successMsg,
-                               String redirectPath) {
-        try {
-            action.run();
-            ra.addFlashAttribute("successMessage", successMsg);
-        } catch (Exception e) {
-            ra.addFlashAttribute("errorMessage", e.getMessage());
+    private void buildSuccessMessage(RedirectAttributes ra, String type, String operation) {
+        switch (type) {
+            case "products" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Producto", operation));
+            case "orders" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Pedido", operation));
+            case "users" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Usuario", operation));
         }
-        return "redirect:/admin/dashboard/" + redirectPath;
+    }
+
+    private String auxiliarForSuccessMessage(String type, String operation) {
+        switch (operation) {
+            case "post" -> {
+                return type + " añadido con éxito.";
+            }
+            case "delete" -> {
+                return type + " eliminado con éxito.";
+            }
+            case "put" -> {
+                return type + " actualizado con éxito.";
+            }
+            default -> {
+                return "Operación en " + type + " realiza con éxito";
+            }
+        }
     }
 }

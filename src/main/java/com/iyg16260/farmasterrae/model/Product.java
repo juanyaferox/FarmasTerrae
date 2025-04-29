@@ -8,10 +8,10 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "products")
+@Table (name = "products")
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     Long id;
 
     String name;
@@ -31,18 +31,18 @@ public class Product {
 
     Integer stock; // puede que se pueda sacar del order
 
-    @Column(unique = true)
+    @Column (unique = true)
     String reference;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="userModifiedId")
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name = "userModifiedId")
     User userModified;
 
-    @OneToMany(mappedBy = "product",fetch = FetchType.LAZY)
+    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @ToString.Exclude
     List<OrderDetails> orderDetails;
 
-    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @ToString.Exclude
     List<Review> reviewList;
 }

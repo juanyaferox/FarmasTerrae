@@ -79,6 +79,9 @@ public class OrderService {
 
         User user = userService.getUser(idUser);
 
+        if (Objects.equals(user.getProfile().getType(), "ADMIN"))
+            return orderMapper.orderToOrderDetailsDTO(order);
+
         if (user.getOrderList().stream().anyMatch(o -> !Objects.equals(o.getId(), order.getId())))
             throw new ResponseStatusException
                     (HttpStatus.FORBIDDEN, "You do not have permission to access this resource.");
