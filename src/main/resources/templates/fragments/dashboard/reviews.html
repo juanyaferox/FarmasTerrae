@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="reviewsSection(reviews)" x-data="{ showModal: false, selectedReview: null }"
+     class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+    <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Reseñas</h2>
+    <table class="min-w-full table-auto border border-gray-200">
+        <thead>
+        <tr class="bg-green-100">
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Título</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Contenido</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Puntuación</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="review : ${reviews}" class="border-t border-gray-200 even:bg-green-50">
+            <td class="px-4 py-2" th:text="${review.title}"></td>
+            <td class="px-4 py-2" th:text="${review.content}"></td>
+            <td class="px-4 py-2" th:text="${review.scoring}"></td>
+            <td class="px-4 py-2 space-x-2">
+                <a th:href="@{/admin/dashboard/reviews/{id}(id=${review.id})}"
+                   class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
+                    Ver Detalles
+                </a>
+                <button type="button"
+                        class="bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
+                        th:data-review-id="${review.id}"
+                        th:data-review-title="${review.title}"
+                        th:data-review-content="${review.content}"
+                        th:data-review-scoring="${review.scoring}"
+                        @click="selectedReview = {
+                            id: $el.dataset.reviewId,
+                            title: $el.dataset.reviewTitle,
+                            content: $el.dataset.reviewContent,
+                            scoring: $el.dataset.reviewScoring
+                         }; showModal = true">
+                    Editar
+                </button>
+                <button type="button"
+                        class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
+                        th:data-review-id="${review.id}"
+                        @click="selectedReview = { id: $el.dataset.reviewId };
+                         if (confirm('¿Estás seguro que deseas eliminar esta reseña?')) {
+                            $nextTick(() => $refs.deleteForm.submit());
+                         }">
+                    Eliminar
+                </button>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- Modal de edición -->
+    <div x-show="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-500/50 z-50"
+         style="display: none;" @click.outside="showModal = false">
+        <template x-if="selectedReview">
+            <div class="bg-white rounded-md shadow-md p-6 w-full max-w-lg">
+                <h3 class="text-2xl font-semibold mb-6 text-green-800">
+                    Editar Reseña: <span x-text="selectedReview.id"></span>
+                </h3>
+                <form x-ref="updateReviewForm" th:action="@{/admin/dashboard/reviews}" method="post">
+                    <!-- CSRF si es necesario -->
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+                    <input type="hidden" name="_method" value="put"/>
+                    <input type="hidden" name="id" :value="selectedReview.id"/>
+
+                    <!-- Título -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                        <input type="text" name="title" x-model="selectedReview.title"
+                               class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
+                        <textarea name="content" x-model="selectedReview.content"
+                                  class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
+                                  rows="3"></textarea>
+                    </div>
+
+                    <!-- Puntuación -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Puntuación</label>
+                        <input type="number" name="scoring" x-model.number="selectedReview.scoring" min="1" max="5"
+                               class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" @click="showModal = false"
+                                class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md uppercase tracking-wide font-semibold hover:bg-gray-200 transition-colors duration-300">
+                            Cancelar
+                        </button>
+                        <button type="button" @click="$refs.updateReviewForm.submit()"
+                                class="px-4 py-2 bg-[#a4fcc4] text-gray-800 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </template>
+    </div>
+
+    <!-- Formularios ocultos para actualizar y eliminar -->
+    <form x-ref="updateReviewForm" th:action="@{/admin/dashboard/reviews}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+        <input type="hidden" name="_method" value="put"/>
+        <input type="hidden" name="id" :value="selectedReview.id"/>
+        <input type="hidden" name="title" :value="selectedReview.title"/>
+        <input type="hidden" name="content" :value="selectedReview.content"/>
+        <input type="hidden" name="scoring" :value="selectedReview.scoring"/>
+    </form>
+
+    <form x-ref="deleteForm" th:action="@{/admin/dashboard/reviews}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+        <input type="hidden" name="_method" value="delete"/>
+        <input type="hidden" name="id" :value="selectedReview.id"/>
+    </form>
+
+    <!-- Paginación -->
+    <div class="mt-6 flex justify-center space-x-2">
+        <a th:if="${reviews.hasPrevious()}"
+           th:href="@{/admin/dashboard/reviews(page=${reviews.number - 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Anterior
+        </a>
+        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${reviews.number + 1}]]</span>
+        <a th:if="${reviews.hasNext()}"
+           th:href="@{/admin/dashboard/reviews(page=${reviews.number + 1})}"
+           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+            Siguiente
+        </a>
+    </div>
+</div>
+</body>
+</html>

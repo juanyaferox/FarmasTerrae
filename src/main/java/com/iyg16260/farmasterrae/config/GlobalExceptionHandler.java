@@ -5,15 +5,16 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ControllerAdvice
-@Order(1)
+@Order (1)
 public class GlobalExceptionHandler {
 
     /**
@@ -21,7 +22,7 @@ public class GlobalExceptionHandler {
      * Si existe Referer: añade flashAttribute y redirige allí.
      * Si no existe Referer: muestra common/error con código y mensaje.
      */
-    @ExceptionHandler(ResponseStatusException.class)
+    @ExceptionHandler ({ResponseStatusException.class, TransactionSystemException.class})
     public ModelAndView handleResponseStatus(ResponseStatusException ex,
                                              RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
@@ -45,7 +46,7 @@ public class GlobalExceptionHandler {
      * Captura cualquier otra excepción no contemplada explícitamente.
      * Siempre muestra common/error con su código y mensaje.
      */
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler (Exception.class)
     public ModelAndView handleException(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         if (ex instanceof NoHandlerFoundException) {

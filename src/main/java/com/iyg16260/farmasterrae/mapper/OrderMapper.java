@@ -1,9 +1,8 @@
-package com.iyg16260.farmasterrae.mapper.user;
+package com.iyg16260.farmasterrae.mapper;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
-import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import org.mapstruct.*;

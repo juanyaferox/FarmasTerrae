@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Farmasterrae - Detalles de Usuario', '/dist/output.css')}"></head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<!-- Header -->
+<header th:replace="~{fragments/header :: header}"></header>
+
+<!-- Contenido Principal -->
+<main class="flex-grow flex items-center justify-center px-4 py-12">
+    <div class="w-full max-w-2xl bg-white rounded-md shadow-md p-8 space-y-8">
+        <!-- Título -->
+        <h2 class="text-4xl font-bold text-green-800 text-center mb-8">
+            Detalles del Usuario
+        </h2>
+
+        <!-- Información del Usuario -->
+        <div class="space-y-6">
+            <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
+                <span class="text-green-600 font-semibold">Usuario</span>
+                <p class="flex-1 text-lg text-gray-800" th:text="${user.username}"></p>
+            </div>
+            <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
+                <span class="text-green-600 font-semibold">Correo Electrónico</span>
+                <p class="flex-1 text-lg text-gray-800" th:text="${user.email}"></p>
+            </div>
+            <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
+                <span class="text-green-600 font-semibold">Teléfono</span>
+                <p class="flex-1 text-lg text-gray-800" th:text="${user.phone}"></p>
+            </div>
+            <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
+                <span class="text-green-600 font-semibold">Dirección</span>
+                <p class="flex-1 text-lg text-gray-800" th:text="${user.address}"></p>
+            </div>
+        </div>
+
+        <!-- Botón de Acción -->
+        <div class="text-center mt-8">
+            <a th:href="@{/admin/dashboard/users}"
+               class="inline-block bg-green-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-green-700 transition-colors duration-300">
+                Volver al Listado
+            </a>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

@@ -79,10 +79,8 @@ public class AdminController {
 
     @GetMapping ("/dashboard/orders/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
-
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-
-        return new ModelAndView("user/order-details")
+        return new ModelAndView("admin/order-details")
                 .addObject("order", orderDetails);
     }
 
@@ -119,6 +117,27 @@ public class AdminController {
         productsService.deleteProduct(reference);
         buildSuccessMessage(ra, "products", "delete");
         return PRODUCT_PATH;
+    }
+
+    @GetMapping ("/dashboard/users/{username}")
+    public ModelAndView getUser(@PathVariable String username) {
+        UserDTO userDTO = userService.getUserByUsername(username);
+        return new ModelAndView("admin/user-details")
+                .addObject("user", userDTO);
+    }
+
+    @PutMapping ("/dashboard/users")
+    public String updateUser(@ModelAttribute UserDTO userDTO, @RequestParam String oldUsername, RedirectAttributes ra) {
+        userService.updateUserByUsername(userDTO, oldUsername);
+        buildSuccessMessage(ra, "users", "put");
+        return USER_PATH;
+    }
+
+    @DeleteMapping ("/dashboard/users")
+    public String deleteUser(@ModelAttribute UserDTO userDTO, RedirectAttributes ra) {
+        userService.deleteUserByUsername(userDTO.getUsername());
+        buildSuccessMessage(ra, "users", "delete");
+        return USER_PATH;
     }
 
     private void buildSuccessMessage(RedirectAttributes ra, String type, String operation) {

@@ -26,11 +26,11 @@
             <td class="px-4 py-2" th:text="${'€' + product.price}"></td>
             <td class="px-4 py-2" th:text="${product.stock}"></td>
             <td class="px-4 py-2" th:text="${product.reference}"></td>
-            <td class="px-4 py-2">
-                <button th:href="@{/admin/dashboard/products/{ref}(ref=${product.reference})}"
-                        class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
+            <td class="px-4 py-2 space-x-2">
+                <a type="button" th:href="@{/admin/dashboard/products/{ref}(ref=${product.reference})}"
+                   class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
                     Ver Detalles
-                </button>
+                </a>
                 <button type="button"
                         class="bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
                         th:data-product-reference="${product.reference}"

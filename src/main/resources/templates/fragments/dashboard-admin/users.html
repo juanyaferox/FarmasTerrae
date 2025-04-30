@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="usersSection(users)" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+<div th:fragment="usersSection(users)" x-data="{ showModal: false, selectedUser: null }"
+     class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
     <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Usuarios</h2>
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
@@ -10,17 +11,103 @@
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Email</th>
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Teléfono</th>
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Dirección</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="user : ${users}" class="border-t border-gray-200 even:bg-green-50">
             <td class="px-4 py-2" th:text="${user.username}"></td>
-            <td class="px-4 py-2" th:text="${user.email}"></td>
-            <td class="px-4 py-2" th:text="${user.phone}"></td>
-            <td class="px-4 py-2" th:text="${user.address}"></td>
+            <td class="px-4 py-2" th:text="${user.email != null ? user.email : 'Sin email disponible'}">
+            <td class="px-4 py-2" th:text="${user.phone != null ? user.phone : 'Sin teléfono'}">
+            <td class="px-4 py-2" th:text="${user.address != null ? user.address : 'Sin dirección'}">
+            <td class="px-4 py-2 space-x-2">
+                <a type="button" th:href="@{/admin/dashboard/users/{username}(username=${user.username})}"
+                   class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
+                    Ver Detalles
+                </a>
+                <button type="button"
+                        class="bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
+                        th:data-username="${user.username}"
+                        th:data-email="${user.email}"
+                        th:data-phone="${user.phone}"
+                        th:data-address="${user.address}"
+                        @click="selectedUser = {
+                    username: $el.dataset.username,
+                    oldUsername: $el.dataset.username,
+                    email: $el.dataset.email,
+                    phone: $el.dataset.phone,
+                    address: $el.dataset.address
+                }; showModal = true">
+                    Editar
+                </button>
+                <button type="button"
+                        class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
+                        th:data-username="${user.username}"
+                        @click="selectedUser = { username: $el.dataset.username };
+                 if (confirm('¿Estás seguro que deseas eliminar este usuario?')) {
+                    $nextTick(() => $refs.deleteUserForm.submit());
+                 }">
+                    Eliminar
+                </button>
+            </td>
         </tr>
         </tbody>
     </table>
+
+    <div x-show="showModal" class="fixed inset-0 flex items-center justify-center bg-gray-500/50 z-50"
+         style="display: none;">
+        <template x-if="selectedUser">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+                <h3 class="text-xl font-semibold mb-4 text-green-700">
+                    Editar Usuario
+                </h3>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
+                    <input type="username" x-model="selectedUser.username" class="w-full border rounded p-2"/>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" x-model="selectedUser.email" class="w-full border rounded p-2"/>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="text" x-model="selectedUser.phone" class="w-full border rounded p-2"/>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                    <input type="text" x-model="selectedUser.address" class="w-full border rounded p-2"/>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                    <button type="button" @click="showModal = false"
+                            class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
+                        Cancelar
+                    </button>
+                    <button type="button" @click="$refs.updateUserForm.submit()"
+                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <form x-ref="deleteUserForm" th:action="@{/admin/dashboard/users}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+        <input type="hidden" name="_method" value="delete"/>
+        <input type="hidden" name="username" :value="selectedUser.username"/>
+    </form>
+
+    <form x-ref="updateUserForm" th:action="@{/admin/dashboard/users}" method="post" style="display: none;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
+        <input type="hidden" name="_method" value="put"/>
+        <input type="hidden" name="oldUsername" :value="selectedUser.oldUsername"/>
+        <input type="hidden" name="username" :value="selectedUser.username"/>
+        <input type="hidden" name="email" :value="selectedUser.email"/>
+        <input type="hidden" name="phone" :value="selectedUser.phone"/>
+        <input type="hidden" name="address" :value="selectedUser.address"/>
+    </form>
+
     <!-- Paginación -->
     <div class="mt-6 flex justify-center space-x-2">
         <a th:if="${users.hasPrevious()}" th:href="@{/admin/dashboard/users(page=${users.number - 1})}"

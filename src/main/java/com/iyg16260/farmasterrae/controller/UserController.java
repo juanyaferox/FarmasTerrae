@@ -2,9 +2,11 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
+import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
+import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
@@ -25,6 +28,9 @@ public class UserController {
 
     @Autowired
     OrderService orderService;
+
+    @Autowired
+    ReviewService reviewService;
 
     /**
      * Para acceder al dashboard y cambiar entre secciones
@@ -48,7 +54,6 @@ public class UserController {
      *
      * @param section seccion del pathvariable
      * @param model   model
-     * @param user    user
      * @param page    page
      * @return vista de la seccion deseada
      */
@@ -64,11 +69,15 @@ public class UserController {
         switch (section) {
             case "orders" -> {
                 Page<OrderDTO> orders = orderService.getOrders(user, page);
-                model.addObject("orders", orders);
+                return model.addObject("orders", orders);
             }
             case "info-user" -> {
                 UserDTO userDTO = userService.getUserById(user.getId());
                 return model.addObject("userView", userDTO);
+            }
+            case "reviews" -> {
+                Page<ReviewDTO> reviews = reviewService.getReviews(user, page);
+                return model.addObject("reviews", reviews);
             }
         }
 
@@ -83,12 +92,9 @@ public class UserController {
      * @return redirecciona al dashboard
      */
     @PostMapping ("/dashboard/info-user")
-    public ModelAndView setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute ("userView") UserDTO userdto) {
-        try {
-            userService.updateUser(user.getId(), userdto);
-        } catch (RuntimeException e) {
-            log.error(e.getMessage());
-        }
+    public ModelAndView setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute ("userView") UserDTO userdto, RedirectAttributes ra) {
+        userService.updateUserById(user.getId(), userdto);
+        buildSuccessMessage(ra, "info-user", "post");
         return new ModelAndView("redirect:/user/dashboard/info-user");
     }
 
@@ -101,10 +107,30 @@ public class UserController {
      */
     @GetMapping ("/dashboard/orders/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
-
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);
+    }
+
+    private void buildSuccessMessage(RedirectAttributes ra, String type, String operation) {
+        switch (type) {
+            case "info-user" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Usuario", operation));
+            case "orders" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Pedido", operation));
+            case "reviews" -> ra.addFlashAttribute
+                    ("successMessage", auxiliarForSuccessMessage("Reseña", operation));
+        }
+    }
+
+    private String auxiliarForSuccessMessage(String type, String operation) {
+        switch (operation) {
+            case "post", "put" -> {
+                return type + " actualizado con éxito.";
+            }
+            default -> {
+                return "Operación en " + type + " realiza con éxito";
+            }
+        }
     }
 }

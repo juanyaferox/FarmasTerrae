@@ -25,6 +25,13 @@
                         <span class="mr-2">📋</span> Pedidos
                     </a>
                 </li>
+                <li>
+                    <a th:href="@{/user/dashboard/reviews}"
+                       th:classappend="${section == 'reviews'} ? 'bg-green-100 text-green-800' : ''"
+                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
+                        <span class="mr-2">⭐</span> Reseñas
+                    </a>
+                </li>
             </ul>
         </nav>
     </aside>
@@ -40,6 +47,9 @@
         </th:block>
         <th:block th:if="${section == 'orders'}">
             <th:block th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></th:block>
+        </th:block>
+        <th:block th:if="${section == 'reviews'}">
+            <th:block th:replace="~{fragments/dashboard/reviews :: reviewsSection(${reviews})}"></th:block>
         </th:block>
     </section>
 </main>

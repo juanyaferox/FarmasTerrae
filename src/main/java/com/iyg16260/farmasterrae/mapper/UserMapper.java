@@ -1,4 +1,4 @@
-package com.iyg16260.farmasterrae.mapper.user;
+package com.iyg16260.farmasterrae.mapper;
 
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.model.User;

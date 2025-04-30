@@ -3,7 +3,7 @@ package com.iyg16260.farmasterrae.service;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleEnum;
-import com.iyg16260.farmasterrae.mapper.user.OrderMapper;
+import com.iyg16260.farmasterrae.mapper.OrderMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import com.iyg16260.farmasterrae.model.Product;

@@ -1,7 +1,7 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
-import com.iyg16260.farmasterrae.mapper.products.ProductMapper;
+import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
