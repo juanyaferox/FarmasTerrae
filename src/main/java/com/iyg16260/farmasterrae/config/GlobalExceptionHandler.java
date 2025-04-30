@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.config;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -13,6 +14,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+@Slf4j
 @ControllerAdvice
 @Order (1)
 public class GlobalExceptionHandler {
@@ -26,6 +28,7 @@ public class GlobalExceptionHandler {
     public ModelAndView handleResponseStatus(ResponseStatusException ex,
                                              RedirectAttributes redirectAttributes,
                                              HttpServletRequest request) {
+        log.error("Error en transacción o respuesta HTTP", ex);
         String referer = request.getHeader("Referer");
         if (referer != null) {
             // 1) si venimos de otra página, usamos flash + redirect
@@ -54,7 +57,7 @@ public class GlobalExceptionHandler {
         } else if (ex instanceof AccessDeniedException) {
             status = HttpStatus.FORBIDDEN;
         }
-
+        log.error("Error no controlado", ex);
         ModelAndView mav = new ModelAndView("common/error");
         mav.setStatus(status);
         mav.addObject("errorCode", status.value());
