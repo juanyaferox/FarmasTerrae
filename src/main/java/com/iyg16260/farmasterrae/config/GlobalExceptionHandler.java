@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
             ModelAndView mav = new ModelAndView("common/error");
             mav.setStatus(status);
             mav.addObject("errorCode", status.value());
-            mav.addObject("errorMessage", ex.getReason());
+            mav.addObject("errorMessageLabel", ex.getReason());
             return mav;
         }
     }
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
         ModelAndView mav = new ModelAndView("common/error");
         mav.setStatus(status);
         mav.addObject("errorCode", status.value());
-        mav.addObject("errorMessage", ex.getMessage());
+        mav.addObject("errorMessageLabel", ex.getMessage());
         return mav;
     }
 }

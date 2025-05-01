@@ -2,7 +2,6 @@ package com.iyg16260.farmasterrae.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -18,13 +17,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 public class SecurityConfig implements WebMvcConfigurer {
 
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, UserDetailsService userDetailsService) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   UserDetailsService userDetailsService) throws Exception {
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
@@ -36,10 +37,11 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 "/cart/**",
                                 "/products/**",
                                 "/",
-                                "/h2-console/**"
-                                ).permitAll()
+                                "/h2-console/**",
+                                "/common/error"
+                        ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/order/**").authenticated()
                 )
                 // Configuración para H2
@@ -63,8 +65,21 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .sessionManagement(session -> session
                         .sessionFixation().newSession()  // Crea una nueva sesión después de autenticación
                         .maximumSessions(1).expiredUrl("/login?expired")  // Expira sesiones viejas
+                )
+                .exceptionHandling(ex -> ex
+                        // para 401:
+                        .authenticationEntryPoint((req, res, authEx) -> {
+                            req.setAttribute("errorCode", 401);
+                            req.setAttribute("errorMessageLabel", "Debes iniciar sesión");
+                            req.getRequestDispatcher("/common/error").forward(req, res);
+                        })
+                        // para 403:
+                        .accessDeniedHandler((req, res, deniedEx) -> {
+                            req.setAttribute("errorCode", 403);
+                            req.setAttribute("errorMessageLabel", "Acceso denegado");
+                            req.getRequestDispatcher("/common/error").forward(req, res);
+                        })
                 );
-
         return http.build();
     }
 

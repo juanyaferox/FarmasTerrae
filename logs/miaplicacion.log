@@ -1,16 +1,12 @@
-2025-05-01 00:21:20 [INFO] Starting FarmasterraeApplication using Java 21.0.1 with PID 37196 (C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae\target\classes started by hulke in C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae)
-2025-05-01 00:21:20 [INFO] No active profile set, falling back to 1 default profile: "default"
-2025-05-01 00:21:23 [INFO] Initializing ProtocolHandler ["http-nio-8080"]
-2025-05-01 00:21:23 [INFO] Starting service [Tomcat]
-2025-05-01 00:21:23 [INFO] Starting Servlet engine: [Apache Tomcat/10.1.34]
-2025-05-01 00:21:23 [INFO] Initializing Spring embedded WebApplicationContext
-2025-05-01 00:21:24 [INFO] HikariPool-1 - Starting...
-2025-05-01 00:21:24 [INFO] HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb:DATABASE_TO_UPPER=false:DB_CLOSE_ON_EXIT=FALSE user=SA
-2025-05-01 00:21:24 [INFO] HikariPool-1 - Start completed.
-2025-05-01 00:21:28 [INFO] Starting ProtocolHandler ["http-nio-8080"]
-2025-05-01 00:21:28 [INFO] Started FarmasterraeApplication in 7.745 seconds (process running for 8.579)
-2025-05-01 00:21:31 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
-2025-05-01 00:27:31 [WARN] Invocation of destroy method failed on bean with name 'inMemoryDatabaseShutdownExecutor': org.h2.jdbc.JdbcSQLNonTransientConnectionException: La base de datos ya esta cerrada (para des-habilitar el cerrado automatico durante el shutdown de la VM, agregue ";DB_CLOSE_ON_EXIT=FALSE" a la URL de conexión)
-Database is already closed (to disable automatic closing at VM shutdown, add ";DB_CLOSE_ON_EXIT=FALSE" to the db URL) [90121-232]
-2025-05-01 00:27:31 [INFO] HikariPool-1 - Shutdown initiated...
-2025-05-01 00:27:31 [INFO] HikariPool-1 - Shutdown completed.
+2025-05-01 16:35:50 [INFO] Starting FarmasterraeApplication using Java 21.0.1 with PID 29116 (C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae\target\classes started by hulke in C:\Users\hulke\OneDrive - Consejería de Educación\2DAW\Proyecto\FarmasTerrae)
+2025-05-01 16:35:50 [INFO] No active profile set, falling back to 1 default profile: "default"
+2025-05-01 16:35:53 [INFO] Initializing ProtocolHandler ["http-nio-8080"]
+2025-05-01 16:35:53 [INFO] Starting service [Tomcat]
+2025-05-01 16:35:53 [INFO] Starting Servlet engine: [Apache Tomcat/10.1.34]
+2025-05-01 16:35:53 [INFO] Initializing Spring embedded WebApplicationContext
+2025-05-01 16:35:54 [INFO] HikariPool-1 - Starting...
+2025-05-01 16:35:54 [INFO] HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:testdb:DATABASE_TO_UPPER=false:DB_CLOSE_ON_EXIT=FALSE user=SA
+2025-05-01 16:35:54 [INFO] HikariPool-1 - Start completed.
+2025-05-01 16:35:59 [INFO] Starting ProtocolHandler ["http-nio-8080"]
+2025-05-01 16:35:59 [INFO] Started FarmasterraeApplication in 8.827 seconds (process running for 9.62)
+2025-05-01 16:36:01 [INFO] Initializing Spring DispatcherServlet 'dispatcherServlet'
