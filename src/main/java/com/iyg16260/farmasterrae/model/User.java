@@ -36,7 +36,9 @@ public class User implements UserDetails, Serializable {
     @PrePersist
     @PreUpdate
     private void preSave() throws ResponseStatusException {
-        this.username = normalizeAndValidate(this.username);
+        if (this.deletedAt == null) {
+            this.username = normalizeAndValidate(this.username);
+        }
     }
 
     String password;

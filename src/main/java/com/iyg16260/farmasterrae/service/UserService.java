@@ -110,12 +110,7 @@ public class UserService implements UserDetailsService {
                 && userRepository.existsByEmail(userDetails.getEmail())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya existente en la BBDD");
         }
-
-        if (userDetails.getUsername() != null) user.setUsername(userDetails.getUsername());
-        if (userDetails.getEmail() != null) user.setEmail(userDetails.getEmail());
-        if (userDetails.getPhone() != null) user.setPhone(userDetails.getPhone());
-        if (userDetails.getAddress() != null) user.setAddress(userDetails.getAddress());
-        return user;
+        return userMapper.userDTOToUser(userDetails);
     }
 
     // Eliminar usuario por ID
