@@ -29,13 +29,13 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
-                        // Permitimos el acceso a la página de login y a los recursos estáticos (styles y js)
                         .requestMatchers("/login",
                                 "/styles/**",
                                 "/js/**",
                                 "/dist/**",
                                 "/cart/**",
                                 "/products/**",
+                                "/register/**",
                                 "/",
                                 "/h2-console/**",
                                 "/common/error"

@@ -18,7 +18,8 @@
         <tr th:each="order : ${orders}" class="border-t border-gray-200 even:bg-green-50">
             <td class="px-4 py-2" th:text="${order.id}"></td>
             <td class="px-4 py-2" th:text="${order.createdAt}"></td>
-            <td class="px-4 py-2" th:text="${order.totalPrice}"></td>
+            <td class="px-4 py-2" th:text="${order.totalPrice} + ' €'"></td>
+            <td class="px-4 py-2" th:text="${order.updatedAt}"></td>
             <td class="px-4 py-2" th:text="${order.status == null ? 'Sin estado' : order.status.value}"></td>
             <td class="px-4 py-2">
                 <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"

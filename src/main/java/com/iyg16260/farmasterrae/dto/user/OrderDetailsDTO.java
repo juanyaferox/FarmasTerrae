@@ -5,7 +5,6 @@ import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import lombok.Data;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Data
@@ -13,8 +12,8 @@ public class OrderDetailsDTO {
     Map<ProductDTO, Integer> products;
     Double totalPrice;
     String status;
-    LocalDateTime createdAt;
-    LocalDateTime updatedAt;
+    String createdAt;
+    String updatedAt;
     String paymentMethod;
 
     public void setStatus(SaleStatus saleStatus) {

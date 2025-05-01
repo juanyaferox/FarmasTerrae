@@ -104,7 +104,7 @@
     </div>
 
     <!-- Formularios ocultos para actualizar y eliminar -->
-    <form x-ref="updateReviewForm" th:action="@{/admin/dashboard/reviews}" method="post" style="display: none;">
+    <form x-ref="updateReviewForm" th:action="@{/user/dashboard/reviews}" method="post" style="display: none;">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
         <input type="hidden" name="_method" value="put"/>
         <input type="hidden" name="id" :value="selectedReview.id"/>
@@ -113,7 +113,7 @@
         <input type="hidden" name="scoring" :value="selectedReview.scoring"/>
     </form>
 
-    <form x-ref="deleteForm" th:action="@{/admin/dashboard/reviews}" method="post" style="display: none;">
+    <form x-ref="deleteForm" th:action="@{/user/dashboard/reviews}" method="post" style="display: none;">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
         <input type="hidden" name="_method" value="delete"/>
         <input type="hidden" name="id" :value="selectedReview.id"/>

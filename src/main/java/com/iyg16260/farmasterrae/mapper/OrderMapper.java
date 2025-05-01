@@ -21,8 +21,8 @@ public abstract class OrderMapper {
 
     @Mapping (target = "totalPrice", source = "totalPrice")
     @Mapping (target = "status", source = "status")
-    @Mapping (target = "createdAt", source = "createdAt")
-    @Mapping (target = "updatedAt", source = "updatedAt")
+    @Mapping (target = "createdAt", source = "createdAt", qualifiedByName = "formatDateDMY")
+    @Mapping (target = "updatedAt", source = "updatedAt", qualifiedByName = "formatDateDMY")
     @Mapping (target = "paymentMethod", source = "paymentMethod")
     public abstract OrderDetailsDTO orderToOrderDetailsDTO(Order order);
 
