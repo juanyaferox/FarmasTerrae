@@ -8,7 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class MvcConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        //--> /common/error queda mapeado a la plantilla common/error.html
         registry.addViewController("/common/error")
                 .setViewName("common/error");
     }

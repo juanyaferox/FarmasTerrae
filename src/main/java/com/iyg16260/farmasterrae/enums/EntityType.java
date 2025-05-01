@@ -1,5 +1,8 @@
 package com.iyg16260.farmasterrae.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum EntityType {
     PRODUCTS("Producto"),
     ORDERS("Pedido"),
@@ -9,9 +12,5 @@ public enum EntityType {
 
     EntityType(String value) {
         this.value = value;
-    }
-
-    public String get() {
-        return value;
     }
 }

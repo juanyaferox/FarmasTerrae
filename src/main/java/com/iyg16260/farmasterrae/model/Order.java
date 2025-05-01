@@ -1,7 +1,8 @@
 package com.iyg16260.farmasterrae.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.enums.PaymentMethod;
+import com.iyg16260.farmasterrae.enums.SaleStatus;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
@@ -22,10 +23,10 @@ public class Order {
     Double totalPrice;
 
     @Enumerated (EnumType.STRING)
-    SaleEnum.SaleStatus status;
+    SaleStatus status;
 
     @Enumerated (EnumType.STRING)
-    SaleEnum.PaymentMethod paymentMethod;
+    PaymentMethod paymentMethod;
 
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn (name = "userId")

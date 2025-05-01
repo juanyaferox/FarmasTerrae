@@ -2,7 +2,8 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
-import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.enums.PaymentMethod;
+import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.mapper.OrderMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
@@ -120,8 +121,8 @@ public class OrderService {
      * @return detalles del pedido guardado
      */
     public OrderDetailsDTO setOrder(User user, SessionCart cart,
-                                    SaleEnum.SaleStatus saleStatus,
-                                    SaleEnum.PaymentMethod paymentMethod) throws ResponseStatusException {
+                                    SaleStatus saleStatus,
+                                    PaymentMethod paymentMethod) throws ResponseStatusException {
         var products = cart.getProducts();
 
         if (products == null || products.isEmpty())
@@ -172,7 +173,7 @@ public class OrderService {
         try {
             System.out.println("idOrder: " + idOrder + ", status: " + status);
             Order order = getOrderById(idOrder);
-            order.setStatus(SaleEnum.SaleStatus.valueOf(status.toUpperCase()));
+            order.setStatus(SaleStatus.valueOf(status.toUpperCase()));
             return orderMapper.orderToOrderDTO(
                     orderRepository.save(order)
             );

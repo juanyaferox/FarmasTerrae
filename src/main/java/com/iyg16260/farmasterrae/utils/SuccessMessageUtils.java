@@ -16,13 +16,13 @@ public class SuccessMessageUtils {
     private static String auxiliarForSuccessMessage(EntityType type, Operation operation) {
         switch (operation) {
             case POST:
-                return type.get() + " añadido con éxito.";
+                return type.getValue() + " añadido con éxito.";
             case DELETE:
-                return type.get() + " eliminado con éxito.";
+                return type.getValue() + " eliminado con éxito.";
             case PUT:
-                return type.get() + " actualizado con éxito.";
+                return type.getValue() + " actualizado con éxito.";
             default:
-                return "Operación en " + type.get() + " realizado con éxito";
+                return "Operación en " + type.getValue() + " realizado con éxito";
         }
     }
 }

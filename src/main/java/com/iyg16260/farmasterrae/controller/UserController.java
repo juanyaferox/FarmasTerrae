@@ -4,6 +4,8 @@ import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.enums.EntityType;
+import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ReviewService;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
 
 @Slf4j
 @Controller
@@ -94,7 +98,7 @@ public class UserController {
     @PostMapping ("/dashboard/info-user")
     public ModelAndView setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute ("userView") UserDTO userdto, RedirectAttributes ra) {
         userService.updateUserById(user.getId(), userdto);
-        buildSuccessMessage(ra, "info-user", "post");
+        buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
         return new ModelAndView("redirect:/user/dashboard/info-user");
     }
 
@@ -110,27 +114,5 @@ public class UserController {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);
-    }
-
-    private void buildSuccessMessage(RedirectAttributes ra, String type, String operation) {
-        switch (type) {
-            case "info-user" -> ra.addFlashAttribute
-                    ("successMessage", auxiliarForSuccessMessage("Usuario", operation));
-            case "orders" -> ra.addFlashAttribute
-                    ("successMessage", auxiliarForSuccessMessage("Pedido", operation));
-            case "reviews" -> ra.addFlashAttribute
-                    ("successMessage", auxiliarForSuccessMessage("Reseña", operation));
-        }
-    }
-
-    private String auxiliarForSuccessMessage(String type, String operation) {
-        switch (operation) {
-            case "post", "put" -> {
-                return type + " actualizado con éxito.";
-            }
-            default -> {
-                return "Operación en " + type + " realiza con éxito";
-            }
-        }
     }
 }

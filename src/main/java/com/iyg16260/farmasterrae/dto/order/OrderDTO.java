@@ -1,6 +1,6 @@
 package com.iyg16260.farmasterrae.dto.order;
 
-import com.iyg16260.farmasterrae.enums.SaleEnum;
+import com.iyg16260.farmasterrae.enums.SaleStatus;
 import lombok.Data;
 
 @Data
@@ -9,5 +9,5 @@ public class OrderDTO {
     String createdAt;
     String updatedAt;
     Float totalPrice;
-    SaleEnum.SaleStatus status;
+    SaleStatus status;
 }
