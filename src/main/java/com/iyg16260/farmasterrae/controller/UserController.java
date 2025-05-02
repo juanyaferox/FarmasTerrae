@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
@@ -8,6 +9,7 @@ import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
+import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,9 @@ public class UserController {
 
     @Autowired
     OrderService orderService;
+
+    @Autowired
+    ProductsService productsService;
 
     @Autowired
     ReviewService reviewService;
@@ -115,4 +120,50 @@ public class UserController {
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);
     }
+
+    @GetMapping ("/dashboard/reviews/form")
+    public ModelAndView getReviewForm(@AuthenticationPrincipal User user,
+                                      @RequestParam (required = false) Long idReview,
+                                      @RequestParam (required = false) String referenceProduct) {
+
+        ModelAndView mav = new ModelAndView();
+
+        if (idReview != null) {
+            ReviewDTO review = reviewService.getReview(user.getId(), idReview);
+            ProductDTO product = reviewService.getProductFromReview(idReview);
+            return mav.addObject("review", review)
+                    .addObject("product", product);
+        }
+
+        ReviewDTO review = new ReviewDTO();
+        ProductDTO product = productsService.getProductDTOByReference(referenceProduct);
+        return mav.addObject("review", review)
+                .addObject("product", product);
+    }
+
+    @PutMapping ("/dashboard/reviews")
+    public String updateReview(@AuthenticationPrincipal User user,
+                               @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+        reviewService.updateReview(reviewDTO, user);
+        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.PUT);
+        return "redirect:/user/dashboard/reviews";
+    }
+
+    @PostMapping ("/dashboard/reviews")
+    public String addReview(@AuthenticationPrincipal User user,
+                            @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+        reviewService.setReview(reviewDTO, user);
+        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.POST);
+        return "redirect:/user/dashboard/reviews";
+    }
+
+    @DeleteMapping ("/dashboard/reviews")
+    public String deleteReview(@RequestParam long idReview,
+                               @AuthenticationPrincipal User user, RedirectAttributes ra) {
+        reviewService.deleteReview(idReview, user);
+        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.DELETE);
+        return "redirect:/user/dashboard/reviews";
+
+    }
+    //@PostMapping ("/dashboard/reviews")
 }

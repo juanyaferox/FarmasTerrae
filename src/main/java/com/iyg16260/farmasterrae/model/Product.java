@@ -16,6 +16,7 @@ public class Product {
 
     String name;
 
+    @Column (length = 1500)
     String description;
 
     String imagePath;
