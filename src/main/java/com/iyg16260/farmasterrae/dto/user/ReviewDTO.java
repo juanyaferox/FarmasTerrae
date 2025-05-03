@@ -9,4 +9,6 @@ public class ReviewDTO {
     String content;
     int scoring;
     String productReference;
+    String productImage;
+    String productName;
 }

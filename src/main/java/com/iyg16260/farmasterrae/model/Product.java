@@ -2,16 +2,19 @@ package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.util.List;
 
 @Entity
 @Data
+@EqualsAndHashCode (onlyExplicitlyIncluded = true)
 @Table (name = "products")
 public class Product {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     Long id;
 
     String name;

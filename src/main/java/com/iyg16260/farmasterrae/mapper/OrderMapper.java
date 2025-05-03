@@ -19,11 +19,8 @@ public abstract class OrderMapper {
     @Autowired
     ProductMapper productMapper;
 
-    @Mapping (target = "totalPrice", source = "totalPrice")
-    @Mapping (target = "status", source = "status")
     @Mapping (target = "createdAt", source = "createdAt", qualifiedByName = "formatDateDMY")
     @Mapping (target = "updatedAt", source = "updatedAt", qualifiedByName = "formatDateDMY")
-    @Mapping (target = "paymentMethod", source = "paymentMethod")
     public abstract OrderDetailsDTO orderToOrderDetailsDTO(Order order);
 
     @Mapping (target = "createdAt", source = "createdAt", qualifiedByName = "formatDateDMY")

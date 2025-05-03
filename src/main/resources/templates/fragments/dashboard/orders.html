@@ -23,7 +23,7 @@
             <td class="px-4 py-2" th:text="${order.status == null ? 'Sin estado' : order.status.value}"></td>
             <td class="px-4 py-2">
                 <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
-                   class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
+                   class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
                     Ver Detalles
                 </a>
             </td>

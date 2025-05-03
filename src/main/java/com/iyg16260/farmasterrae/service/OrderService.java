@@ -1,10 +1,12 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.mapper.OrderMapper;
+import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import com.iyg16260.farmasterrae.model.Product;
@@ -43,6 +45,9 @@ public class OrderService {
     @Autowired
     OrderMapper orderMapper;
 
+    @Autowired
+    ProductMapper productMapper;
+
     // No utilizar repositorio de OrderDetails, no es necesario.
 
     /**
@@ -56,6 +61,10 @@ public class OrderService {
 
         return orderRepository.findByUser(user, pageable)
                 .map(orderMapper::orderToOrderDTO);
+    }
+
+    public List<Order> getAllOrderFromUser(User user) {
+        return orderRepository.findByUser(user);
     }
 
     public Page<OrderDTO> getAllOrders(int page) {
@@ -181,5 +190,18 @@ public class OrderService {
             System.out.println(e);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado inválido: " + status);
         }
+    }
+
+    @Transactional
+    public List<ProductDTO> getProductsFromUserOrders(User user) {
+
+        List<Order> orders = orderRepository.findByUser(user);
+
+        return orders.stream()
+                .flatMap(o -> o.getOrderDetails().stream()
+                        .map(OrderDetails::getProduct)
+                        .map(productMapper::productToProductDTO))
+                .distinct()
+                .toList();
     }
 }

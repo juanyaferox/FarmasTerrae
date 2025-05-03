@@ -5,7 +5,6 @@ import com.iyg16260.farmasterrae.mapper.UserMapper;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
-import com.iyg16260.farmasterrae.validation.ObjectValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,11 +44,13 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario o email no encontrado"));
     }
 
-    // Crear usuario
+
+    /**
+     * @param user
+     * @return
+     * @throws ResponseStatusException
+     */
     public User createUser(User user) throws ResponseStatusException {
-        if (!ObjectValidator.isValid(user)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario inválido");
-        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);

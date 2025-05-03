@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
+import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.Review;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class ReviewService {
 
@@ -25,10 +28,17 @@ public class ReviewService {
     ProductsService productsService;
 
     @Autowired
+    OrderService orderService;
+
+    @Autowired
     ReviewMapper reviewMapper;
+
+    @Autowired
+    ProductMapper productMapper;
 
     private static final int PAGE_SIZE_USER = 10;
 
+    @Transactional (readOnly = true)
     public Page<ReviewDTO> getReviews(User user, int page) {
         Pageable pageable = Pageable
                 .ofSize(PAGE_SIZE_USER)
@@ -38,7 +48,7 @@ public class ReviewService {
                 .map(reviewMapper::reviewToReviewDTO);
     }
 
-    @Transactional
+    //@Transactional
     public ReviewDTO getReview(long idUser, long idReview) throws ResponseStatusException {
 
         Review review = getReviewDB(idReview);
@@ -81,14 +91,14 @@ public class ReviewService {
 
     public Review updateReview(ReviewDTO reviewDTO, User user) {
 
-        validateReview(reviewDTO.getId(), user.getId());
+        Review review = validateReview(reviewDTO.getId(), user.getId());
 
-        Review review = reviewMapper.reviewDTOToReview(reviewDTO);
+        reviewMapper.updateReviewFromReviewDTO(reviewDTO, review);
 
         return reviewRepository.save(review);
     }
 
-    private void validateReview(long idReview, long idUser) throws ResponseStatusException {
+    private Review validateReview(long idReview, long idUser) throws ResponseStatusException {
 
         Review review = reviewRepository.findById(idReview).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource.")
@@ -97,5 +107,13 @@ public class ReviewService {
         if (!review.getUser().getId().equals(idUser)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource.");
         }
+        return review;
+    }
+
+    @Transactional
+    public List<ProductDTO> getProductForReview(User user) {
+
+        return orderService.getProductsFromUserOrders(user);
+        // verificar que los productos no tengan reseña
     }
 }

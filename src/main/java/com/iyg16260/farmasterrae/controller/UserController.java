@@ -1,7 +1,6 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
-import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
@@ -86,6 +85,8 @@ public class UserController {
             }
             case "reviews" -> {
                 Page<ReviewDTO> reviews = reviewService.getReviews(user, page);
+                var listProducts = reviewService.getProductForReview(user);
+                System.out.println(listProducts.toString());
                 return model.addObject("reviews", reviews);
             }
         }
@@ -119,26 +120,6 @@ public class UserController {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);
-    }
-
-    @GetMapping ("/dashboard/reviews/form")
-    public ModelAndView getReviewForm(@AuthenticationPrincipal User user,
-                                      @RequestParam (required = false) Long idReview,
-                                      @RequestParam (required = false) String referenceProduct) {
-
-        ModelAndView mav = new ModelAndView();
-
-        if (idReview != null) {
-            ReviewDTO review = reviewService.getReview(user.getId(), idReview);
-            ProductDTO product = reviewService.getProductFromReview(idReview);
-            return mav.addObject("review", review)
-                    .addObject("product", product);
-        }
-
-        ReviewDTO review = new ReviewDTO();
-        ProductDTO product = productsService.getProductDTOByReference(referenceProduct);
-        return mav.addObject("review", review)
-                .addObject("product", product);
     }
 
     @PutMapping ("/dashboard/reviews")
