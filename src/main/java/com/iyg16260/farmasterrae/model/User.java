@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.annotations.Where;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @Entity
 @Data
+@EqualsAndHashCode (onlyExplicitlyIncluded = true)
 @Table (name = "users")
 @Where (clause = "deletedAt IS NULL") // Deprecated, pero más sencillo
 public class User implements UserDetails, Serializable {
@@ -28,6 +30,7 @@ public class User implements UserDetails, Serializable {
 
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     Long id;
 
     @Column (unique = true)

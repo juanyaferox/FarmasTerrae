@@ -110,10 +110,20 @@ public class ReviewService {
         return review;
     }
 
+    /**
+     * Obtener lista de productos los cuales el usuario ha comprado y no ha reseñado
+     *
+     * @param user
+     * @return
+     */
     @Transactional
     public List<ProductDTO> getProductForReview(User user) {
 
-        return orderService.getProductsFromUserOrders(user);
-        // verificar que los productos no tengan reseña
+        return orderService.getProductsFromUserOrders(user).stream()
+                .filter(product -> product.getReviewList().stream()
+                        .noneMatch(review -> review.getUser().equals(user)
+                        )
+                ).map(productMapper::productToProductDTO)
+                .toList();
     }
 }

@@ -1,7 +1,6 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
-import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
@@ -193,14 +192,13 @@ public class OrderService {
     }
 
     @Transactional
-    public List<ProductDTO> getProductsFromUserOrders(User user) {
+    public List<Product> getProductsFromUserOrders(User user) {
 
         List<Order> orders = orderRepository.findByUser(user);
 
         return orders.stream()
                 .flatMap(o -> o.getOrderDetails().stream()
-                        .map(OrderDetails::getProduct)
-                        .map(productMapper::productToProductDTO))
+                        .map(OrderDetails::getProduct))
                 .distinct()
                 .toList();
     }
