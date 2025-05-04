@@ -1,6 +1,8 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
+import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
@@ -22,12 +24,24 @@ public class ProductsService {
     @Autowired
     ProductMapper productMapper;
 
-    private final int PAGE_SIZE = 20;
+    private final int PAGE_SIZE = 21;
 
     public Page<ProductDTO> getProductList(int page) {
         return productRepository
                 .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
                 .map(p -> productMapper.productToProductDTO(p));
+    }
+
+    public Page<ProductPageDTO> getProductListByCategory(Category category, int page) {
+        return productRepository
+                .findByCategory(category, Pageable.ofSize(PAGE_SIZE).withPage(page))
+                .map(productMapper::productToProductPageDTO);
+    }
+
+    public Page<ProductPageDTO> getProductListByCategory(int page) {
+        return productRepository
+                .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
+                .map(productMapper::productToProductPageDTO);
     }
 
     public ProductDTO getProductDTOByReference(String reference) {
@@ -44,7 +58,6 @@ public class ProductsService {
     }
 
     public void deleteProduct(String reference) throws ResponseStatusException {
-        System.out.println("++++++ Reference: " + reference);
         Product product = getProductByReference(reference);
         productRepository.delete(product);
     }

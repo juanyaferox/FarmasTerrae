@@ -11,7 +11,7 @@ import java.util.List;
 @Entity
 @Data
 @EqualsAndHashCode (onlyExplicitlyIncluded = true)
-@Table (name = "products", indexes = @Index (name = "idxProductCategory", columnList = "category"))
+@Table (name = "products", indexes = {@Index (name = "idxProductCategory", columnList = "category"), @Index (name = "idxProductReference", columnList = "reference")})
 public class Product {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
@@ -34,7 +34,7 @@ public class Product {
 
     Double price;
 
-    Integer stock; // puede que se pueda sacar del order
+    Integer stock;
 
     @Column (unique = true)
     String reference;

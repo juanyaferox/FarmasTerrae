@@ -17,7 +17,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Medicamentos</h2>
                     <p class="text-gray-600 mb-4">Encuentra los medicamentos que necesitas para tu bienestar.</p>
-                    <a th:href="@{/products?category=medicamentos}"
+                    <a th:href="@{/products(category='MEDICINE')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
@@ -30,7 +30,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Vitaminas y Suplementos</h2>
                     <p class="text-gray-600 mb-4">Mejora tu salud con nuestros suplementos de calidad.</p>
-                    <a th:href="@{/products?category=vitaminas}"
+                    <a th:href="@{/products(category='VITAMIN')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
@@ -43,7 +43,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Cuidado Personal</h2>
                     <p class="text-gray-600 mb-4">Productos para tu higiene y cuidado diario.</p>
-                    <a th:href="@{/products?category=cuidado-personal}"
+                    <a th:href="@{/products(category='CARE')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
@@ -56,7 +56,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Primeros Auxilios</h2>
                     <p class="text-gray-600 mb-4">Todo lo que necesitas para emergencias menores.</p>
-                    <a th:href="@{/products?category=primeros-auxilios}"
+                    <a th:href="@{/products(category='FIRST_AID')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
@@ -69,7 +69,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Belleza y Cuidado de la Piel</h2>
                     <p class="text-gray-600 mb-4">Cuida tu piel con nuestros productos de belleza.</p>
-                    <a th:href="@{/products?category=belleza}"
+                    <a th:href="@{/products(category='BEAUTY')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
@@ -81,7 +81,7 @@
                 <div class="p-6">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Productos para Bebés</h2>
                     <p class="text-gray-600 mb-4">Lo mejor para el cuidado de tu bebé.</p>
-                    <a th:href="@{/products?category=bebes}"
+                    <a th:href="@{/products(category='BABY')}"
                        class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>

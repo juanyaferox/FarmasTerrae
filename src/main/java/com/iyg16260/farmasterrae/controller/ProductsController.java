@@ -1,7 +1,10 @@
 package com.iyg16260.farmasterrae.controller;
 
+import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
+import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,9 +25,14 @@ public class ProductsController {
     }
 
     @GetMapping
-    public ModelAndView getProductList(@RequestParam (defaultValue = "0", required = false) int page) {
+    public ModelAndView getProducts(@RequestParam (required = false) Category category, @RequestParam (defaultValue = "0", required = false) int page) {
+        Page<ProductPageDTO> products;
+        if (category != null)
+            products = productsService.getProductListByCategory(category, page);
+        else
+            products = productsService.getProductListByCategory(page);
         return new ModelAndView("products/product-list")
-                .addObject("products", productsService.getProductList(page));
+                .addObject("products", products);
     }
 
     @GetMapping ("/{reference}")

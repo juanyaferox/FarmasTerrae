@@ -1,7 +1,7 @@
 package com.iyg16260.farmasterrae.mapper;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
-import com.iyg16260.farmasterrae.dto.user.ProductForReviewDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
 import com.iyg16260.farmasterrae.model.Product;
 import org.mapstruct.Mapper;
 
@@ -9,7 +9,7 @@ import org.mapstruct.Mapper;
 public interface ProductMapper {
     ProductDTO productToProductDTO(Product product); // Asume que tienes una entidad Product
 
-    ProductForReviewDTO productToProductForReviewDTO(Product product);
+    ProductPageDTO productToProductPageDTO(Product product);
 
     Product productDTOToProduct(ProductDTO productDTO);
 }

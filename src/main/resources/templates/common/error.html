@@ -20,6 +20,10 @@
         <h2 class="text-3xl font-bold text-gray-800" th:text="${'Error ' + errorCode}"></h2>
         <!-- Mensaje del Error -->
         <p class="text-lg text-gray-600" th:text="${errorMessageLabel}"></p>
+        <!-- ID del Error -->
+        <p class="text-sm text-gray-500" th:if="${errorId}">
+            Código de error: <span class="font-mono" th:text="${errorId}">[error-id]</span>
+        </p>
         <!-- Botón de Acción -->
         <div class="mt-8">
             <a th:href="@{/}"

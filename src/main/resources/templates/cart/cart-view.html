@@ -1,10 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Farmasterrae - Carrito', '/dist/output.css')}"></head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<!-- Header -->
+<header th:replace="~{fragments/header :: header}"></header>
 
+<!-- Sección Principal: Carrito -->
+<main class="flex-grow py-12">
+    <div class="container mx-auto px-4">
+        <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Tu Carrito</h1>
+        <div class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+            <table class="min-w-full table-auto">
+                <thead>
+                <tr class="bg-green-100">
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Imagen</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Precio</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Cantidad</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${cart.products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
+                    <td class="px-4 py-2">
+                        <img th:src="${entry.key.imagePath}" alt="Imagen del producto"
+                             class="w-12 h-12 object-cover rounded-md">
+                    </td>
+                    <td class="px-4 py-2" th:text="${entry.key.name}"></td>
+                    <td class="px-4 py-2" th:text="${'€' + entry.key.price}"></td>
+                    <td class="px-4 py-2">
+                        <div class="flex items-center space-x-2">
+                            <button type="button"
+                                    class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300"
+                                    th:onclick="|updateQuantity('${entry.key.reference}', -1)|">-
+                            </button>
+                            <span th:text="${entry.value}"></span>
+                            <button type="button"
+                                    class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300"
+                                    th:onclick="|updateQuantity('${entry.key.reference}', 1)|">+
+                            </button>
+                        </div>
+                    </td>
+                    <td class="px-4 py-2" th:text="${'€' + (entry.key.price * entry.value)}"></td>
+                    <td class="px-4 py-2">
+                        <button type="button"
+                                class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
+                                th:onclick="|removeProduct('${entry.key.reference}')|">
+                            Eliminar
+                        </button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <!-- Resumen del Carrito -->
+            <div class="mt-8 flex justify-between items-center">
+                <button type="button"
+                        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-300"
+                        th:onclick="|emptyCart()|">
+                    Vaciar Carrito
+                </button>
+                <div class="text-xl font-semibold text-green-800">
+                    Total: <span th:text="${'€' + cart.total}"></span>
+                </div>
+            </div>
+            <!-- Botón Continuar con el Pago -->
+            <div class="mt-8 text-center">
+                <a th:href="@{/checkout}"
+                   class="inline-block bg-green-600 text-white px-8 py-4 rounded-md font-semibold hover:bg-green-700 transition-colors duration-300">
+                    Continuar con el Pago
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

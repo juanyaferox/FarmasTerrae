@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.config;
 
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,22 +27,50 @@ import java.util.stream.Collectors;
 @Slf4j
 @ControllerAdvice
 @Order (1)
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler implements Filter {
+
+    /**
+     * Captura errores de parse de la vista
+     *
+     * @param req   The request to process
+     * @param res   The response associated with the request
+     * @param chain Provides access to the next filter in the chain for this filter to pass the request and response
+     *              to for further processing
+     * @throws IOException
+     * @throws ServletException
+     */
+    @Override
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) req;
+
+        try {
+            chain.doFilter(req, res);
+        } catch (Exception ex) {
+            String errorId = UUID.randomUUID().toString();
+            request.setAttribute("errorId", errorId);
+            logException(errorId, ex, collectAuditInfo(request));
+            throw ex;
+        }
+    }
 
     /**
      * Captura cualquier tipo de excepción
      * Si existe Referer: añade flashAttribute y redirige allí.
-     * Si no existe Referer: muestra common/error con código y mensaje.
+     * Si no existe Referer: muestra una pantalla genérica con el código y mensaje.
      */
     @ExceptionHandler (Exception.class)
     public ModelAndView handleAllExceptions(Exception ex,
                                             RedirectAttributes redirectAttributes,
                                             HttpServletRequest request) {
 
+
         // Construcción mensaje del error
         ErrorInfo errorInfo = getErrorInfo(ex);
-        String errorId = "(ID: " + UUID.randomUUID() + ")";
+        String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
+                .orElse("(ID: " + UUID.randomUUID() + ")");
         String messageWithId = errorInfo.message() + " " + errorId;
+        request.setAttribute("errorId", errorId);
 
         // Log con la información
         logException(errorId, ex, collectAuditInfo(request));
@@ -51,7 +81,7 @@ public class GlobalExceptionHandler {
             return handleRedirect(redirectAttributes, referer, messageWithId);
         }
 
-        // Caso no tenga dirección, se devuelve una pantalla génerica
+        // Caso no tenga dirección, se devuelve una pantalla genérica
         return createErrorModelAndView(errorInfo.status(), errorInfo.message());
     }
 
@@ -175,11 +205,12 @@ public class GlobalExceptionHandler {
      * Construye el mensaje de error de manera detallada con la información del usuario
      */
     private void logException(String errorId, Exception ex, AuditInfo auditInfo) {
-        log.error("Excepción [{}] | Usuario: {} | IP: {} | URI: {} | Método: {} | Sesión: {} | " +
+        log.error("Excepción [{}] | Usuario: {} | IP: {} | Agente de Usuario: {}| URI: {} | Método: {} | Sesión: {} | " +
                         "Mensaje: {} | Tipo: {}",
                 errorId,
                 auditInfo.username(),
                 auditInfo.remoteAddress(),
+                auditInfo.userAgent(),
                 auditInfo.requestUri(),
                 auditInfo.method(),
                 auditInfo.sessionId(),
