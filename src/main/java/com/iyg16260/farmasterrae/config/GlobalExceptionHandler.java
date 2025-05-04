@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.TransactionSystemException;
+import org.springframework.validation.BindException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,6 +15,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
@@ -58,6 +61,13 @@ public class GlobalExceptionHandler {
             status = HttpStatus.FORBIDDEN;
             message = "No tienes permisos para acceder a este recurso";
 
+        } else if (ex instanceof BindException be) {
+            status = HttpStatus.BAD_REQUEST;
+            String errors = be.getBindingResult().getFieldErrors().stream()
+                    .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                    .collect(Collectors.joining("; "));
+            message = "Errores de validación: " + errors;
+            
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             message = "Error interno del servidor";

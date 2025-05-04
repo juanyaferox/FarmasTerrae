@@ -14,15 +14,18 @@ public class SuccessMessageUtils {
     }
 
     private static String auxiliarForSuccessMessage(EntityType type, Operation operation) {
+        String stringType = type.getValue();
+        char genderLetter = stringType.endsWith("a") ? 'o' : 'a';
+
         switch (operation) {
             case POST:
-                return type.getValue() + " añadido con éxito.";
+                return stringType + " añadid" + genderLetter + " con éxito.";
             case DELETE:
-                return type.getValue() + " eliminado con éxito.";
+                return stringType + " eliminad" + genderLetter + " con éxito.";
             case PUT:
-                return type.getValue() + " actualizado con éxito.";
+                return stringType + " actualizad" + genderLetter + " con éxito.";
             default:
-                return "Operación en " + type.getValue() + " realizado con éxito";
+                return "Operación en " + stringType + " realizad" + genderLetter + " con éxito";
         }
     }
 }

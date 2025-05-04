@@ -20,10 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
@@ -192,14 +190,12 @@ public class OrderService {
     }
 
     @Transactional
-    public List<Product> getProductsFromUserOrders(User user) {
+    public Set<Product> getProductsFromUserOrders(User user) {
 
-        List<Order> orders = orderRepository.findByUser(user);
-
-        return orders.stream()
+        return orderRepository.findByUser(user).stream()
                 .flatMap(o -> o.getOrderDetails().stream()
                         .map(OrderDetails::getProduct))
-                .distinct()
-                .toList();
+                .collect(Collectors.toSet());
+        // Si fuera necesario mantener el orden de insercion: .collect(Collectors.toCollection(LinkedHashSet::new))
     }
 }

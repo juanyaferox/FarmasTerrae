@@ -47,13 +47,12 @@ public class ReviewService {
         return reviewRepository.findByUser(user, pageable)
                 .map(reviewMapper::reviewToReviewDTO);
     }
-
-    //@Transactional
+    
     public ReviewDTO getReview(long idUser, long idReview) throws ResponseStatusException {
 
         Review review = getReviewDB(idReview);
 
-        validateReview(idReview, idUser);
+        obtainAndvalidateReview(idReview, idUser);
 
         return reviewMapper.reviewToReviewDTO(review);
     }
@@ -72,11 +71,19 @@ public class ReviewService {
 
     public void deleteReview(long idReview, User user) throws ResponseStatusException {
 
-        validateReview(idReview, user.getId());
+        obtainAndvalidateReview(idReview, user.getId());
 
         reviewRepository.deleteById(idReview);
     }
 
+    /**
+     * Guarda una nueva review en la bbdd
+     *
+     * @param reviewDTO
+     * @param user
+     * @return
+     * @throws ResponseStatusException
+     */
     public Review setReview(ReviewDTO reviewDTO, User user) throws ResponseStatusException {
 
         Product product =
@@ -89,16 +96,31 @@ public class ReviewService {
         return reviewRepository.save(review);
     }
 
-    public Review updateReview(ReviewDTO reviewDTO, User user) {
+    /**
+     * Actualiza la info de review a partir del reviewdto
+     *
+     * @param reviewDTO
+     * @param user
+     * @return
+     */
+    public Review updateReview(ReviewDTO reviewDTO, User user) throws ResponseStatusException {
 
-        Review review = validateReview(reviewDTO.getId(), user.getId());
+        Review review = obtainAndvalidateReview(reviewDTO.getId(), user.getId());
 
         reviewMapper.updateReviewFromReviewDTO(reviewDTO, review);
 
         return reviewRepository.save(review);
     }
 
-    private Review validateReview(long idReview, long idUser) throws ResponseStatusException {
+    /**
+     * Obtiene el Review y lo valida en base al usuario
+     *
+     * @param idReview
+     * @param idUser
+     * @return
+     * @throws ResponseStatusException
+     */
+    private Review obtainAndvalidateReview(long idReview, long idUser) throws ResponseStatusException {
 
         Review review = reviewRepository.findById(idReview).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.FORBIDDEN, "You do not have permission to access this resource.")

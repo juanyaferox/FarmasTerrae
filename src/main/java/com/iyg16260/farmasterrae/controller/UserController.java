@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
@@ -11,6 +12,7 @@ import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
 
@@ -85,9 +89,9 @@ public class UserController {
             }
             case "reviews" -> {
                 Page<ReviewDTO> reviews = reviewService.getReviews(user, page);
-                var listProducts = reviewService.getProductForReview(user);
-                System.out.println(listProducts.toString());
-                return model.addObject("reviews", reviews);
+                List<ProductDTO> products = reviewService.getProductForReview(user);
+                return model.addObject("reviews", reviews)
+                        .addObject("products", products);
             }
         }
 
@@ -124,7 +128,7 @@ public class UserController {
 
     @PutMapping ("/dashboard/reviews")
     public String updateReview(@AuthenticationPrincipal User user,
-                               @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+                               @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
         reviewService.updateReview(reviewDTO, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.PUT);
         return "redirect:/user/dashboard/reviews";
@@ -132,7 +136,7 @@ public class UserController {
 
     @PostMapping ("/dashboard/reviews")
     public String addReview(@AuthenticationPrincipal User user,
-                            @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+                            @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
         reviewService.setReview(reviewDTO, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.POST);
         return "redirect:/user/dashboard/reviews";
@@ -146,5 +150,4 @@ public class UserController {
         return "redirect:/user/dashboard/reviews";
 
     }
-    //@PostMapping ("/dashboard/reviews")
 }
