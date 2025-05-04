@@ -22,7 +22,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="entry : ${cart.products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
+                <tr th:each="entry : ${products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
                     <td class="px-4 py-2">
                         <img th:src="${entry.key.imagePath}" alt="Imagen del producto"
                              class="w-12 h-12 object-cover rounded-md">
@@ -31,37 +31,31 @@
                     <td class="px-4 py-2" th:text="${'€' + entry.key.price}"></td>
                     <td class="px-4 py-2">
                         <div class="flex items-center space-x-2">
-                            <button type="button"
-                                    class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300"
-                                    th:onclick="|updateQuantity('${entry.key.reference}', -1)|">-
-                            </button>
+                            <a th:href="@{/cart/decrease/{reference}(reference=${entry.key.reference})}"
+                               class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300">-</a>
                             <span th:text="${entry.value}"></span>
-                            <button type="button"
-                                    class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300"
-                                    th:onclick="|updateQuantity('${entry.key.reference}', 1)|">+
-                            </button>
+                            <a th:href="@{/cart/increase/{reference}(reference=${entry.key.reference})}"
+                               class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300">+</a>
                         </div>
                     </td>
                     <td class="px-4 py-2" th:text="${'€' + (entry.key.price * entry.value)}"></td>
                     <td class="px-4 py-2">
-                        <button type="button"
-                                class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300"
-                                th:onclick="|removeProduct('${entry.key.reference}')|">
+                        <a th:href="@{/cart/remove/{reference}(reference=${entry.key.reference})}"
+                           class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300">
                             Eliminar
-                        </button>
+                        </a>
                     </td>
                 </tr>
                 </tbody>
             </table>
             <!-- Resumen del Carrito -->
             <div class="mt-8 flex justify-between items-center">
-                <button type="button"
-                        class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-300"
-                        th:onclick="|emptyCart()|">
+                <a th:href="@{/cart/clear}"
+                   class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-300">
                     Vaciar Carrito
-                </button>
+                </a>
                 <div class="text-xl font-semibold text-green-800">
-                    Total: <span th:text="${'€' + cart.total}"></span>
+                    Total: <span th:text="${'€' + totalAmount}"></span>
                 </div>
             </div>
             <!-- Botón Continuar con el Pago -->
