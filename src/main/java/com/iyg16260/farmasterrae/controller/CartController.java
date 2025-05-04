@@ -29,7 +29,7 @@ public class CartController {
                 .addObject("totalAmount", totalAmount);
     }
 
-    @PostMapping ("/add/{reference}")
+    @GetMapping ("/add/{reference}")
     public String addToCart(@PathVariable String reference, HttpSession session) {
         cartService.addProductToCart(reference, session);
 

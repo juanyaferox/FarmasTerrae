@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -44,9 +45,18 @@ public class OrderController {
         SessionCart cart = cartService.getCart(session);
 
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("El carrito está vacío");
+            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
             return new ModelAndView("redirect:/cart");
         }
+
+        // Verificar que las reservas de stock son válidas
+        if (!cartService.validateCartReservations(session)) {
+            // Si no son válidas, redirigir al carrito con un mensaje de error
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Algunos productos no tienen suficiente stock o tu reserva ha expirado. Por favor, revisa tu carrito.");
+            return new ModelAndView("redirect:/cart");
+        }
+
         return new ModelAndView("/order/order-details")
                 .addObject("products", cartService.getDetailedProducts(session))
                 .addObject("paymentMethod", PaymentMethod.values());
@@ -59,7 +69,15 @@ public class OrderController {
      * @return
      */
     @GetMapping ("/payment")
-    public ModelAndView getPayment(@ModelAttribute PaymentMethod paymentMethod) {
+    public ModelAndView getPayment(@ModelAttribute PaymentMethod paymentMethod, HttpSession session,
+                                   RedirectAttributes redirectAttributes) {
+        // Verificar nuevamente las reservas de stock
+        if (!cartService.validateCartReservations(session)) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Algunos productos no tienen suficiente stock o tu reserva ha expirado. Por favor, revisa tu carrito.");
+            return new ModelAndView("redirect:/cart");
+        }
+
         return new ModelAndView("order/payment-gateway");
     }
 
@@ -79,14 +97,21 @@ public class OrderController {
         SessionCart cart = cartService.getCart(session);
 
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("El carrito está vacío");
+            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
             return new ModelAndView("redirect:/cart");
         }
 
-        redirectAttributes.addFlashAttribute(
-                orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentMethod)
-        );
-        return new ModelAndView("redirect:/order/success");
+        try {
+            // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
+            redirectAttributes.addFlashAttribute(
+                    orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentMethod, session)
+            );
+            return new ModelAndView("redirect:/order/success");
+        } catch (ResponseStatusException ex) {
+            // Si hay un error (por ejemplo, stock insuficiente), redirigir al carrito
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getReason());
+            return new ModelAndView("redirect:/cart");
+        }
     }
 
     /**
@@ -98,7 +123,7 @@ public class OrderController {
      */
     @GetMapping ("/success")
     public ModelAndView successOrder(@ModelAttribute Order order, HttpSession session) {
-        cartService.getCart(session).clear();
+        cartService.clearCart(session);
 
         return new ModelAndView("/order/success")
                 .addObject("order", GenericUtils.mapper(order, OrderDTO.class));

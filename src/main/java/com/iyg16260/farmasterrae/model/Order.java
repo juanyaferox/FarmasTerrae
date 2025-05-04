@@ -1,6 +1,5 @@
 package com.iyg16260.farmasterrae.model;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import jakarta.persistence.*;
@@ -41,12 +40,13 @@ public class Order {
     LocalDateTime updatedAt;
 
     @PrePersist
-    void onCreate() throws JsonProcessingException {
+    void onCreate() {
         createdAt = LocalDateTime.now(Clock.systemUTC());
     }
 
     @PreUpdate
-    void onUpdate() throws JsonProcessingException {
+    void onUpdate() {
         updatedAt = LocalDateTime.now(Clock.systemUTC());
     }
+
 }

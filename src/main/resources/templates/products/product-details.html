@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Farmasterrae - Detalles del Producto', '/dist/output.css')}"></head>
+<body class="bg-gray-50 min-h-screen flex flex-col">
+<!-- Header -->
+<header th:replace="~{fragments/header :: header}"></header>
+<!-- Main Content: Product Details -->
+<main class="flex-grow py-12">
+    <div class="container mx-auto px-4">
+        <!-- Notification for Added to Cart -->
+        <div th:if="${added}" class="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
+            ¡Producto añadido al carrito con éxito!
+        </div>
+        <div class="mb-6 p-4 bg-red-100 text-red-800 rounded-md text-center" th:if="${param.error}">
+            <p th:text="${param.error}">Error al añadir el producto al carrito.</p>
+        </div>
+        <!-- Product Details Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-md shadow-md p-8">
+            <!-- Product Image -->
+            <div class="flex justify-center">
+                <img th:src="${product.imagePath}" alt="Imagen del producto"
+                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm">
+            </div>
+            <!-- Product Information -->
+            <div class="space-y-6">
+                <h1 class="text-3xl font-bold text-green-800" th:text="${product.name}"></h1>
+                <p class="text-xl font-semibold text-gray-800" th:text="${'€' + product.price}"></p>
+                <p class="text-gray-600" th:text="${product.description}"></p>
+                <p class="text-sm font-medium text-gray-700" th:if="${product.stock > 0}">
+                    Stock: <span th:text="${product.stock}"></span></p>
+                </p>
+                <div class="text-sm font-medium text-gray-700" th:if="${product.stock <= 0}">
+                    <p>Producto agotado</p>
+                </div>
+                <p class="text-sm text-gray-500">
+                    Referencia: <span th:text="${product.reference}"></span>
+                </p>
+                <!-- Add to Cart Button -->
+                <div class="mt-6">
+                    <a th:href="@{/cart/add/{reference}(reference=${product.reference})}"
+                       th:classappend="${product.stock == 0} ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'"
+                       class="inline-block text-white px-8 py-4 rounded-md font-semibold transition-colors duration-300"
+                       th:attr="disabled=${product.stock == 0}">
+                        Añadir al Carrito
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Reviews Section -->
+        <div class="mt-12 bg-white rounded-md shadow-md p-8">
+            <h2 class="text-2xl font-bold text-green-800 mb-6">Reseñas del Producto</h2>
+            <div th:if="${reviews.isEmpty()}" class="text-gray-600 text-center">
+                No hay reseñas para este producto todavía.
+            </div>
+            <div th:unless="${reviews.isEmpty()}" class="space-y-6">
+                <div th:each="review : ${reviews}" class="border-t border-gray-200 pt-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800" th:text="${review.title}"></h3>
+                        <div class="flex items-center">
+                            <!-- Calculamos las estrellas completas y medias estrellas -->
+                            <th:block
+                                    th:with="fullStars=${T(java.lang.Math).floor(review.scoring/2)}, hasHalfStar=${review.scoring % 2 != 0}">
+                                <!-- Estrellas completas -->
+                                <svg th:each="i : ${#numbers.sequence(1, fullStars)}" xmlns="http://www.w3.org/2000/svg"
+                                     class="h-5 w-5 text-yellow-500 fill-current" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
+                                </svg>
+
+                                <!-- Media estrella si es necesario -->
+                                <svg th:if="${hasHalfStar}" xmlns="http://www.w3.org/2000/svg"
+                                     class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20">
+                                    <defs>
+                                        <linearGradient id="halfStar" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="50%" stop-color="#FBBF24"/>
+                                            <stop offset="50%" stop-color="#E5E7EB"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <path fill="url(#halfStar)"
+                                          d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
+                                </svg>
+
+                                <!-- Estrellas vacías -->
+                                <svg th:each="i : ${#numbers.sequence(1, 5 - fullStars - (hasHalfStar ? 1 : 0))}"
+                                     xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300 fill-current"
+                                     viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
+                                </svg>
+
+                                <!-- Puntuación numérica -->
+                                <span class="ml-1 text-sm text-gray-600" th:text="${review.scoring + '/10'}"></span>
+                            </th:block>
+                        </div>
+                    </div>
+                    <p class="text-gray-600" th:text="${review.content}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<!-- Footer -->
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

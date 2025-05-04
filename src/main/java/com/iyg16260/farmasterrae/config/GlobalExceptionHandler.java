@@ -68,7 +68,7 @@ public class GlobalExceptionHandler implements Filter {
         // Construcción mensaje del error
         ErrorInfo errorInfo = getErrorInfo(ex);
         String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
-                .orElse("(ID: " + UUID.randomUUID() + ")");
+                .orElse(UUID.randomUUID().toString());
         String messageWithId = errorInfo.message() + " " + errorId;
         request.setAttribute("errorId", errorId);
 

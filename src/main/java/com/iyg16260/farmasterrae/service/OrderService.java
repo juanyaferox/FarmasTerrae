@@ -12,6 +12,7 @@ import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.utils.SessionCart;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +46,8 @@ public class OrderService {
     @Autowired
     ProductMapper productMapper;
 
-    // No utilizar repositorio de OrderDetails, no es necesario.
+    @Autowired
+    CartService cartService;
 
     /**
      * @param user usuario a obtener pedidos
@@ -91,14 +93,14 @@ public class OrderService {
 
         if (user.getOrderList().stream().anyMatch(o -> !Objects.equals(o.getId(), order.getId())))
             throw new ResponseStatusException
-                    (HttpStatus.FORBIDDEN, "You do not have permission to access this resource.");
+                    (HttpStatus.FORBIDDEN, "No tienes permiso para acceder a este recurso.");
 
         return orderMapper.orderToOrderDetailsDTO(order);
     }
 
     private Order getOrderById(long idOrder) throws ResponseStatusException {
         return orderRepository.findById(idOrder)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
     }
 
     /**
@@ -124,24 +126,53 @@ public class OrderService {
      * @param cart          carrito
      * @param saleStatus    saleStatus
      * @param paymentMethod paymentMethod
+     * @param session       la sesión HTTP
      * @return detalles del pedido guardado
      */
+    @Transactional
     public OrderDetailsDTO setOrder(User user, SessionCart cart,
                                     SaleStatus saleStatus,
-                                    PaymentMethod paymentMethod) throws ResponseStatusException {
+                                    PaymentMethod paymentMethod,
+                                    HttpSession session) throws ResponseStatusException {
         var products = cart.getProducts();
 
         if (products == null || products.isEmpty())
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart not found");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Carrito no encontrado");
+
+        // Verificar que las reservas de stock son válidas
+        if (!cartService.validateCartReservations(session)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "No hay suficiente stock disponible o la reserva ha expirado. Por favor, revisa tu carrito.");
+        }
+
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
         order.setPaymentMethod(paymentMethod);
+
+        // Calcular precio total
+        double totalPrice = products.entrySet().stream()
+                .mapToDouble(entry -> {
+                    Product product = productsService.getProductByReference(entry.getKey());
+                    return product.getPrice() * entry.getValue();
+                })
+                .sum();
+
+        order.setTotalPrice(totalPrice);
         order.setOrderDetails(
                 getOrderDetailsFromCart(products, order)
         );
 
-        return orderMapper.orderToOrderDetailsDTO(orderRepository.save(order));
+        // Guardar el pedido
+        Order savedOrder = orderRepository.save(order);
+
+        // Confirmar la reserva de stock (actualiza el stock real)
+        if (!cartService.confirmReservation(session)) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al confirmar la reserva de stock");
+        }
+
+        return orderMapper.orderToOrderDetailsDTO(savedOrder);
     }
 
 
@@ -196,6 +227,5 @@ public class OrderService {
                 .flatMap(o -> o.getOrderDetails().stream()
                         .map(OrderDetails::getProduct))
                 .collect(Collectors.toSet());
-        // Si fuera necesario mantener el orden de insercion: .collect(Collectors.toCollection(LinkedHashSet::new))
     }
 }

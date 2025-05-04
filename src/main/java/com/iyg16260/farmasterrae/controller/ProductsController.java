@@ -1,6 +1,8 @@
 package com.iyg16260.farmasterrae.controller;
 
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
+import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 @RequestMapping ("/products")
 @Controller
@@ -39,8 +43,11 @@ public class ProductsController {
     public ModelAndView getProductDetails(@PathVariable String reference,
                                           @RequestParam (defaultValue = "false", required = false) boolean added) {
 
+        ProductDTO product = productsService.getProductDTOByReference(reference);
+        List<ReviewDTO> reviewList = productsService.getReviewsFromProduct(reference);
         return new ModelAndView("products/product-details")
-                .addObject("product", productsService.getProductDTOByReference(reference))
+                .addObject("product", product)
+                .addObject("reviews", reviewList)
                 .addObject("added", added);
     }
 
