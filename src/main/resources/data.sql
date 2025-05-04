@@ -29,13 +29,13 @@ INSERT INTO orders (id, totalPrice, status, paymentMethod, userId, createdAt, up
 
 -- Insertar detalles de órdenes
 INSERT INTO orderDetails (idOrder, idProduct, amount) VALUES
-(1, 1, 1),  -- Producto A: 10.99 * 1
-(1, 2, 1),  -- Producto B: 15.99 * 1  => Total: 26.98
-(2, 3, 1),  -- Producto C: 20.50 * 1
-(2, 5, 1),  -- Producto E: 12.00 * 1  => Total: 32.50
-(3, 1, 3),  -- Producto A: 10.99 * 3 = 32.97
-(3, 4, 2),  -- Producto D: 8.99 * 2 = 17.98  => Total: 50.95
-(4, 5, 2);  -- Producto E: 12.00 * 2  => Total: 24.00
+(1, 1, 1),
+(1, 2, 1),
+(2, 3, 1),
+(2, 5, 1),
+(3, 1, 3),
+(3, 4, 2)
+(4, 5, 2)
 
 INSERT INTO reviews (id, title, content, scoring, productId, userId) VALUES
  (1, 'Buen producto', 'Descripción de prueba', 10, 1, 2),
