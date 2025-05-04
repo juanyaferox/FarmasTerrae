@@ -11,12 +11,12 @@ INSERT INTO users (id, profileId, username, email, password, phone, address) VAL
 
 
 -- Insertar productos
-INSERT INTO products (id, name, description, imagePath, price, stock, reference, userModifiedId) VALUES
-(1, 'Producto A', 'Descripción del Producto A', '/images/productA.jpg', 10.99, 100, 'REF001', 1),
-(2, 'Producto B', 'Descripción del Producto B', '/images/productB.jpg', 15.99, 200, 'REF002', 1),
-(3, 'Producto C', 'Descripción del Producto C', '/images/productC.jpg', 20.50, 150, 'REF003', 1),
-(4, 'Producto D', 'Descripción del Producto D', '/images/productD.jpg', 8.99, 300, 'REF004', 1),
-(5, 'Producto E', 'Descripción del Producto E', '/images/productE.jpg', 12.00, 50, 'REF005', 1);
+INSERT INTO products (id, name, description, imagePath, price, stock, reference, userModifiedId, category) VALUES
+(1, 'Producto A', 'Descripción del Producto A', '/images/productA.jpg', 10.99, 100, 'REF001', 1, 'VITAMINE'),
+(2, 'Producto B', 'Descripción del Producto B', '/images/productB.jpg', 15.99, 200, 'REF002', 1, 'VITAMINE'),
+(3, 'Producto C', 'Descripción del Producto C', '/images/productC.jpg', 20.50, 150, 'REF003', 1, 'VITAMINE'),
+(4, 'Producto D', 'Descripción del Producto D', '/images/productD.jpg', 8.99, 300, 'REF004', 1, 'VITAMINE'),
+(5, 'Producto E', 'Descripción del Producto E', '/images/productE.jpg', 12.00, 50, 'REF005', 1, 'VITAMINE');
 
 
 -- Insertar órdenes
