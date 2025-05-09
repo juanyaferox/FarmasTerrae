@@ -34,6 +34,16 @@
                 Cerrar sesión</a>
         </nav>
     </div>
-    <div th:if="${errorMessage}" x-data th:attr="x-init=|alert('${errorMessage}')|" style="display: none;"></div>
-    <div th:if="${successMessage}" x-data th:attr="x-init=|alert('${successMessage}')|" style="display: none;"></div>
+    <div th:if="${errorMessage}" x-data="{ show: true }"
+         th:attr="x-init=|setTimeout(() => show = false, 3000)|"
+         x-show="show"
+         class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow">
+        <span th:utext="${errorMessage}"></span>
+    </div>
+    <div th:if="${successMessage}" x-data="{ show: true }"
+         th:attr="x-init=|setTimeout(() => show = false, 3000)|"
+         x-show="show"
+         class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow">
+        <span th:text="${successMessage}"></span>
+    </div>
 </header>

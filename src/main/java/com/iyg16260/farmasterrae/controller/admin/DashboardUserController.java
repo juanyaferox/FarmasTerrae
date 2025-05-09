@@ -4,6 +4,7 @@ import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class DashboardUserController {
     }
 
     @PutMapping
-    public String updateUser(@ModelAttribute UserDTO userDTO, @RequestParam String oldUsername, RedirectAttributes ra) {
+    public String updateUser(@Valid @ModelAttribute UserDTO userDTO, @RequestParam String oldUsername, RedirectAttributes ra) {
         userService.updateUserByUsername(userDTO, oldUsername);
         buildSuccessMessage(ra, EntityType.USERS, Operation.PUT);
         return USER_PATH;

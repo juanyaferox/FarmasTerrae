@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -78,6 +79,12 @@ public class GlobalExceptionHandler implements Filter {
         // Se determina si se debería redirigir
         if (determineIfShouldRedirect(ex, request)) {
             String referer = request.getHeader("Referer");
+            if (ex instanceof BindException) {
+                String errors = processBindingErrors((BindException) ex);
+                String message = "Errores de validación: " + errors;
+                return handleRedirect(redirectAttributes, referer, message);
+            }
+
             return handleRedirect(redirectAttributes, referer, messageWithId);
         }
 
@@ -109,13 +116,10 @@ public class GlobalExceptionHandler implements Filter {
 
             case NoHandlerFoundException ignored -> new ErrorInfo(HttpStatus.NOT_FOUND, "Recurso no encontrado");
 
+            case NoResourceFoundException ignored -> new ErrorInfo(HttpStatus.NOT_FOUND, "Recurso no encontrado");
+
             case AccessDeniedException ignored ->
                     new ErrorInfo(HttpStatus.FORBIDDEN, "No tienes permisos para acceder a este recurso");
-
-            case BindException be -> {
-                String errors = processBindingErrors(be);
-                yield new ErrorInfo(HttpStatus.BAD_REQUEST, "Errores de validación: " + errors);
-            }
 
             case null, default -> new ErrorInfo(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
         };
@@ -123,17 +127,23 @@ public class GlobalExceptionHandler implements Filter {
 
     private String processBindingErrors(BindException be) {
         return be.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
-                .collect(Collectors.joining("; "));
+                .map(fe -> "<li><strong>"
+                        + fe.getField()
+                        + "</strong>: "
+                        + fe.getDefaultMessage()
+                        + "</li>")
+                .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));
     }
 
     /**
      * Determina si debería devolver un redirect en base al tipo de error y la cabecera
      */
     private boolean determineIfShouldRedirect(Exception ex, HttpServletRequest request) {
+        boolean haveReferer = request.getHeader("Referer") != null;
         return switch (ex) {
-            case ResponseStatusException ignore -> request.getHeader("Referer") != null;
-            case TransactionSystemException ignore -> request.getHeader("Referer") != null;
+            case ResponseStatusException ignore -> haveReferer;
+            case TransactionSystemException ignore -> haveReferer;
+            case BindException ignore -> haveReferer;
             default -> false;
         };
     }
@@ -143,6 +153,7 @@ public class GlobalExceptionHandler implements Filter {
      */
     private ModelAndView handleRedirect(RedirectAttributes redirectAttributes,
                                         String referer, String message) {
+
         redirectAttributes.addFlashAttribute("errorMessage", message);
         return new ModelAndView("redirect:" + referer);
     }
