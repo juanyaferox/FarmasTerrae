@@ -64,7 +64,7 @@ public class AdminController {
                 model.addObject("saleStatuses", SaleStatus.values());
             }
             case "products" -> {
-                Page<ProductDTO> products = productsService.getProductList(page);
+                Page<ProductDTO> products = productsService.getProductList(page, true);
                 model.addObject("products", products);
             }
             case "users" -> {

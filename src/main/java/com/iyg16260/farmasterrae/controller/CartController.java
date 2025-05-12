@@ -21,6 +21,9 @@ public class CartController {
 
     private final String CART_URL = "redirect:/cart";
 
+    /**
+     * Acceder al carrito
+     */
     @GetMapping
     public ModelAndView viewCart(HttpSession session) {
         Map<ProductDTO, Integer> cart = cartService.getDetailedProducts(session);
@@ -33,6 +36,9 @@ public class CartController {
                 .addObject("totalAmount", totalAmount);
     }
 
+    /**
+     * Añadir producto al carrito
+     */
     @GetMapping ("/add/{reference}")
     public String addToCart(@PathVariable String reference, HttpSession session) {
         cartService.addProductToCart(reference, session);
@@ -40,6 +46,11 @@ public class CartController {
         return "redirect:/products/" + reference + "?added=true";
     }
 
+    /**
+     * Borrar todos los mismos de un producto del carrito
+     *
+     * @return
+     */
     @GetMapping ("/remove/{reference}")
     public String deleteFromCart(@PathVariable String reference,
                                  HttpSession session) {
@@ -47,24 +58,36 @@ public class CartController {
         return CART_URL;
     }
 
+    /**
+     * Limpiar el carrito
+     */
     @GetMapping ("/clear")
     public String clearCart(HttpSession session) {
         cartService.clearCart(session);
         return CART_URL;
     }
 
+    /**
+     * Añadir un producto del mismo al carrito
+     */
     @GetMapping ("/increase/{reference}")
     public String increaseCart(@PathVariable String reference, HttpSession session) {
         cartService.addProductToCart(reference, session);
         return CART_URL;
     }
 
+    /**
+     * Borrar un producto del mismo del carrito
+     */
     @GetMapping ("/decrease/{reference}")
     public String decreaseCart(@PathVariable String reference, HttpSession session) {
         cartService.deleteProductFromCart(reference, session);
         return CART_URL;
     }
 
+    /**
+     * Redirecciona a la pasarela de pago
+     */
     @GetMapping ("/checkout")
     public String goCheckout() {
         return "redirect:/checkout";

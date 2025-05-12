@@ -32,11 +32,17 @@ public class ProductsService {
     ProductMapper productMapper;
 
     private final int PAGE_SIZE = 21;
+    private final int PAGE_SIZE_ADMIN = 10;
+
+    public Page<ProductDTO> getProductList(int page, boolean isAdmin) {
+        int pageSize = isAdmin ? PAGE_SIZE_ADMIN : PAGE_SIZE;
+        return productRepository
+                .findAll(Pageable.ofSize(pageSize).withPage(page))
+                .map(p -> productMapper.productToProductDTO(p));
+    }
 
     public Page<ProductDTO> getProductList(int page) {
-        return productRepository
-                .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
-                .map(p -> productMapper.productToProductDTO(p));
+        return getProductList(page, false);
     }
 
     public Page<ProductPageDTO> getProductListByCategory(Category category, int page) {
