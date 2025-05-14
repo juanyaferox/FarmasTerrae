@@ -62,12 +62,12 @@
                     Editar Usuario
                 </h3>
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
-                    <input type="username" x-model="selectedUser.username" class="w-full border rounded p-2"/>
+                    <label class="block text-sm font-medium text-gray-700 mb-1" maxlength="50">Nombre de usuario</label>
+                    <input type="text" x-model="selectedUser.username" class="w-full border rounded p-2" required/>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" x-model="selectedUser.email" class="w-full border rounded p-2"/>
+                    <input type="email" x-model="selectedUser.email" class="w-full border rounded p-2" required/>
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
