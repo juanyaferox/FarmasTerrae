@@ -32,7 +32,7 @@ public class Product {
         }
     }
 
-    Double price;
+    Integer price;
 
     Integer stock;
 

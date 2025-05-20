@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.service.CartService;
+import com.iyg16260.farmasterrae.utils.GenericUtils;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -9,7 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Map;
 
 @Controller
@@ -27,10 +31,9 @@ public class CartController {
     @GetMapping
     public ModelAndView viewCart(HttpSession session) {
         Map<ProductDTO, Integer> cart = cartService.getDetailedProducts(session);
-        double totalAmount = 0.0;
-        for (Map.Entry<ProductDTO, Integer> entry : cart.entrySet()) {
-            totalAmount += entry.getKey().getPrice() * entry.getValue();
-        }
+
+        var totalAmount = GenericUtils.priceAmountCalc(cart);
+
         return new ModelAndView("cart/cart-view")
                 .addObject("products", cart)
                 .addObject("totalAmount", totalAmount);
@@ -40,7 +43,7 @@ public class CartController {
      * Añadir producto al carrito
      */
     @GetMapping ("/add/{reference}")
-    public String addToCart(@PathVariable String reference, HttpSession session) {
+    public String addToCart(@PathVariable String reference, HttpSession session, RedirectAttributes ra) {
         cartService.addProductToCart(reference, session);
 
         return "redirect:/products/" + reference + "?added=true";
@@ -71,7 +74,7 @@ public class CartController {
      * Añadir un producto del mismo al carrito
      */
     @GetMapping ("/increase/{reference}")
-    public String increaseCart(@PathVariable String reference, HttpSession session) {
+    public String increaseCart(@PathVariable String reference, HttpSession session, RedirectAttributes ra) {
         cartService.addProductToCart(reference, session);
         return CART_URL;
     }
@@ -83,14 +86,6 @@ public class CartController {
     public String decreaseCart(@PathVariable String reference, HttpSession session) {
         cartService.deleteProductFromCart(reference, session);
         return CART_URL;
-    }
-
-    /**
-     * Redirecciona a la pasarela de pago
-     */
-    @GetMapping ("/checkout")
-    public String goCheckout() {
-        return "redirect:/checkout";
     }
 
 }

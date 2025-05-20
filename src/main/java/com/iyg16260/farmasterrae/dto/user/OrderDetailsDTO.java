@@ -5,12 +5,13 @@ import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Data
 public class OrderDetailsDTO {
     Map<ProductDTO, Integer> products;
-    Double totalPrice;
+    BigDecimal totalPrice;
     String status;
     String createdAt;
     String updatedAt;

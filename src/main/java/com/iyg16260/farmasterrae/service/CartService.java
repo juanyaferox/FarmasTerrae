@@ -5,7 +5,9 @@ import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
@@ -36,9 +38,10 @@ public class CartService {
     /**
      * Añade un producto al carrito y reserva el stock
      */
-    public boolean addProductToCart(String refProduct, HttpSession session) {
+    public boolean addProductToCart(String refProduct, HttpSession session) throws  ResponseStatusException{
         // Primero verificamos que hay stock disponible (considerando reservas previas)
         Product product = productsService.getProductByReference(refProduct);
+
         SessionCart cart = getCart(session);
 
         // Añadimos temporalmente el producto al carrito para validar

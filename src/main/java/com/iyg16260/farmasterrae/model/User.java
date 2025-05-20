@@ -36,6 +36,8 @@ public class User implements UserDetails, Serializable {
     @Column (unique = true)
     String username;
 
+    String fullName;
+
     @PrePersist
     @PreUpdate
     private void preSave() throws ResponseStatusException {

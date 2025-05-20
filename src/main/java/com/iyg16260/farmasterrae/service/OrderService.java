@@ -1,6 +1,7 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -132,7 +134,7 @@ public class OrderService {
     @Transactional
     public OrderDetailsDTO setOrder(User user, SessionCart cart,
                                     SaleStatus saleStatus,
-                                    PaymentMethod paymentMethod,
+                                    PaymentDetailsDTO payment,
                                     HttpSession session) throws ResponseStatusException {
         var products = cart.getProducts();
 
@@ -148,17 +150,10 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
-        order.setPaymentMethod(paymentMethod);
-
-        // Calcular precio total
-        double totalPrice = products.entrySet().stream()
-                .mapToDouble(entry -> {
-                    Product product = productsService.getProductByReference(entry.getKey());
-                    return product.getPrice() * entry.getValue();
-                })
-                .sum();
-
-        order.setTotalPrice(totalPrice);
+        order.setPaymentMethod(payment.getPaymentMethod());
+        order.setAddress(payment.getAddress());
+        order.setName(payment.getFull_name());
+        order.setTotalPrice(payment.getAmount());
         order.setOrderDetails(
                 getOrderDetailsFromCart(products, order)
         );

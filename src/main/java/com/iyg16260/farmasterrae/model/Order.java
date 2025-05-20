@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,13 +20,16 @@ public class Order {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     Long id;
 
-    Double totalPrice;
+    BigDecimal totalPrice;
 
     @Enumerated (EnumType.STRING)
     SaleStatus status;
 
     @Enumerated (EnumType.STRING)
     PaymentMethod paymentMethod;
+
+    String name;
+    String address;
 
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn (name = "userId")

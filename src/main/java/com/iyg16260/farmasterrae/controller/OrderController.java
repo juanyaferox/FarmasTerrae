@@ -1,6 +1,8 @@
 package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
+import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.model.Order;
@@ -14,13 +16,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.math.BigDecimal;
+import java.util.Map;
+import java.util.Objects;
 
 @Controller
 @Slf4j
@@ -41,7 +44,7 @@ public class OrderController {
      * @return la vista con el listado de productos y un array paymentMethod
      */
     @GetMapping
-    public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes) {
+    public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
         SessionCart cart = cartService.getCart(session);
 
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
@@ -57,20 +60,33 @@ public class OrderController {
             return new ModelAndView("redirect:/cart");
         }
 
+        Map<ProductDTO, Integer> cartProducts = cartService.getDetailedProducts(session);
+        BigDecimal totalAmount = GenericUtils.priceAmountCalc(cartProducts);
+
+        PaymentDetailsDTO paymentDetails = new PaymentDetailsDTO();
+        paymentDetails.setAmount(totalAmount);
+        paymentDetails.setAddress(user.getAddress());
+        paymentDetails.setFull_name(user.getFullName());
+
         return new ModelAndView("/order/order-details")
-                .addObject("products", cartService.getDetailedProducts(session))
-                .addObject("paymentMethod", PaymentMethod.values());
+                .addObject("products", cartProducts)
+                .addObject("paymentMethod", PaymentMethod.values())
+                .addObject("paymentDetails", paymentDetails);
     }
 
     /**
      * Direcciona a la vista de pago con él metodo de pago
      *
-     * @param paymentMethod
+     * @param paymentDetails
      * @return
      */
-    @GetMapping ("/payment")
-    public ModelAndView getPayment(@ModelAttribute PaymentMethod paymentMethod, HttpSession session,
+    @PostMapping ("/confirm")
+    public ModelAndView getPayment(@ModelAttribute PaymentDetailsDTO paymentDetails,
+                                   @AuthenticationPrincipal User user,
+                                   HttpSession session,
                                    RedirectAttributes redirectAttributes) {
+        //TODO: Es necesario hacer que los datos del formulario del html se añadan al paymentDetailsDTO
+
         // Verificar nuevamente las reservas de stock
         if (!cartService.validateCartReservations(session)) {
             redirectAttributes.addFlashAttribute("errorMessage",
@@ -78,19 +94,24 @@ public class OrderController {
             return new ModelAndView("redirect:/cart");
         }
 
-        return new ModelAndView("order/payment-gateway");
+        SessionCart cart = cartService.getCart(session);
+
+        if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
+            return new ModelAndView("redirect:/cart");
+        }
+
+        var order =  orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentDetails, session);
+        // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
+        redirectAttributes.addFlashAttribute(order);
+
+        return new ModelAndView("order/success")
+                .addObject("order", order);
     }
 
-    /**
-     * Realiza el pago
-     *
-     * @param paymentMethod      metodo de pago ya incluido en la vista
-     * @param user
-     * @param session
-     * @param redirectAttributes
-     * @return redirecciona al success o al carrito si por algo está vacio
-     */
-    @PostMapping ("/payment")
+    // SIN USAR, ENFOQUE ORIGINAL PARA TENER UN PAGO MAS DETALLADO
+    /*
+    @PostMapping("/payment")
     public ModelAndView setPayment(@ModelAttribute PaymentMethod paymentMethod,
                                    @AuthenticationPrincipal User user, HttpSession session,
                                    RedirectAttributes redirectAttributes) {
@@ -100,32 +121,18 @@ public class OrderController {
             redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
             return new ModelAndView("redirect:/cart");
         }
-
-        try {
             // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
             redirectAttributes.addFlashAttribute(
                     orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentMethod, session)
             );
             return new ModelAndView("redirect:/order/success");
-        } catch (ResponseStatusException ex) {
-            // Si hay un error (por ejemplo, stock insuficiente), redirigir al carrito
-            redirectAttributes.addFlashAttribute("errorMessage", ex.getReason());
-            return new ModelAndView("redirect:/cart");
-        }
     }
-
-    /**
-     * Confirmación del pedido si fue exitoso
-     *
-     * @param order
-     * @param session
-     * @return vista con resumen del pedido
-     */
     @GetMapping ("/success")
     public ModelAndView successOrder(@ModelAttribute Order order, HttpSession session) {
         cartService.clearCart(session);
 
         return new ModelAndView("/order/success")
-                .addObject("order", GenericUtils.mapper(order, OrderDTO.class));
+                .addObject("order", order);
     }
+     */
 }

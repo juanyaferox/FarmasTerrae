@@ -37,7 +37,7 @@
     </aside>
 
     <!-- Main Content -->
-    <section class="w-full md:flex-1 p-4 md:p-10 overflow-auto">
+    <section class="w-full md:flex-1 p-4 overflow-auto">
         <th:block th:if="${section == 'orders'}">
             <th:block th:replace="~{fragments/dashboard-admin/orders :: ordersSection(${orders})}"></th:block>
         </th:block>

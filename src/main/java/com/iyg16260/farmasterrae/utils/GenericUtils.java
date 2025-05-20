@@ -9,6 +9,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.lang.reflect.InvocationTargetException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
@@ -31,14 +33,12 @@ public class GenericUtils {
         return letraDNI == letraCorrecta;
     }
 
-    public static <T>T mapper(Object object, Class<T> targetClass) {
-        try {
-            T targetObject = targetClass.getDeclaredConstructor().newInstance();
-            BeanUtils.copyProperties(object, targetObject);
-            return targetObject;
-        } catch (Exception e) {
-            return null;
-        }
+    public static BigDecimal priceAmountCalc(Map<ProductDTO, Integer> cart) {
+        return cart.entrySet().stream()
+                .map(entry -> entry.getKey().getPrice()
+                        .multiply(BigDecimal.valueOf(entry.getValue())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
 }
