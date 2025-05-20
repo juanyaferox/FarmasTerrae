@@ -5,7 +5,7 @@
 <!-- Header -->
 <header th:replace="~{fragments/header :: header}"></header>
 <!-- Main Content: Product Details -->
-<main class="flex-grow py-12">
+<main class="flex-grow py-20 bg-green-50">
     <div class="container mx-auto px-4">
         <!-- Notification for Added to Cart -->
         <div th:if="${added}" class="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
@@ -26,9 +26,6 @@
                 <h1 class="text-3xl font-bold text-green-800" th:text="${product.name}"></h1>
                 <p class="text-xl font-semibold text-gray-800" th:text="${'€' + product.price}"></p>
                 <p class="text-gray-600" th:text="${product.description}"></p>
-                <p class="text-sm font-medium text-gray-700" th:if="${product.stock > 0}">
-                    Stock: <span th:text="${product.stock}"></span></p>
-                </p>
                 <div class="text-sm font-medium text-gray-700" th:if="${product.stock <= 0}">
                     <p>Producto agotado</p>
                 </div>

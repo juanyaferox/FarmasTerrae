@@ -36,6 +36,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 "/cart/**",
                                 "/products/**",
                                 "/register/**",
+                                "/assets/**",
                                 "/",
                                 "/h2-console/**",
                                 "/common/error"

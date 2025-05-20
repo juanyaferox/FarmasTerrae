@@ -31,7 +31,7 @@ public class ProductsService {
     @Autowired
     ProductMapper productMapper;
 
-    private final int PAGE_SIZE = 21;
+    private final int PAGE_SIZE = 24;
     private final int PAGE_SIZE_ADMIN = 10;
 
     public Page<ProductDTO> getProductList(int page, boolean isAdmin) {

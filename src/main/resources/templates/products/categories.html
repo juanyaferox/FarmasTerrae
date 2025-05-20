@@ -6,83 +6,98 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <!-- Sección de Categorías -->
-<main class="flex-grow py-12">
+<main class="flex-grow py-20 bg-green-50">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Explora Nuestras Categorías</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
             <!-- Categoría 1: Medicamentos -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Medicamentos" alt="Medicamentos"
-                     class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <img th:src="@{/assets/img/categories/medicine.jpg}" alt="Medicamentos"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Medicamentos</h2>
                     <p class="text-gray-600 mb-4">Encuentra los medicamentos que necesitas para tu bienestar.</p>
                     <a th:href="@{/products(category='MEDICINE')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
             </div>
             <!-- Categoría 2: Vitaminas y Suplementos -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Vitaminas" alt="Vitaminas"
-                     class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <div class="h-48 overflow-hidden">
+                        <img th:src="@{/assets/img/categories/vitamin.jpg}" alt="Vitaminas y Suplementos"
+                             class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Vitaminas y Suplementos</h2>
                     <p class="text-gray-600 mb-4">Mejora tu salud con nuestros suplementos de calidad.</p>
                     <a th:href="@{/products(category='VITAMIN')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
             </div>
             <!-- Categoría 3: Cuidado Personal -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Cuidado+Personal" alt="Cuidado Personal"
-                     class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <img th:src="@{/assets/img/categories/self-care.jpg}" alt="Cuidado Personal"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Cuidado Personal</h2>
                     <p class="text-gray-600 mb-4">Productos para tu higiene y cuidado diario.</p>
                     <a th:href="@{/products(category='CARE')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
             </div>
             <!-- Categoría 4: Primeros Auxilios -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Primeros+Auxilios" alt="Primeros Auxilios"
-                     class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <img th:src="@{/assets/img/categories/first-aid.jpg}" alt="Primeros Auxilios"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Primeros Auxilios</h2>
                     <p class="text-gray-600 mb-4">Todo lo que necesitas para emergencias menores.</p>
                     <a th:href="@{/products(category='FIRST_AID')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
             </div>
             <!-- Categoría 5: Belleza y Cuidado de la Piel -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Belleza" alt="Belleza"
-                     class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <img th:src="@{/assets/img/categories/beauty.jpg}" alt="Belleza"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Belleza y Cuidado de la Piel</h2>
                     <p class="text-gray-600 mb-4">Cuida tu piel con nuestros productos de belleza.</p>
                     <a th:href="@{/products(category='BEAUTY')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
             </div>
             <!-- Categoría 6: Productos para Bebés -->
-            <div class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img src="https://via.placeholder.com/400x200?text=Bebes" alt="Bebés" class="w-full h-48 object-cover">
-                <div class="p-6">
+            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
+                <div class="h-48 overflow-hidden">
+                    <img th:src="@{/assets/img/categories/baby.jpg}" alt="Bebés"
+                         class="w-full h-full object-cover">
+                </div>
+                <div class="p-6 text-center">
                     <h2 class="text-2xl font-semibold text-green-700 mb-2">Productos para Bebés</h2>
                     <p class="text-gray-600 mb-4">Lo mejor para el cuidado de tu bebé.</p>
                     <a th:href="@{/products(category='BABY')}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
+                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
                         Explorar
                     </a>
                 </div>
