@@ -2,7 +2,6 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.UserRepository;
-import com.iyg16260.farmasterrae.utils.EncryptionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +21,7 @@ public class RegisterService {
      */
     private void encryptPassword(User user) {
         String password = user.getPassword();
-        password = EncryptionUtils.hashPassword(password);
+        //password = EncryptionUtils.hashPassword(password);
         user.setPassword(password);
     }
 
