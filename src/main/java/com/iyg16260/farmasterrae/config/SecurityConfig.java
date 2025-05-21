@@ -29,6 +29,10 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/order/**").authenticated()
                         .requestMatchers("/auth/**",
                                 "/styles/**",
                                 "/js/**",
@@ -41,10 +45,6 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 "/h2-console/**",
                                 "/common/error"
                         ).permitAll()
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/order/**").authenticated()
                 )
                 // Configuración para H2
                 .csrf(AbstractHttpConfigurer::disable)

@@ -8,15 +8,18 @@ import lombok.Data;
 
 @Data
 public class RegisterFormDTO {
-    @NotBlank(message = "Username is mandatory")
+    @NotBlank (message = "El usuario no puede estar vacío")
+    @Size (max = 50, message = "El título debe tener un máximo de 50 caracteres")
     String username;
-    @NotBlank(message = "Email is mandatory")
-    @Email
+    String fullName;
+    @NotBlank (message = "El correo no puede estar vacío")
+    @Email (message = "Debe ser un correo")
     String email;
     @NotBlank
-    @Size(min=8,max=100,message = "The password needs to have at least 8 characters")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).*$",
-    message = "The password should contain at least a number, a uppercase, a lowercase and a special character")
+    @Size (min = 6, max = 20, message = "La contraseña necesita tener 6 caracteres")
+    @Pattern (regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$",
+            message = "La contraseña debe cumplir el patrón")
     String password;
+    String confirmPassword;
     String phone;
 }

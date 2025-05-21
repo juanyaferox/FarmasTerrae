@@ -32,17 +32,19 @@ public class AuthService {
 
 
     public void setRegister(RegisterFormDTO registerForm) throws ResponseStatusException {
+
         if (userRepository.findByUsername(registerForm.getUsername()).isPresent())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User already registered");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Usuario ya registrado");
 
         if (userRepository.findByEmail(registerForm.getEmail()).isPresent())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already registered");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email ya registrado");
 
         User user = new User();
         user.setUsername(registerForm.getUsername());
         user.setEmail(registerForm.getEmail());
         user.setPassword(passwordEncoder.encode(registerForm.getPassword()));
         user.setPhone(registerForm.getPhone());
+        userRepository.save(user);
     }
 
     public PasswordRecoveryDTO setPassword(PasswordRecoveryDTO passwordRequest) {

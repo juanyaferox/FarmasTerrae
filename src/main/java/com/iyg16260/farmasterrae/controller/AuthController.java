@@ -2,20 +2,22 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.auth.PasswordRecoveryDTO;
 import com.iyg16260.farmasterrae.dto.auth.RegisterFormDTO;
+import com.iyg16260.farmasterrae.enums.EntityType;
+import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.AuthService;
+import com.iyg16260.farmasterrae.utils.SuccessMessageUtils;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Slf4j
 @Controller
@@ -44,18 +46,11 @@ public class AuthController {
     }
 
     @PostMapping ("/register")
-    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO,
-                                        BindingResult bindingResult) {
-        if (bindingResult.hasErrors())
-            return new ModelAndView("auth/register");
-        try {
-            authService.setRegister(registerFormDTO);
-            return new ModelAndView("redirect:/login");
-        } catch (ResponseStatusException e) {
-            return new ModelAndView("auth/register")
-                    .addObject("registerForm", registerFormDTO)
-                    .addObject("error", e.getMessage());
-        }
+    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO, RedirectAttributes ra) {
+        authService.setRegister(registerFormDTO);
+        SuccessMessageUtils.buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
+        // TODO: Hacer que se defina el profile antes de guardar
+        return new ModelAndView("redirect:/auth");
     }
 
     @GetMapping ("/changePassword")
