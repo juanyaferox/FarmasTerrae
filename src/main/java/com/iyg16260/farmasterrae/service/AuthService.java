@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.service;
 import com.iyg16260.farmasterrae.dto.auth.PasswordRecoveryDTO;
 import com.iyg16260.farmasterrae.dto.auth.RegisterFormDTO;
 import com.iyg16260.farmasterrae.model.User;
+import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
 import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,9 @@ public class AuthService {
     UserRepository userRepository;
 
     @Autowired
+    ProfileRepository profileRepository;
+
+    @Autowired
     PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -44,6 +48,8 @@ public class AuthService {
         user.setEmail(registerForm.getEmail());
         user.setPassword(passwordEncoder.encode(registerForm.getPassword()));
         user.setPhone(registerForm.getPhone());
+        user.setProfile(profileRepository.findByType("USER"));
+        System.out.println(user.toString());
         userRepository.save(user);
     }
 
