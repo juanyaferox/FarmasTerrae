@@ -14,4 +14,6 @@ public class UserDTO {
     String email;
     String phone;
     String address;
+    @NotBlank (message = "El usuario debe estar asignado a un tipo")
+    String type;
 }

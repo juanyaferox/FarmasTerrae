@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.mapper.UserMapper;
+import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -88,6 +90,7 @@ public class UserService implements UserDetailsService {
     // Actualizar usuario
     public User updateUserById(long id, UserDTO userDetails) throws ResponseStatusException {
         User userDB = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
         return userRepository.save(
                 validateUserDTOAndReturnUserModified(userDB, userDetails)
         );
@@ -112,6 +115,7 @@ public class UserService implements UserDetailsService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya existente en la BBDD");
         }
         userMapper.updateUserFromUserDTO(userDetails, user);
+        user.setProfile(profileRepository.findByType(userDetails.getType()));
         return user;
     }
 
@@ -156,6 +160,10 @@ public class UserService implements UserDetailsService {
         // Forzamos la inicialización de la colección mientras la sesión está abierta
         user.getOrderList().size();
         return user;
+    }
+
+    public List<Profile> getProfiles() {
+        return profileRepository.findAll();
     }
 
 }

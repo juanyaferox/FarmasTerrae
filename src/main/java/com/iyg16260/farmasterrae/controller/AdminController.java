@@ -4,6 +4,7 @@ import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
+import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 @Controller
 @RequestMapping ("/admin")
@@ -69,7 +72,9 @@ public class AdminController {
             }
             case "users" -> {
                 Page<UserDTO> users = userService.getAllUsers(page);
+                List<Profile> profiles = userService.getProfiles();
                 model.addObject("users", users);
+                model.addObject("profiles", profiles);
             }
         }
         return model;

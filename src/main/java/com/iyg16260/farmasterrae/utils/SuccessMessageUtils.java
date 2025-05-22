@@ -15,7 +15,7 @@ public class SuccessMessageUtils {
 
     private static String auxiliarForSuccessMessage(EntityType type, Operation operation) {
         String stringType = type.getValue();
-        char genderLetter = stringType.endsWith("a") ? 'o' : 'a';
+        char genderLetter = stringType.endsWith("a") ? 'a' : 'o';
 
         switch (operation) {
             case POST:
