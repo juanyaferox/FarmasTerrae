@@ -3,7 +3,6 @@ package com.iyg16260.farmasterrae.service;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
-import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.mapper.OrderMapper;
 import com.iyg16260.farmasterrae.mapper.ProductMapper;
@@ -22,10 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static com.iyg16260.farmasterrae.utils.GenericUtils.priceAmountCalc;
 
 @Service
 public class OrderService {
@@ -124,11 +124,11 @@ public class OrderService {
     /**
      * Guarda un pedido
      *
-     * @param user          usuario
-     * @param cart          carrito
-     * @param saleStatus    saleStatus
-     * @param paymentMethod paymentMethod
-     * @param session       la sesión HTTP
+     * @param user       usuario
+     * @param cart       carrito
+     * @param saleStatus saleStatus
+     * @param payment    paymentMethod
+     * @param session    la sesión HTTP
      * @return detalles del pedido guardado
      */
     @Transactional
@@ -150,16 +150,15 @@ public class OrderService {
         Order order = new Order();
         order.setUser(user);
         order.setStatus(saleStatus);
+        order.setTotalPrice(priceAmountCalc(cartService.getDetailedProducts(session)));
         order.setPaymentMethod(payment.getPaymentMethod());
         order.setAddress(payment.getAddress());
         order.setName(payment.getFull_name());
-        order.setTotalPrice(payment.getAmount());
+        Order savedOrder = orderRepository.save(order);
         order.setOrderDetails(
-                getOrderDetailsFromCart(products, order)
+                getOrderDetailsFromCart(products, savedOrder)
         );
 
-        // Guardar el pedido
-        Order savedOrder = orderRepository.save(order);
 
         // Confirmar la reserva de stock (actualiza el stock real)
         if (!cartService.confirmReservation(session)) {
@@ -185,9 +184,7 @@ public class OrderService {
 
         cartProducts.forEach((reference, quantity) -> {
             Product product = productsService.getProductByReference(reference);
-            OrderDetails details = new OrderDetails();
-            details.setProduct(product);
-            details.setOrder(order);
+            OrderDetails details = new OrderDetails(order, product);
             details.setAmount(quantity);
             detailsList.add(details);
         });

@@ -136,7 +136,7 @@ public class UserService implements UserDetailsService {
             String userProfileType = user.getProfile().getType();
 
             if (Objects.equals(userProfileType, "ADMIN")
-                    && profileRepository.findAllByType(userProfileType).size() <= 1)
+                    && userRepository.findAllByProfileType(userProfileType).size() <= 1)
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tiene que existir al menos un administrador");
 
             return anonymize(user);

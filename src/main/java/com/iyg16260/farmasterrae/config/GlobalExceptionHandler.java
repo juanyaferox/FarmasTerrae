@@ -68,13 +68,18 @@ public class GlobalExceptionHandler implements Filter {
 
         // Construcción mensaje del error
         ErrorInfo errorInfo = getErrorInfo(ex);
-        String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
-                .orElse(UUID.randomUUID().toString());
-        String messageWithId = errorInfo.message() + " " + errorId;
-        request.setAttribute("errorId", errorId);
 
-        // Log con la información
-        logException(errorId, ex, collectAuditInfo(request));
+        String messageError;
+        // Log con la información excepto si es un error de validación o un 400
+        if (shouldLogException(ex)) {
+            String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
+                    .orElse(UUID.randomUUID().toString());
+            messageError = errorInfo.message() + " " + errorId;
+            request.setAttribute("errorId", errorId);
+            logException(errorId, ex, collectAuditInfo(request));
+        } else {
+            messageError = errorInfo.message();
+        }
 
         // Se determina si se debería redirigir
         if (determineIfShouldRedirect(ex, request)) {
@@ -85,7 +90,7 @@ public class GlobalExceptionHandler implements Filter {
                 return handleRedirect(redirectAttributes, referer, message);
             }
 
-            return handleRedirect(redirectAttributes, referer, messageWithId);
+            return handleRedirect(redirectAttributes, referer, messageError);
         }
 
         // Caso no tenga dirección, se devuelve una pantalla genérica
@@ -109,7 +114,7 @@ public class GlobalExceptionHandler implements Filter {
             case ResponseStatusException rse -> new ErrorInfo(rse.getStatusCode(), rse.getReason());
 
             case TransactionSystemException ignored ->
-                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Error en la transacción. Verifique los datos.");
+                    new ErrorInfo(HttpStatus.BAD_GATEWAY, "Error en la transacción. Verifique los datos.");
 
             case HttpRequestMethodNotSupportedException methodEx ->
                     new ErrorInfo(HttpStatus.METHOD_NOT_ALLOWED, "Método no permitido: " + methodEx.getMethod());
@@ -133,6 +138,19 @@ public class GlobalExceptionHandler implements Filter {
                         + fe.getDefaultMessage()
                         + "</li>")
                 .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));
+    }
+
+    private boolean shouldLogException(Exception ex) {
+
+        if (ex instanceof BindException) {
+            return false;
+        }
+
+        if (ex instanceof ResponseStatusException rse) {
+            return !HttpStatus.BAD_REQUEST.equals(rse.getStatusCode());
+        }
+
+        return true;
     }
 
     /**
