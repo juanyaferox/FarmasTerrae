@@ -132,10 +132,10 @@ public class OrderService {
      * @return detalles del pedido guardado
      */
     @Transactional
-    public OrderDetailsDTO setOrder(User user, SessionCart cart,
-                                    SaleStatus saleStatus,
-                                    PaymentDetailsDTO payment,
-                                    HttpSession session) throws ResponseStatusException {
+    public Order setOrder(User user, SessionCart cart,
+                          SaleStatus saleStatus,
+                          PaymentDetailsDTO payment,
+                          HttpSession session) throws ResponseStatusException {
         var products = cart.getProducts();
 
         if (products == null || products.isEmpty())
@@ -166,7 +166,7 @@ public class OrderService {
                     "Error al confirmar la reserva de stock");
         }
 
-        return orderMapper.orderToOrderDetailsDTO(savedOrder);
+        return savedOrder;
     }
 
 

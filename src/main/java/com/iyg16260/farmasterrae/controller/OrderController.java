@@ -99,7 +99,7 @@ public class OrderController {
             return new ModelAndView("redirect:/cart");
         }
 
-        var order = orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentDetails, session);
+        var order = orderService.setOrder(user, cart, SaleStatus.PENDING, paymentDetails, session);
         // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
         redirectAttributes.addFlashAttribute(order);
 
