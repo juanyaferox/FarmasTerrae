@@ -49,7 +49,6 @@ public class AuthController {
     public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO, RedirectAttributes ra) {
         authService.setRegister(registerFormDTO);
         SuccessMessageUtils.buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
-        // TODO: Hacer que se defina el profile antes de guardar
         return new ModelAndView("redirect:/auth");
     }
 

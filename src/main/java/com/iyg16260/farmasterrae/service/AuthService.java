@@ -46,10 +46,10 @@ public class AuthService {
         User user = new User();
         user.setUsername(registerForm.getUsername());
         user.setEmail(registerForm.getEmail());
+        user.setFullName(registerForm.getFullName());
         user.setPassword(passwordEncoder.encode(registerForm.getPassword()));
         user.setPhone(registerForm.getPhone());
         user.setProfile(profileRepository.findByType("USER"));
-        System.out.println(user.toString());
         userRepository.save(user);
     }
 
