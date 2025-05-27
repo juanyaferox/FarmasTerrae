@@ -33,18 +33,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/order/**").authenticated()
-                        .requestMatchers("/auth/**",
-                                "/styles/**",
-                                "/js/**",
-                                "/dist/**",
-                                "/cart/**",
-                                "/products/**",
-                                "/register/**",
-                                "/assets/**",
-                                "/",
-                                "/h2-console/**",
-                                "/common/error"
-                        ).permitAll()
+                        .anyRequest().permitAll()
                 )
                 // Configuración para H2
                 .csrf(AbstractHttpConfigurer::disable)

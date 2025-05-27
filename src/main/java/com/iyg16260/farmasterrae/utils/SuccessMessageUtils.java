@@ -6,12 +6,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 public class SuccessMessageUtils {
 
-    private static final String success = "successMessage";
-
+    /**
+     * Construye el mensaje de éxito de la operación
+     *
+     * @param ra        atributo de redirección
+     * @param type      tipo de entidad
+     * @param operation operación realizada
+     */
     public static void buildSuccessMessage(RedirectAttributes ra, EntityType type, Operation operation) {
         String message = auxiliarForSuccessMessage(type, operation);
         ra.addFlashAttribute("successMessage", message);
     }
+
 
     private static String auxiliarForSuccessMessage(EntityType type, Operation operation) {
         String stringType = type.getValue();

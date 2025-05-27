@@ -52,8 +52,11 @@ public class OrderService {
     CartService cartService;
 
     /**
+     * Página con los pedidos del usuario
+     *
      * @param user usuario a obtener pedidos
-     * @return paginas con los pedidos del user, si eres admin de todos
+     * @param page página actual
+     * @return página con los pedidos actual
      */
     public Page<OrderDTO> getOrders(User user, int page) {
         Pageable pageable = Pageable
@@ -64,10 +67,12 @@ public class OrderService {
                 .map(orderMapper::orderToOrderDTO);
     }
 
-    public List<Order> getAllOrderFromUser(User user) {
-        return orderRepository.findByUser(user);
-    }
-
+    /**
+     * Página con todos los pedidos
+     *
+     * @param page página actual
+     * @return página de los pedidos actual
+     */
     public Page<OrderDTO> getAllOrders(int page) {
         Pageable pageable = Pageable
                 .ofSize(PAGE_SIZE_ADMIN)
@@ -78,9 +83,11 @@ public class OrderService {
     }
 
     /**
-     * @param idUser  idUser
-     * @param idOrder idOrder
-     * @return pedido coincidiente con el id, si es del usuario actual
+     * Pedido cuyo id, pero solo si es del usuario o si es admin
+     *
+     * @param idUser  id del usuario
+     * @param idOrder id del pedido
+     * @return pedido coincidente
      * @throws ResponseStatusException NOTFOUND o FORBIDDEN
      */
     @Transactional
@@ -100,6 +107,13 @@ public class OrderService {
         return orderMapper.orderToOrderDetailsDTO(order);
     }
 
+    /**
+     * Obtener pedido por id
+     *
+     * @param idOrder id del pedido
+     * @return pedido coincidente
+     * @throws ResponseStatusException si pedido no encontrado
+     */
     private Order getOrderById(long idOrder) throws ResponseStatusException {
         return orderRepository.findById(idOrder)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido no encontrado"));
@@ -124,10 +138,10 @@ public class OrderService {
     /**
      * Guarda un pedido
      *
-     * @param user       usuario
-     * @param cart       carrito
-     * @param saleStatus saleStatus
-     * @param payment    paymentMethod
+     * @param user       usuario que realiza el pedido
+     * @param cart       carrito con el pedido
+     * @param saleStatus estado de venta
+     * @param payment    detalles del pago
      * @param session    la sesión HTTP
      * @return detalles del pedido guardado
      */
@@ -153,7 +167,7 @@ public class OrderService {
         order.setTotalPrice(priceAmountCalc(cartService.getDetailedProducts(session)));
         order.setPaymentMethod(payment.getPaymentMethod());
         order.setAddress(payment.getAddress());
-        order.setName(payment.getFull_name());
+        order.setName(payment.getFullName());
         Order savedOrder = orderRepository.save(order);
         order.setOrderDetails(
                 getOrderDetailsFromCart(products, savedOrder)
@@ -192,11 +206,25 @@ public class OrderService {
         return detailsList;
     }
 
+    /**
+     * Borra por id de pedido
+     *
+     * @param idOrder id del pedido
+     * @throws ResponseStatusException si pedido no encontrado
+     */
     public void deleteOrderById(long idOrder) throws ResponseStatusException {
         Order order = getOrderById(idOrder);
         orderRepository.delete(order);
     }
 
+    /**
+     * Actualiza el pedido cambiando el status
+     *
+     * @param idOrder id del pedido a cambiar
+     * @param status  estado al que cambia (debe ser el valor coincidente con el enum)
+     * @return pedido actualizado
+     * @throws ResponseStatusException si el estado no es válido
+     */
     @Transactional
     public OrderDTO updateOrder(long idOrder, String status) throws ResponseStatusException {
         try {
@@ -212,6 +240,12 @@ public class OrderService {
         }
     }
 
+    /**
+     * Obtiene una lista de los productos que aparezcan en sus pedidos
+     *
+     * @param user usuario del que obtener
+     * @return listado de productos comprados
+     */
     @Transactional
     public Set<Product> getProductsFromUserOrders(User user) {
 

@@ -26,6 +26,12 @@ public class GenericUtils {
         return letraDNI == letraCorrecta;
     }
 
+    /**
+     * Calcula el precio total del carrito
+     *
+     * @param cart carrito con los productos a calcular el precio
+     * @return precio total en BigDecimal con 2 caracteres tras coma
+     */
     public static BigDecimal priceAmountCalc(Map<ProductDTO, Integer> cart) {
         return cart.entrySet().stream()
                 .map(entry -> entry.getKey().getPrice()

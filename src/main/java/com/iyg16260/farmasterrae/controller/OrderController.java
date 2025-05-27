@@ -10,6 +10,7 @@ import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.utils.GenericUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -65,7 +66,7 @@ public class OrderController {
         PaymentDetailsDTO paymentDetails = new PaymentDetailsDTO();
         paymentDetails.setAmount(totalAmount);
         paymentDetails.setAddress(user.getAddress());
-        paymentDetails.setFull_name(user.getFullName());
+        paymentDetails.setFullName(user.getFullName());
 
         return new ModelAndView("/order/order-details")
                 .addObject("products", cartProducts)
@@ -80,7 +81,7 @@ public class OrderController {
      * @return
      */
     @PostMapping ("/confirm")
-    public ModelAndView getPayment(@ModelAttribute PaymentDetailsDTO paymentDetails,
+    public ModelAndView getPayment(@Valid @ModelAttribute PaymentDetailsDTO paymentDetails,
                                    @AuthenticationPrincipal User user,
                                    HttpSession session,
                                    RedirectAttributes redirectAttributes) {
@@ -103,8 +104,7 @@ public class OrderController {
         // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
         redirectAttributes.addFlashAttribute(order);
 
-        // Añadir algo como request param de exito true
-        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId());
+        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId() + "?success=true");
     }
 
     // SIN USAR, ENFOQUE ORIGINAL PARA TENER UN PAGO MAS DETALLADO

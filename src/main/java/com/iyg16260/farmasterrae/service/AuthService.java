@@ -34,7 +34,12 @@ public class AuthService {
     @Autowired
     BCryptPasswordEncoder encoder;
 
-
+    /**
+     * Registra el usuario a partir del formulario en la BBDD
+     *
+     * @param registerForm DTO que representa el formulario de registro
+     * @throws ResponseStatusException BAD_REQUEST caso haya campos coincidentes
+     */
     public void setRegister(RegisterFormDTO registerForm) throws ResponseStatusException {
 
         if (userRepository.findByUsername(registerForm.getUsername()).isPresent())
@@ -53,6 +58,12 @@ public class AuthService {
         userRepository.save(user);
     }
 
+    /**
+     * Cambia la contraseña por una contraseña autogenerada y manda un correo
+     *
+     * @param passwordRequest DTO que contiene el email
+     * @return mismo DTO con success/error
+     */
     public PasswordRecoveryDTO setPassword(PasswordRecoveryDTO passwordRequest) {
         try {
             if (!recoverPassword(passwordRequest.getEmail())) {
@@ -70,6 +81,13 @@ public class AuthService {
         return passwordRequest;
     }
 
+    /**
+     * Cambia la contraseña por la recibida através del DTO
+     *
+     * @param passwordRequest DTO con la contraseña
+     * @param user            usuario a cambiar
+     * @return mismo DTO con success/error
+     */
     public PasswordRecoveryDTO setPasswordAuthenticated(PasswordRecoveryDTO passwordRequest, User user) {
 
         var validationResult = validatePassword(passwordRequest);
@@ -85,6 +103,12 @@ public class AuthService {
         return passwordRequest;
     }
 
+    /**
+     * Verifica que la contraseña sea correcta, si está en blanco y si la confirmación es correcta
+     *
+     * @param passwordRequest DTO con la contraseña y su confirmación
+     * @return null si es correcta la validacion, error si no
+     */
     private PasswordRecoveryDTO validatePassword(PasswordRecoveryDTO passwordRequest) {
         String newPassword = passwordRequest.getNewPassword();
 

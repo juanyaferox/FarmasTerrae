@@ -132,9 +132,7 @@ public class GlobalExceptionHandler implements Filter {
 
     private String processBindingErrors(BindException be) {
         return be.getBindingResult().getFieldErrors().stream()
-                .map(fe -> "<li><strong>"
-                        + fe.getField()
-                        + "</strong>: "
+                .map(fe -> "<li>"
                         + fe.getDefaultMessage()
                         + "</li>")
                 .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));

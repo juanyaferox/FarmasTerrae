@@ -1,10 +1,9 @@
 package com.iyg16260.farmasterrae.utils;
 
-import com.iyg16260.farmasterrae.model.Product;
-
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SessionCart implements Serializable {
 
@@ -18,7 +17,8 @@ public class SessionCart implements Serializable {
 
     /**
      * Añade producto a la cesta, aumentando en uno la cantidad si está repetido
-     * @param productReference
+     *
+     * @param productReference referencia del producto
      */
     public void addProduct(String productReference) {
         products.merge(productReference, 1, Integer::sum);
@@ -26,7 +26,8 @@ public class SessionCart implements Serializable {
 
     /**
      * Borra una unidad del producto del Map
-     * @param productReference
+     *
+     * @param productReference referencia del producto
      */
     public void deleteOneProduct(String productReference) {
         products.merge(productReference, 1, (oldQuantity, value) -> {
@@ -37,7 +38,8 @@ public class SessionCart implements Serializable {
 
     /**
      * Borra todas las unidades del producto del Map
-     * @param productReference
+     *
+     * @param productReference referencia del producto
      */
     public void deleteAllSameProduct(String productReference) {
         products.remove(productReference);
@@ -52,7 +54,8 @@ public class SessionCart implements Serializable {
 
     /**
      * Obtiene todos los productos del carrito
-     * @return
+     *
+     * @return productos por referencia y cantidad
      */
     public Map<String, Integer> getProducts() {
         return products;
@@ -60,7 +63,8 @@ public class SessionCart implements Serializable {
 
     /**
      * Obtiene el tamaño del carrito
-     * @return
+     *
+     * @return tamaño del carrito
      */
     public int getSize() {
         return products.size();

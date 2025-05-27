@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.controller;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
@@ -69,6 +70,7 @@ public class AdminController {
             case "products" -> {
                 Page<ProductDTO> products = productsService.getProductList(page, true);
                 model.addObject("products", products);
+                model.addObject("categories", Category.values());
             }
             case "users" -> {
                 Page<UserDTO> users = userService.getAllUsers(page);

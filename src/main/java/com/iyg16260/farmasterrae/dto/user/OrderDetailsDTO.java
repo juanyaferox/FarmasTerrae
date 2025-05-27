@@ -16,6 +16,8 @@ public class OrderDetailsDTO {
     String createdAt;
     String updatedAt;
     String paymentMethod;
+    String name;
+    String address;
 
     public void setStatus(SaleStatus saleStatus) {
         this.status = saleStatus.getValue();

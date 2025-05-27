@@ -4,6 +4,7 @@ import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.service.ProductsService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -21,14 +22,14 @@ public class DashboardProductController {
     private final String PRODUCT_PATH = "redirect:/admin/dashboard/products";
 
     @PostMapping
-    public String addProduct(@ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
+    public String addProduct(@Valid @ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
         productsService.saveProduct(productDTO);
         buildSuccessMessage(ra, EntityType.PRODUCTS, Operation.POST);
         return PRODUCT_PATH;
     }
 
     @PutMapping
-    public String updateProduct(@ModelAttribute ProductDTO productDTO, @RequestParam String oldReference, RedirectAttributes ra) {
+    public String updateProduct(@Valid @ModelAttribute ProductDTO productDTO, @RequestParam String oldReference, RedirectAttributes ra) {
         productsService.updateProduct(productDTO, oldReference);
         buildSuccessMessage(ra, EntityType.PRODUCTS, Operation.PUT);
         return PRODUCT_PATH;

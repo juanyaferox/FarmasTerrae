@@ -18,8 +18,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-md shadow-md p-8">
             <!-- Product Image -->
             <div class="flex justify-center">
-                <img th:src="${product.imagePath}" alt="Imagen del producto"
-                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm">
+                <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
+                     alt="Imagen del producto"
+                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
+                <img th:unless="${product.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
+                     alt="Imagen del producto"
+                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
             </div>
             <!-- Product Information -->
             <div class="space-y-6">

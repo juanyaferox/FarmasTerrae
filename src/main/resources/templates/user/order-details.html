@@ -10,7 +10,9 @@
     <div class="container mx-auto px-4">
         <!-- Título -->
         <h1 class="text-4xl font-bold text-green-800 mb-12 text-center">Detalles del Pedido</h1>
-
+        <div th:if="${success}" class="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
+            ¡Pedido realizado con éxito!
+        </div>
         <!-- Información General del Pedido -->
         <div class="bg-green-50 shadow-sm rounded-md p-6 mb-8">
             <h2 class="text-2xl font-semibold text-green-700 mb-6">Información del Pedido</h2>
@@ -18,6 +20,14 @@
                 <div>
                     <p class="text-gray-600"><span class="font-semibold text-green-700">Precio Total:</span> <span
                             th:text="${order.totalPrice} + ' €'"></span></p>
+                    <p class="text-gray-600">
+                        <span class="font-semibold text-green-700">Nombre de Envío:</span>
+                        <span th:text="${order.name}"></span>
+                    </p>
+                    <p class="text-gray-600">
+                        <span class="font-semibold text-green-700">Dirección de Envío:</span>
+                        <span th:text="${order.address}"></span>
+                    </p>
                     <p class="text-gray-600"><span class="font-semibold text-green-700">Estado:</span> <span
                             th:text="${order.status}"></span></p>
                     <p class="text-gray-600"><span class="font-semibold text-green-700">Método de Pago:</span> <span
@@ -50,7 +60,7 @@
                         <h3 class="text-xl font-semibold text-green-700" th:text="${entry.key.name}"></h3>
                         <p class="text-gray-600 mb-2" th:text="${entry.key.description}"></p>
                         <p class="text-gray-600"><span class="font-semibold text-green-700">Precio Unitario:</span>
-                            <span th:text="${entry.key.price} + ' $'"></span></p>
+                            <span th:text="${entry.key.price} + ' €'"></span></p>
                         <p class="text-gray-600"><span class="font-semibold text-green-700">Cantidad:</span> <span
                                 th:text="${entry.value}"></span></p>
                         <p class="text-gray-600"><span class="font-semibold text-green-700">Referencia:</span> <span

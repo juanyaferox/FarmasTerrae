@@ -10,4 +10,6 @@ public class OrderDTO {
     String updatedAt;
     Float totalPrice;
     SaleStatus status;
+    String name;
+    String address;
 }
