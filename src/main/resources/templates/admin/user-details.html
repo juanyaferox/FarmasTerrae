@@ -20,16 +20,23 @@
                 <p class="flex-1 text-lg text-gray-800" th:text="${user.username}"></p>
             </div>
             <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
+                <span class="text-green-600 font-semibold">Nombre completo</span>
+                <p class="flex-1 text-lg text-gray-800"
+                   th:text="${user.fullName != null ? user.fullName : 'Sin nombre completo'}"></p>
+            </div>
+            <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
                 <span class="text-green-600 font-semibold">Correo Electrónico</span>
                 <p class="flex-1 text-lg text-gray-800" th:text="${user.email}"></p>
             </div>
             <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
                 <span class="text-green-600 font-semibold">Teléfono</span>
-                <p class="flex-1 text-lg text-gray-800" th:text="${user.phone}"></p>
+                <p class="flex-1 text-lg text-gray-800"
+                   th:text="${user.phone != null ? user.phone : 'Sin teléfono'}"></p>
             </div>
             <div class="flex items-center space-x-4 bg-green-50 p-4 rounded-md shadow-sm">
                 <span class="text-green-600 font-semibold">Dirección</span>
-                <p class="flex-1 text-lg text-gray-800" th:text="${user.address}"></p>
+                <p class="flex-1 text-lg text-gray-800"
+                   th:text="${user.address != null ? user.address : 'Sin dirección'}"></p>
             </div>
         </div>
 

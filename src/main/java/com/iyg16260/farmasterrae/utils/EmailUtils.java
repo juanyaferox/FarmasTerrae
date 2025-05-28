@@ -43,10 +43,10 @@ public class EmailUtils {
 
         message.setFrom(internetAddress);
         message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-        message.setSubject("Recuperación de Contraseña - InmoGestor");
+        message.setSubject("Recuperación de Contraseña - FarmasTerrae");
 
         String emailContent = "Estimado usuario,\n\n"
-                + "Su contraseña ha sido restablecida. Su nueva contraseña es: " + newPassword;
+                + "Su contraseña ha sido restablecida. Su nueva contraseña es: \n\n" + newPassword;
 
         message.setText(emailContent);
 

@@ -29,32 +29,23 @@ public class SecurityConfig implements WebMvcConfigurer {
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login",
-                                "/styles/**",
-                                "/js/**",
-                                "/dist/**",
-                                "/cart/**",
-                                "/products/**",
-                                "/register/**",
-                                "/",
-                                "/h2-console/**",
-                                "/common/error"
-                        ).permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/order/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 // Configuración para H2
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
                 .formLogin(form -> form
-                        .loginPage("/login")  // Configuramos la URL de la página de login personalizada
+                        .loginPage("/auth")  // Configuramos la URL de la página de login personalizada
                         .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
+                        .logoutSuccessUrl("/auth?logout")
                         .permitAll()
                 )
                 .rememberMe(remember -> remember
@@ -64,7 +55,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 )
                 .sessionManagement(session -> session
                         .sessionFixation().newSession()  // Crea una nueva sesión después de autenticación
-                        .maximumSessions(1).expiredUrl("/login?expired")  // Expira sesiones viejas
+                        .maximumSessions(1).expiredUrl("/auth?expired")  // Expira sesiones viejas
                 )
                 .exceptionHandling(ex -> ex
                         // para 401:
@@ -85,7 +76,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/login").setViewName("auth/login");
+        registry.addViewController("/auth").setViewName("auth/login");
     }
 
 

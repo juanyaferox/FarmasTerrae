@@ -79,6 +79,10 @@ public class StockReservationService {
 
     /**
      * Obtiene el stock disponible para un producto considerando las reservas actuales
+     *
+     * @param product              producto a consultar
+     * @param excludeReservationId id de reserva a excluir del cálculo
+     * @return stock disponible actual
      */
     public int getAvailableStock(Product product, String excludeReservationId) {
         int reservedStock = 0;
@@ -98,6 +102,9 @@ public class StockReservationService {
 
     /**
      * Confirma una reserva y actualiza el stock real del producto
+     *
+     * @param reservationId id de la reserva a confirmar
+     * @return true si la confirmación fue exitosa, false si no se encontró la reserva
      */
     @Transactional
     public boolean confirmReservation(String reservationId) {
@@ -132,6 +139,8 @@ public class StockReservationService {
 
     /**
      * Libera una reserva sin actualizar el stock del producto
+     *
+     * @param reservationId id de la reserva a liberar
      */
     public void releaseReservation(String reservationId) {
         stockReservations.remove(reservationId);
@@ -139,7 +148,10 @@ public class StockReservationService {
     }
 
     /**
-     * Obtiene o crea un ID de reserva para la sesión
+     * Obtiene o crea un id de reserva para la sesión
+     *
+     * @param session sesión HTTP
+     * @return id de reserva único para la sesión
      */
     private String getOrCreateReservationId(HttpSession session) {
         String reservationId = (String) session.getAttribute(RESERVATION_ID_KEY);
@@ -151,7 +163,10 @@ public class StockReservationService {
     }
 
     /**
-     * Obtiene el ID de reserva de la sesión
+     * Obtiene el id de reserva de la sesión
+     *
+     * @param session sesión HTTP
+     * @return id de reserva o null si no existe
      */
     public String getReservationId(HttpSession session) {
         return (String) session.getAttribute(RESERVATION_ID_KEY);
@@ -175,6 +190,9 @@ public class StockReservationService {
 
     /**
      * Comprueba si la reserva de una sesión ha expirado
+     *
+     * @param session sesión HTTP a verificar
+     * @return true si la reserva ha expirado o no existe, false si está vigente
      */
     public boolean isReservationExpired(HttpSession session) {
         LocalDateTime reservationTime = (LocalDateTime) session.getAttribute(RESERVATION_TIME_KEY);

@@ -26,7 +26,8 @@
                     <tbody>
                     <tr th:each="entry : ${products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
                         <td class="px-4 py-2">
-                            <img th:src="${entry.key.imagePath}" alt="Imagen del producto" class="w-12 h-12 object-cover rounded-md">
+                            <img th:src="${entry.key.imagePath}" alt="Imagen del producto"
+                                 class="w-12 h-12 object-cover rounded-md">
                         </td>
                         <td class="px-4 py-2" th:text="${entry.key.name}"></td>
                         <td class="px-4 py-2" th:text="${entry.key.price + '€'}"></td>
@@ -35,7 +36,8 @@
                     </tr>
                     </tbody>
                 </table>
-                <p class="text-xl font-semibold text-green-700 text-right mb-4 py-4" th:text="${'TOTAL: ' + paymentDetails.amount + '€'}"></p>
+                <p class="text-xl font-semibold text-green-700 text-right mb-4 py-4"
+                   th:text="${'TOTAL: ' + paymentDetails.amount + '€'}"></p>
             </div>
 
             <!-- Columna Derecha: Formulario de Entrega y Pago -->
@@ -44,21 +46,23 @@
                 <form th:action="@{/order/confirm}" method="post">
                     <!-- Campo Nombre -->
                     <div class="mb-4">
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text" id="name" name="name" required
-                               th:value="${paymentDetails.full_name}"
+                        <label for="paymentDetails.fullName"
+                               class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" id="paymentDetails.fullName" name="fullName" required
+                               th:value="${paymentDetails.fullName}"
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
                     <!-- Campo Dirección -->
                     <div class="mb-4">
-                        <label for="address" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                        <input type="text" id="address" name="address" required
+                        <label for="paymentDetails.address" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
+                        <input type="text" id="paymentDetails.address" name="address" required
                                th:value="${paymentDetails.address}"
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
                     <!-- Select para Método de Pago -->
                     <div class="mb-6">
-                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Método de Pago</label>
+                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Método de
+                            Pago</label>
                         <select id="paymentMethod" name="paymentMethod" required
                                 class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition">
                             <option th:each="method : ${paymentMethod}"

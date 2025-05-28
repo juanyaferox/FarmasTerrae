@@ -28,15 +28,19 @@
                 <button type="button"
                         class="bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
                         th:data-username="${user.username}"
+                        th:data-fullName="${user.fullName}"
                         th:data-email="${user.email}"
                         th:data-phone="${user.phone}"
                         th:data-address="${user.address}"
+                        th:data-type="${user.type}"
                         @click="selectedUser = {
                     username: $el.dataset.username,
                     oldUsername: $el.dataset.username,
+                    fullName: $el.dataset.fullName,
                     email: $el.dataset.email,
                     phone: $el.dataset.phone,
-                    address: $el.dataset.address
+                    address: $el.dataset.address,
+                    type: $el.dataset.type
                 }; showModal = true">
                     Editar
                 </button>
@@ -66,6 +70,10 @@
                     <input type="text" x-model="selectedUser.username" class="w-full border rounded p-2" required/>
                 </div>
                 <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+                    <input type="fullName" x-model="selectedUser.fullName" class="w-full border rounded p-2" required/>
+                </div>
+                <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                     <input type="email" x-model="selectedUser.email" class="w-full border rounded p-2" required/>
                 </div>
@@ -76,6 +84,16 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                     <input type="text" x-model="selectedUser.address" class="w-full border rounded p-2"/>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Perfil</label>
+                    <select x-model="selectedUser.type" required class="w-full border rounded p-2">
+                        <option disabled value="">Seleccione un perfil</option>
+                        <option th:each="profile : ${profiles}"
+                                th:value="${profile.type}"
+                                th:text="${profile.description}">
+                        </option>
+                    </select>
                 </div>
 
                 <div class="flex justify-end space-x-2">
@@ -103,9 +121,11 @@
         <input type="hidden" name="_method" value="put"/>
         <input type="hidden" name="oldUsername" :value="selectedUser.oldUsername"/>
         <input type="hidden" name="username" :value="selectedUser.username"/>
+        <input type="hidden" name="fullName" :value="selectedUser.fullName"/>
         <input type="hidden" name="email" :value="selectedUser.email"/>
         <input type="hidden" name="phone" :value="selectedUser.phone"/>
         <input type="hidden" name="address" :value="selectedUser.address"/>
+        <input type="hidden" name="type" :value="selectedUser.type"/>
     </form>
 
     <!-- Paginación -->

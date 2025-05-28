@@ -1,29 +1,29 @@
 package com.iyg16260.farmasterrae.controller;
 
-import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
-import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.CartService;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.utils.GenericUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import java.util.Objects;
 
 @Controller
 @Slf4j
@@ -66,7 +66,7 @@ public class OrderController {
         PaymentDetailsDTO paymentDetails = new PaymentDetailsDTO();
         paymentDetails.setAmount(totalAmount);
         paymentDetails.setAddress(user.getAddress());
-        paymentDetails.setFull_name(user.getFullName());
+        paymentDetails.setFullName(user.getFullName());
 
         return new ModelAndView("/order/order-details")
                 .addObject("products", cartProducts)
@@ -81,11 +81,10 @@ public class OrderController {
      * @return
      */
     @PostMapping ("/confirm")
-    public ModelAndView getPayment(@ModelAttribute PaymentDetailsDTO paymentDetails,
+    public ModelAndView getPayment(@Valid @ModelAttribute PaymentDetailsDTO paymentDetails,
                                    @AuthenticationPrincipal User user,
                                    HttpSession session,
                                    RedirectAttributes redirectAttributes) {
-        //TODO: Es necesario hacer que los datos del formulario del html se añadan al paymentDetailsDTO
 
         // Verificar nuevamente las reservas de stock
         if (!cartService.validateCartReservations(session)) {
@@ -101,12 +100,11 @@ public class OrderController {
             return new ModelAndView("redirect:/cart");
         }
 
-        var order =  orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentDetails, session);
+        var order = orderService.setOrder(user, cart, SaleStatus.PENDING, paymentDetails, session);
         // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
         redirectAttributes.addFlashAttribute(order);
 
-        return new ModelAndView("order/success")
-                .addObject("order", order);
+        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId() + "?success=true");
     }
 
     // SIN USAR, ENFOQUE ORIGINAL PARA TENER UN PAGO MAS DETALLADO

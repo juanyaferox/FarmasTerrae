@@ -25,8 +25,8 @@
                 Panel de control
             </a>
             <div sec:authorize="isAnonymous()">
-                <a th:href="@{/login}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Iniciar sesión</a>
-                <a th:href="@{/register}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Registrarse</a>
+                <a th:href="@{/auth}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Iniciar sesión</a>
+                <a th:href="@{/auth/register}" class="py-2 px-4 hover:bg-green-100 text-green-700 rounded-md">Registrarse</a>
             </div>
 
             <a sec:authorize="isAuthenticated()" th:href="@{/logout}"
@@ -35,15 +35,15 @@
         </nav>
     </div>
     <div th:if="${errorMessage}" x-data="{ show: true }"
-         th:attr="x-init=|setTimeout(() => show = false, 3000)|"
+         th:attr="x-init=|setTimeout(() => show = false, 10000)|"
          x-show="show"
          class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow">
         <span th:utext="${errorMessage}"></span>
     </div>
     <div th:if="${successMessage}" x-data="{ show: true }"
-         th:attr="x-init=|setTimeout(() => show = false, 3000)|"
+         th:attr="x-init=|setTimeout(() => show = false, 10000)|"
          x-show="show"
-         class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow">
+         class="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow">
         <span th:text="${successMessage}"></span>
     </div>
 </header>

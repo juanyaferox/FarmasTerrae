@@ -120,10 +120,12 @@ public class UserController {
      * @return
      */
     @GetMapping ("/dashboard/orders/{idOrder}")
-    public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
+    public ModelAndView getOrder(@PathVariable int idOrder, @RequestParam (defaultValue = "false", required = false) boolean success, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
+        System.out.println(orderDetails);
         return new ModelAndView("user/order-details")
-                .addObject("order", orderDetails);
+                .addObject("order", orderDetails)
+                .addObject("success", success);
     }
 
     @PutMapping ("/dashboard/reviews")

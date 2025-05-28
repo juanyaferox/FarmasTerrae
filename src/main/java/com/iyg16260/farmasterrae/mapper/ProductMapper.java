@@ -9,23 +9,26 @@ import org.mapstruct.Named;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Mapper (componentModel = "spring") // Para que Spring lo gestione como un Bean
 public interface ProductMapper {
 
-    @Mapping(target = "price", source = "price", qualifiedByName = "formatPrice")
+    @Mapping (target = "price", source = "price", qualifiedByName = "formatPrice")
     ProductDTO productToProductDTO(Product product); // Asume que tienes una entidad Product
 
-    @Mapping(target = "price", source = "price", qualifiedByName = "formatPrice")
+    @Mapping (target = "price", source = "price", qualifiedByName = "formatPrice")
     ProductPageDTO productToProductPageDTO(Product product);
 
+    @Mapping (target = "price", source = "price", qualifiedByName = "formatPriceToCents")
     Product productDTOToProduct(ProductDTO productDTO);
 
-    @Named("formatPrice")
+    @Named ("formatPrice")
     default BigDecimal formatPrice(Integer price) {
         return BigDecimal.valueOf(price).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+    }
 
+    @Named ("formatPriceToCents")
+    default Integer formatPriceToCents(BigDecimal price) {
+        return price.multiply(BigDecimal.valueOf(100)).intValue();
     }
 }

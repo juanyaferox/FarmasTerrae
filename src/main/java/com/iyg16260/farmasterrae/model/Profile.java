@@ -11,16 +11,17 @@ import java.util.List;
 
 @Entity
 @Data
-@Table(name = "profiles")
+@Table (name = "profiles")
 public class Profile implements GrantedAuthority, Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue (strategy = GenerationType.IDENTITY)
     Long id;
 
+    @Column (unique = true)
     String type;
 
     String description;

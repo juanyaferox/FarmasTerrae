@@ -31,12 +31,15 @@ public class ProductsController {
     @GetMapping
     public ModelAndView getProducts(@RequestParam (required = false) Category category, @RequestParam (defaultValue = "0", required = false) int page) {
         Page<ProductPageDTO> products;
-        if (category != null)
+        String text = "Todos los Productos";
+        if (category != null) {
             products = productsService.getProductListByCategory(category, page);
-        else
+            text = category.getValue();
+        } else
             products = productsService.getProductListByCategory(page);
         return new ModelAndView("products/product-list")
-                .addObject("products", products);
+                .addObject("products", products)
+                .addObject("text", text);
     }
 
     @GetMapping ("/{reference}")

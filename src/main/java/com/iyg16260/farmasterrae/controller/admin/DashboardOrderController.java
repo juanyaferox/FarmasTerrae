@@ -26,7 +26,7 @@ public class DashboardOrderController {
     @GetMapping ("/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-        return new ModelAndView("admin/order-details")
+        return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);
     }
 

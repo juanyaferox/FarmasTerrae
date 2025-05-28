@@ -1,11 +1,17 @@
 package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
-@Data
-@Table(name = "orderDetails")
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@Table (name = "orderDetails")
 public class OrderDetails {
 
     @EmbeddedId
@@ -20,13 +26,21 @@ public class OrderDetails {
         }
     }
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="idOrder")
-    @MapsId("idOrder")
+    @ToString.Exclude
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name = "idOrder")
+    @MapsId ("idOrder")
     Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="idProduct")
-    @MapsId("idProduct")
+    @ToString.Exclude
+    @ManyToOne (fetch = FetchType.LAZY)
+    @JoinColumn (name = "idProduct")
+    @MapsId ("idProduct")
     Product product;
+
+    public OrderDetails(Order order, Product product) {
+        this.order = order;
+        this.product = product;
+        this.id = new OrderDetailsId(order.getId(), product.getId());
+    }
 }

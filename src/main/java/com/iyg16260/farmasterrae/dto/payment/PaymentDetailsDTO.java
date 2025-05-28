@@ -1,15 +1,17 @@
 package com.iyg16260.farmasterrae.dto.payment;
 
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Data
 public class PaymentDetailsDTO {
     PaymentMethod paymentMethod;
     BigDecimal amount;
+    @NotBlank (message = "Debe tener una dirección")
     String address;
-    String full_name;
+    @NotBlank (message = "Debe tener un nombre")
+    String fullName;
 }

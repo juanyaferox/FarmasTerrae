@@ -14,7 +14,7 @@
         </h2>
 
         <!-- Formulario -->
-        <form th:action="@{/login}" method="post" class="space-y-6">
+        <form th:action="@{/auth}" method="post" class="space-y-6">
             <div>
                 <label for="username" class="block text-gray-700 font-medium mb-1">Usuario</label>
                 <input
@@ -38,8 +38,9 @@
 
         <!-- Enlaces Auxiliares -->
         <div class="flex justify-between text-sm text-green-700">
-            <a th:href="@{/forgot-password}" class="hover:text-green-800 hover:underline">¿Olvidaste tu contraseña?</a>
-            <a th:href="@{/register}" class="hover:text-green-800 hover:underline">Crear cuenta</a>
+            <a th:href="@{/auth/forgotPassword}" class="hover:text-green-800 hover:underline">¿Olvidaste tu
+                contraseña?</a>
+            <a th:href="@{/auth/register}" class="hover:text-green-800 hover:underline">Crear cuenta</a>
         </div>
 
         <!-- Mensajes de Error / Logout -->
