@@ -84,9 +84,9 @@
             <version>2.0.1</version>
         </dependency>
         <dependency>
-            <groupId>org.mariadb.jdbc</groupId>
-            <artifactId>mariadb-java-client</artifactId>
-            <version>3.3.2</version>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>

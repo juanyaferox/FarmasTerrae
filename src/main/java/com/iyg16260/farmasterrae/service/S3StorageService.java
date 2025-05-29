@@ -10,10 +10,14 @@ import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
@@ -21,6 +25,9 @@ public class S3StorageService {
 
     @Autowired
     private S3Client s3Client;
+
+    @Autowired
+    private S3Presigner s3Presigner;
 
     @Value ("${aws.s3.bucket-name}")
     private String bucketName;
@@ -95,5 +102,52 @@ public class S3StorageService {
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al procesar la URL del archivo", e);
         }
+    }
+
+    /**
+     * Genera una URL firmada para descargar un archivo de S3
+     *
+     * @param key      La clave del objeto en S3
+     * @param duration La duración de validez de la URL firmada
+     * @return La URL firmada
+     */
+    public String generatePresignedUrl(String key, Duration duration) {
+        try {
+            // Construye la petición de descarga
+            GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(key)
+                    .build();
+
+            // Construye la petición de prefirmado
+            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                    .signatureDuration(duration)
+                    .getObjectRequest(getObjectRequest)
+                    .build();
+
+            // Genera y devuelve la URL firmada
+            return s3Presigner.presignGetObject(presignRequest).url().toString();
+
+        } catch (S3Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar URL firmada: " + e.getMessage(), e);
+        }
+    }
+
+    public String extractKeyFromUrl(String fileUrl) {
+        if (fileUrl == null || fileUrl.isEmpty()) {
+            return null;
+        }
+
+        // Si ya es solo la clave
+        if (!fileUrl.startsWith("http")) {
+            return fileUrl;
+        }
+
+        // Si es URL completa, extraer la clave
+        if (fileUrl.contains(bucketName)) {
+            return fileUrl.substring(fileUrl.indexOf(bucketName) + bucketName.length() + 1);
+        }
+
+        return fileUrl;
     }
 }

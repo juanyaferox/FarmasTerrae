@@ -25,13 +25,6 @@ public class Product {
 
     String imagePath;
 
-    @PrePersist
-    void prePersist() {
-        if (imagePath == null || imagePath.isEmpty()) {
-            //imagePath = 1;//ruta de imagen x defecto
-        }
-    }
-
     Integer price;
 
     Integer stock;
