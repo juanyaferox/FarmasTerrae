@@ -5,7 +5,6 @@ target/
 !**/src/test/**/target/
 .env
 logs/
-src/main/resources/application-secrets.properties
 
 ### STS ###
 .apt_generated
@@ -37,5 +36,4 @@ build/
 
 ### NODE JS ###
 /src/main/resources/static/node_modules/
-!/src/main/resources/application-secrets.properties
 !/src/main/resources/application-secrets.properties

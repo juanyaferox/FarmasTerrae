@@ -157,7 +157,7 @@ public class AuthService {
 
         try {
             MimeMessage message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, false, "UTF-8");
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
 
             helper.setFrom(fromAddress);
             helper.setTo(email);
@@ -169,7 +169,7 @@ public class AuthService {
                             "Por favor, cámbiela después de iniciar sesión.",
                     user.getUsername(), newPassword
             );
-            helper.setText(content, false);
+            helper.setText(content);
 
             javaMailSender.send(message);
 
