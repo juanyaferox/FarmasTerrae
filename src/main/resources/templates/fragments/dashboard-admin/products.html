@@ -21,6 +21,13 @@
          // Crear FormData para manejar archivos
          const formData = new FormData(form);
 
+         // VALIDACIÓN: tamaño máximo 10MB
+        const file = this.$refs.fileInput.files[0];
+        if (file && file.size > 1 * 1024 * 1024) {
+            alert('El archivo supera el tamaño máximo permitido de 10 MB');
+            return; // Detiene el envío
+        }
+
          // Enviar con fetch para manejar multipart/form-data
          fetch(form.action, {
            method: 'POST',
@@ -120,7 +127,7 @@
                     <span x-text="isNew ? 'Nuevo Producto' : 'Editar Producto: ' + selectedProduct.reference"></span>
                 </h3>
                 <form x-ref="productForm" th:action="@{/admin/dashboard/products}" method="post"
-                      enctype="multipart/form-data">
+                      enctype="multipart/form-data" @submit.prevent="submitForm()">
                     <!-- CSRF si es necesario -->
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
                     <template x-if="!isNew">
@@ -159,7 +166,7 @@
                             <button type="button"
                                     class="w-full bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
                                     @click="$refs.fileInput.click()">
-                                Seleccionar Imagen
+                                Seleccionar Imagen (Tamaño Máximo: 10MB)
                             </button>
                         </div>
                         <!-- Texto de estado debajo del botón -->
