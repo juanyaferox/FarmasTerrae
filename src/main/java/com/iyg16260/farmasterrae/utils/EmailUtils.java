@@ -1,59 +1,54 @@
 package com.iyg16260.farmasterrae.utils;
 
-import io.github.cdimascio.dotenv.Dotenv;
-import jakarta.mail.*;
-import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Properties;
-
-
+@Service
 public class EmailUtils {
-    private static final String SMTP_HOST = "smtp.gmail.com";
-    private static final int SMTP_PORT = 587;
 
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String EMAIL = dotenv.get("SMTP_USERNAME");
-    private static final String PASSWORD = dotenv.get("SMTP_PASSWORD");
+    private final JavaMailSender mailSender;
+    private final String fromAddress;
+
+    public EmailUtils(
+            JavaMailSender mailSender,
+            @Value ("${spring.mail.username}") String fromAddress
+    ) {
+        this.mailSender = mailSender;
+        this.fromAddress = fromAddress;
+    }
 
     /**
-     * Envia un correo de recuperación de contraseña
+     * Envía un correo de recuperación de contraseña usando Spring Email
      *
      * @param toEmail     Correo de destino
      * @param newPassword Nueva contraseña
      */
-    public static void sendPasswordRecoveryEmail(String toEmail, String newPassword) throws MessagingException {
+    public void sendPasswordRecoveryEmail(String toEmail, String newPassword) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, /* multipart */ false, "UTF-8");
 
-        Properties props = new Properties();
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.host", SMTP_HOST);
-        props.put("mail.smtp.port", SMTP_PORT);
+            helper.setFrom(fromAddress);
+            helper.setTo(toEmail);
+            helper.setSubject("Recuperación de Contraseña - FarmasTerrae");
 
-        Authenticator auth = new Authenticator() {
-            @Override
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(EMAIL, PASSWORD);
-            }
-        };
+            String content = String.format(
+                    "Estimado usuario,%n%n" +
+                            "Su contraseña ha sido restablecida. Su nueva contraseña es:%n%n%s",
+                    newPassword
+            );
+            helper.setText(content);
 
-        Session session = Session.getInstance(props, auth);
-        var message = new MimeMessage(session);
-        var internetAddress = new InternetAddress(toEmail);
+            mailSender.send(message);
 
-        message.setFrom(internetAddress);
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toEmail));
-        message.setSubject("Recuperación de Contraseña - FarmasTerrae");
-
-        String emailContent = "Estimado usuario,\n\n"
-                + "Su contraseña ha sido restablecida. Su nueva contraseña es: \n\n" + newPassword;
-
-        message.setText(emailContent);
-
-        Transport.send(message);
-
-        System.out.println("Correo enviado satisfactoriamente a " + toEmail);
-
-
+        } catch (Exception e) {
+            // Loguea o reprocesa según tu política de errores
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error enviando correo de recuperación");
+        }
     }
 }
