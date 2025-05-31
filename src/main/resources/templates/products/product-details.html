@@ -28,7 +28,7 @@
             <!-- Product Information -->
             <div class="space-y-6">
                 <h1 class="text-3xl font-bold text-green-800" th:text="${product.name}"></h1>
-                <p class="text-xl font-semibold text-gray-800" th:text="${'€' + product.price}"></p>
+                <p class="text-xl font-semibold text-gray-800" th:text="${product.price + ' €'}"></p>
                 <p class="text-gray-600" th:text="${product.description}"></p>
                 <div class="text-sm font-medium text-gray-700" th:if="${product.stock <= 0}">
                     <p>Producto agotado</p>
@@ -39,8 +39,8 @@
                 <!-- Add to Cart Button -->
                 <div class="mt-6">
                     <a th:href="@{/cart/add/{reference}(reference=${product.reference})}"
-                       th:classappend="${product.stock == 0} ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'"
-                       class="inline-block text-white px-8 py-4 rounded-md font-semibold transition-colors duration-300"
+                       th:classappend="${product.stock == 0} ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-100 hover:bg-green-300'"
+                       class="inline-block text-green-800 px-8 py-4 rounded-md font-semibold transition-colors duration-300"
                        th:attr="disabled=${product.stock == 0}">
                         Añadir al Carrito
                     </a>

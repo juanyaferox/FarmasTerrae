@@ -182,6 +182,17 @@ public class ProductsService {
     }
 
     /**
+     * Obtiene una cantidad específica de productos aleatorios de la base de datos
+     *
+     * @param count número de productos a obtener
+     * @return lista de productos aleatorios
+     */
+    public List<ProductDTO> getRandomProducts(int count) {
+        return productRepository.findRandomProducts(count)
+                .stream().map(productMapper::productToProductDTO).toList();
+    }
+
+    /**
      * Obtiene todas las reviews de un producto por su referencia
      *
      * @param reference referencia del producto
