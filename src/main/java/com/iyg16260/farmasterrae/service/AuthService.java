@@ -5,16 +5,18 @@ import com.iyg16260.farmasterrae.dto.auth.RegisterFormDTO;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
-import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import static com.iyg16260.farmasterrae.utils.EmailUtils.sendPasswordRecoveryEmail;
 import static com.iyg16260.farmasterrae.utils.GeneratorUtils.generateRandomCode;
 import static com.iyg16260.farmasterrae.utils.PasswordUtils.isValidPassword;
 
@@ -30,6 +32,9 @@ public class AuthService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    JavaMailSender javaMailSender;
 
     @Autowired
     BCryptPasswordEncoder encoder;
@@ -73,7 +78,7 @@ public class AuthService {
                 passwordRequest.setMessage("Correo enviado correctamente. Revisa tu bandeja de entrada.");
                 passwordRequest.setMessageType("success");
             }
-        } catch (MessagingException e) {
+        } catch (Exception e) {
             log.error("Error al mandar el mensaje a la dirección de correo: {}", passwordRequest.getEmail(), e);
             passwordRequest.setMessage("Hubo un error al enviar el correo. Inténtalo de nuevo.");
             passwordRequest.setMessageType("error");
@@ -134,12 +139,15 @@ public class AuthService {
         return null;
     }
 
+    @Value ("${spring.mail.username}")
+    String fromAddress;
+
     /**
      * @param email correo a recuperar
      * @return false caso el correo no este asignado a un usuario, true si se realizó con éxito
-     * @throws MessagingException excepcion en caso de que el correo no pudiera ser enviado
+     * @throws ResponseStatusException excepcion en caso de que el correo no pudiera ser enviado
      */
-    private boolean recoverPassword(String email) throws MessagingException {
+    private boolean recoverPassword(String email) throws ResponseStatusException {
         var optUser = userRepository.findByEmail(email);
         if (optUser.isEmpty())
             return false;
@@ -147,7 +155,27 @@ public class AuthService {
         User user = optUser.get();
         String newPassword = generateRandomCode();
 
-        sendPasswordRecoveryEmail(email, newPassword);
+        try {
+            MimeMessage message = javaMailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+
+            helper.setFrom(fromAddress);
+            helper.setTo(email);
+            helper.setSubject("Recuperación de Contraseña - FarmasTerrae");
+
+            String content = String.format(
+                    "Estimado %s,%n%n" +
+                            "Su contraseña ha sido restablecida. Su nueva contraseña es:%n%n%s%n%n" +
+                            "Por favor, cámbiela después de iniciar sesión.",
+                    user.getUsername(), newPassword
+            );
+            helper.setText(content);
+
+            javaMailSender.send(message);
+
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error enviando correo de recuperación");
+        }
 
         user.setPassword(encoder.encode(newPassword));
         userRepository.save(user);

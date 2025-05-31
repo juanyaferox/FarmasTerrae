@@ -17,6 +17,15 @@
        }
      }"
      class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
+    <script>
+        function validateFile(event) {
+    const file = document.querySelector('[x-ref="fileInput"]').files[0];
+    if (file && file.size > 10 * 1024 * 1024) {
+      alert('El archivo supera el tamaño máximo permitido de 10 MB');
+      event.preventDefault(); // Evita el envío
+    }
+  }
+    </script>
     <div class="flex justify-end mb-4">
         <button type="button"
                 class="bg-[#E6E6FA] text-purple-800 px-4 py-2 rounded-md shadow-sm hover:bg-[#D8BFD8]
@@ -93,9 +102,10 @@
         <template x-if="selectedProduct">
             <div class="bg-white rounded-md shadow-md p-6 w-full max-w-lg">
                 <h3 class="text-2xl font-semibold mb-6 text-green-800">
-                    Editar Producto: <span x-text="selectedProduct.reference"></span>
+                    <span x-text="isNew ? 'Nuevo Producto' : 'Editar Producto: ' + selectedProduct.reference"></span>
                 </h3>
-                <form x-ref="productForm" th:action="@{/admin/dashboard/products}" method="post">
+                <form x-ref="productForm" th:action="@{/admin/dashboard/products}" method="post"
+                      enctype="multipart/form-data" @submit="validateFile($event)">
                     <!-- CSRF si es necesario -->
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
                     <template x-if="!isNew">
@@ -109,14 +119,14 @@
                     <!-- Referencia -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Referencia</label>
-                        <input type="text" name="reference" x-model="selectedProduct.reference"
+                        <input type="text" name="reference" x-model="selectedProduct.reference" required
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
 
                     <!-- Nombre -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text" name="name" x-model="selectedProduct.name"
+                        <input type="text" name="name" x-model="selectedProduct.name" required
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
 
@@ -124,25 +134,35 @@
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Imagen</label>
                         <div class="relative">
-                            <!-- Input oculto -->
-                            <input type="file" name="imageFile" x-ref="fileInput" class="hidden"
+                            <!-- Input de archivo -->
+                            <input type="file" name="imageFile" x-ref="fileInput" class="hidden" accept="image/*"
                                    @change="if ($refs.fileInput.files.length) {
-                   selectedProduct.imageName = $refs.fileInput.files[0].name;
-                   selectedProduct.imageExists = true; }"/>
+                                       selectedProduct.imageName = $refs.fileInput.files[0].name;
+                                       selectedProduct.imageExists = true;
+                                   }"/>
                             <!-- Botón personalizado -->
                             <button type="button"
                                     class="w-full bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
                                     @click="$refs.fileInput.click()">
-                                Seleccionar Imagen
+                                Seleccionar Imagen (Tamaño Máximo: 10MB)
                             </button>
                         </div>
                         <!-- Texto de estado debajo del botón -->
                         <p class="mt-2 text-sm text-gray-600"
                            x-text="selectedProduct.imageName
-                            ? 'Imagen seleccionada: ' + selectedProduct.imageName
-                            : (selectedProduct.imageExists
-                                ? 'Existe imagen actual: ' + selectedProduct.imagePath
-                            : 'No hay imagen seleccionada')"></p>
+                            ? 'Nueva imagen seleccionada: ' + selectedProduct.imageName
+                            : (selectedProduct.imageExists && selectedProduct.imagePath
+                                ? 'Imagen actual: ' + selectedProduct.imagePath.split('/').pop()
+                                : 'No hay imagen seleccionada')"></p>
+
+                        <!-- Mostrar imagen actual si existe -->
+                        <template
+                                x-if="!selectedProduct.imageName && selectedProduct.imageExists && selectedProduct.imagePath">
+                            <div class="mt-2">
+                                <img :src="selectedProduct.imagePath" alt="Imagen actual"
+                                     class="max-w-32 h-20 object-cover rounded border">
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Descripción -->
@@ -155,18 +175,20 @@
 
                     <!-- Precio -->
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-                        <input type="number" name="price" x-model.number="selectedProduct.price" step="0.01"
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio (€)</label>
+                        <input type="number" name="price" x-model.number="selectedProduct.price" step="0.01" min="0"
+                               required
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
 
                     <!-- Stock -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
-                        <input type="number" name="stock" x-model.number="selectedProduct.stock"
+                        <input type="number" name="stock" x-model.number="selectedProduct.stock" min="0" required
                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
                     </div>
 
+                    <!-- Categoría -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
                         <select x-model="selectedProduct.category" name="category"
@@ -186,7 +208,7 @@
                                 class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md uppercase tracking-wide font-semibold hover:bg-gray-200 transition-colors duration-300">
                             Cancelar
                         </button>
-                        <button type="button" @click="$refs.productForm.submit()"
+                        <button type="submit"
                                 class="px-4 py-2 bg-[#a4fcc4] text-gray-800 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
                             <span x-text="isNew ? 'Crear' : 'Actualizar'"></span>
                         </button>
@@ -196,18 +218,7 @@
         </template>
     </div>
 
-    <form x-ref="updateProductForm" th:action="@{/admin/dashboard/products}" method="post" style="display: none;">
-        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
-        <input type="hidden" name="_method" value="put"/>
-        <input type="hidden" name="reference" :value="selectedProduct.reference"/>
-        <input type="hidden" name="imagePath" :value="selectedProduct.imagePath">
-        <input type="hidden" name="name" :value="selectedProduct.name"/>
-        <input type="hidden" name="description" :value="selectedProduct.description"/>
-        <input type="hidden" name="price" :value="selectedProduct.price"/>
-        <input type="hidden" name="stock" :value="selectedProduct.stock"/>
-        <input type="hidden" name="category" :value="selectedProduct.category"/>
-    </form>
-
+    <!-- Formulario para eliminar productos -->
     <form x-ref="deleteForm" th:action="@{/admin/dashboard/products}" method="post" style="display: none;">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" th:if="${_csrf}"/>
         <input type="hidden" name="_method" value="delete">

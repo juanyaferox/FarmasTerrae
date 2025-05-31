@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler implements Filter {
 
     /**
-     * Captura errores de parse de la vista
+     * Captura errores de parse de la vista. Si es BAD_REQUEST o BindException no genera archivo de log
      *
      * @param req   The request to process
      * @param res   The response associated with the request

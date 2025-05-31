@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
@@ -21,16 +22,18 @@ public class DashboardProductController {
 
     private final String PRODUCT_PATH = "redirect:/admin/dashboard/products";
 
-    @PostMapping
-    public String addProduct(@Valid @ModelAttribute ProductDTO productDTO, RedirectAttributes ra) {
+    @PostMapping (consumes = {"multipart/form-data"})
+    public String addProduct(@Valid @ModelAttribute ProductDTO productDTO, @RequestParam (required = false) MultipartFile imageFile,
+                             RedirectAttributes ra) {
         productsService.saveProduct(productDTO);
         buildSuccessMessage(ra, EntityType.PRODUCTS, Operation.POST);
         return PRODUCT_PATH;
     }
 
-    @PutMapping
-    public String updateProduct(@Valid @ModelAttribute ProductDTO productDTO, @RequestParam String oldReference, RedirectAttributes ra) {
-        productsService.updateProduct(productDTO, oldReference);
+    @PutMapping (consumes = {"multipart/form-data"})
+    public String updateProduct(@Valid @ModelAttribute ProductDTO productDTO, @RequestParam String oldReference,
+                                @RequestParam (required = false) MultipartFile imageFile, RedirectAttributes ra) {
+        productsService.updateProduct(productDTO, oldReference, imageFile);
         buildSuccessMessage(ra, EntityType.PRODUCTS, Operation.PUT);
         return PRODUCT_PATH;
     }

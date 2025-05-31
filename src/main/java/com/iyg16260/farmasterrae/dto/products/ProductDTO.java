@@ -15,6 +15,7 @@ public class ProductDTO {
     String imagePath;
     @NotNull (message = "Debe tener un precio")
     BigDecimal price;
+    @NotNull (message = "Debe tener un stock")
     Integer stock;
     @NotBlank (message = "Debe tener una referencia")
     String reference;

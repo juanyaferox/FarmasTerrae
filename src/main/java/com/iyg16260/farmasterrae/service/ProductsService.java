@@ -8,19 +8,26 @@ import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class ProductsService {
+
+    @Autowired
+    S3StorageService s3StorageService;
 
     @Autowired
     ProductRepository productRepository;
@@ -33,6 +40,8 @@ public class ProductsService {
 
     private final int PAGE_SIZE = 24;
     private final int PAGE_SIZE_ADMIN = 10;
+    private final String PRODUCT_IMAGES_FOLDER = "product-images";
+    private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
 
     /**
      * Obtiene una página de productos con opción de tamaño personalizado para admin
@@ -45,7 +54,7 @@ public class ProductsService {
         int pageSize = isAdmin ? PAGE_SIZE_ADMIN : PAGE_SIZE;
         return productRepository
                 .findAll(Pageable.ofSize(pageSize).withPage(page))
-                .map(p -> productMapper.productToProductDTO(p));
+                .map(productMapper::productToProductDTO);
     }
 
     /**
@@ -90,10 +99,10 @@ public class ProductsService {
      * @return producto DTO
      */
     public ProductDTO getProductDTOByReference(String reference) {
-        return productMapper.productToProductDTO(
-                productRepository.findByReference(reference)
-                        .orElseThrow(() -> new RuntimeException("Producto no encontrado"))
-        );
+        Product product = productRepository.findByReference(reference)
+                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+
+        return productMapper.productToProductDTO(product);
     }
 
     /**
@@ -128,18 +137,37 @@ public class ProductsService {
      * @return producto DTO actualizado
      * @throws ResponseStatusException BAD_REQUEST si la nueva referencia ya existe, NOT_FOUND si no se encuentra el producto
      */
-    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference) throws ResponseStatusException {
+    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference, MultipartFile image) throws ResponseStatusException {
         Product product = productMapper.productDTOToProduct(productDTO);
+        Product oldProduct = productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
+                (HttpStatus.NOT_FOUND, "Producto no encontrado con esta referencia: " + oldReference));
 
         if (!Objects.equals(product.getReference(), oldReference) && productRepository.existsByReference(product.getReference()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
 
-        product.setId(productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
-                (HttpStatus.NOT_FOUND, "Producto no encontrado con esta referencia: " + oldReference)).getId());
+        product.setId(oldProduct.getId());
+
+        if (image != null && !image.isEmpty()) {
+            // Si ya había una imagen, eliminarla de S3
+            if (oldProduct.getImagePath() != null && !oldProduct.getImagePath().isEmpty()) {
+                s3StorageService.deleteFile(oldProduct.getImagePath());
+            }
+
+            // Subir la nueva imagen
+            String imageUrl = s3StorageService.uploadFile(image, PRODUCT_IMAGES_FOLDER);
+            product.setImagePath(imageUrl);
+        } else {
+            // Mantener la imagen anterior
+            product.setImagePath(oldProduct.getImagePath());
+        }
 
         return productMapper.productToProductDTO(
                 productRepository.save(product)
         );
+    }
+
+    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference) throws ResponseStatusException {
+        return updateProduct(productDTO, oldReference, null);
     }
 
     /**
@@ -149,14 +177,24 @@ public class ProductsService {
      * @return producto guardado
      * @throws ResponseStatusException BAD_REQUEST si ya existe un producto con esa referencia
      */
-    public Product saveProduct(ProductDTO productDTO) {
+    public Product saveProduct(ProductDTO productDTO, MultipartFile image) {
         Product product = productMapper.productDTOToProduct(productDTO);
+
         if (productRepository.existsByReference(product.getReference())) {
             throw new ResponseStatusException
                     (HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia: " + product.getReference());
         }
 
+        if (image != null && !image.isEmpty()) {
+            String imageUrl = s3StorageService.uploadFile(image, PRODUCT_IMAGES_FOLDER);
+            product.setImagePath(imageUrl);
+        }
+
         return productRepository.save(product);
+    }
+
+    public Product saveProduct(ProductDTO productDTO) {
+        return saveProduct(productDTO, null);
     }
 
     /**
@@ -169,6 +207,29 @@ public class ProductsService {
     public List<ReviewDTO> getReviewsFromProduct(String reference) {
         Product product = getProductByReference(reference);
         return product.getReviewList().stream().map(reviewMapper::reviewToReviewDTO).toList();
+    }
+
+    private ProductDTO convertToProductDTOWithSignedUrl(Product product) {
+        ProductDTO productDTO = productMapper.productToProductDTO(product);
+
+        if (productDTO.getImagePath() != null && !productDTO.getImagePath().isEmpty()) {
+            try {
+                // Usar el método utilitario del servicio S3
+                String key = s3StorageService.extractKeyFromUrl(productDTO.getImagePath());
+
+                if (key != null) {
+                    String signedUrl = s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
+                    productDTO.setImagePath(signedUrl);
+                }
+
+            } catch (Exception e) {
+                System.err.println("Error generando URL firmada para producto " +
+                        product.getReference() + ": " + e.getMessage());
+                // Mantener URL original como fallback
+            }
+        }
+
+        return productDTO;
     }
 
 }
