@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build and run tests with JaCoCo
-        run: mvn clean verify
+        run: mvn clean verify -Dfile.encoding=UTF-8 -X
 
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@4.6.2
