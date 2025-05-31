@@ -4,14 +4,111 @@
 <div th:fragment="ordersSection(orders)" x-data="{ showModal: false, selectedOrder: null }"
      class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
     <h2 class="text-2xl font-bold mb-4 text-green-700">Tus Pedidos</h2>
+    <div th:replace="~{fragments/search :: search('/admin/dashboard/orders')}"></div>
+
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
         <tr class="bg-green-100">
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800"># Pedido</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Fecha</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Última actualización</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Estado</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="id">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'id' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        # Pedido
+                        <span th:if="${param.sort != null and param.sort[0] == 'id'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="createdAt">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'createdAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Fecha
+                        <span th:if="${param.sort != null and param.sort[0] == 'createdAt'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="totalPrice">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'totalPrice' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Total
+                        <span th:if="${param.sort != null and param.sort[0] == 'totalPrice'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="updatedAt">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'updatedAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Última actualización
+                        <span th:if="${param.sort != null and param.sort[0] == 'updatedAt'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="status">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'status' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Estado
+                        <span th:if="${param.sort != null and param.sort[0] == 'status'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
         </tr>
         </thead>
@@ -98,17 +195,7 @@
 
 
     <!-- Paginación -->
-    <div class="mt-4 flex justify-center space-x-2">
-        <a th:if="${orders.hasPrevious()}" th:href="@{/dashboard/orders(page=${orders.number - 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Anterior
-        </a>
-        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${orders.number + 1}]]</span>
-        <a th:if="${orders.hasNext()}" th:href="@{/dashboard/orders(page=${orders.number + 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Siguiente
-        </a>
-    </div>
+    <div th:replace="~{fragments/pagination :: pagination(${products}, '/admin/dashboard/orders', 'productos')}"></div>
 </div>
 </body>
 </html>

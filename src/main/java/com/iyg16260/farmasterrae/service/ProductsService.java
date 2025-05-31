@@ -8,10 +8,14 @@ import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import com.iyg16260.farmasterrae.spec.ProductSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,57 +42,41 @@ public class ProductsService {
     @Autowired
     ProductMapper productMapper;
 
-    private final int PAGE_SIZE = 24;
-    private final int PAGE_SIZE_ADMIN = 10;
+    private final int PAGE_SIZE = 20;
+    private final int PAGE_SIZE_ADMIN = 9;
     private final String PRODUCT_IMAGES_FOLDER = "product-images";
     private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
 
     /**
      * Obtiene una página de productos con opción de tamaño personalizado para admin
      *
-     * @param page    número de página
-     * @param isAdmin si es admin para usar tamaño de página diferente
+     * @param page número de página
      * @return página de productos DTO
      */
-    public Page<ProductDTO> getProductList(int page, boolean isAdmin) {
-        int pageSize = isAdmin ? PAGE_SIZE_ADMIN : PAGE_SIZE;
+    public Page<ProductDTO> getProductList(int page, String keyword, String sort, String dir) {
+
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        var specUtils = new ProductSpecification();
+        Specification<Product> spec = specUtils.searchLike(keyword)
+                .or(specUtils.searchLikeCategory(keyword));
+
         return productRepository
-                .findAll(Pageable.ofSize(pageSize).withPage(page))
+                .findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
                 .map(productMapper::productToProductDTO);
     }
 
-    /**
-     * Obtiene una página de productos con tamaño estándar
-     *
-     * @param page número de página
-     * @return página de productos DTO
-     */
-    public Page<ProductDTO> getProductList(int page) {
-        return getProductList(page, false);
-    }
+    public Page<ProductPageDTO> getFilteredProducts(Category category, String keyword, int page) {
 
-    /**
-     * Obtiene una página de productos filtrados por categoría
-     *
-     * @param category categoría a filtrar
-     * @param page     número de página
-     * @return página de productos DTO para página de productos
-     */
-    public Page<ProductPageDTO> getProductListByCategory(Category category, int page) {
-        return productRepository
-                .findByCategory(category, Pageable.ofSize(PAGE_SIZE).withPage(page))
-                .map(productMapper::productToProductPageDTO);
-    }
+        ProductSpecification specUtil = new ProductSpecification();
+        Specification<Product> spec = specUtil.searchByCategory(category)
+                .and(specUtil.searchLike(keyword));
 
-    /**
-     * Obtiene una página de todos los productos sin filtro de categoría
-     *
-     * @param page número de página
-     * @return página de productos DTO para página de productos
-     */
-    public Page<ProductPageDTO> getProductListByCategory(int page) {
-        return productRepository
-                .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
+        return productRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE).withPage(page))
                 .map(productMapper::productToProductPageDTO);
     }
 

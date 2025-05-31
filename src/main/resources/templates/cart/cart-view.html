@@ -1,47 +1,47 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('Farmasterrae - Carrito', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<body class="bg-green-50 min-h-screen flex flex-col">
 <!-- Header -->
 <header th:replace="~{fragments/header :: header}"></header>
 
 <!-- Sección Principal: Carrito -->
 <main class="flex-grow py-12">
     <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Tu Carrito</h1>
-        <div class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
-            <table class="min-w-full table-auto">
+        <h1 class="text-4xl font-bold text-green-700 text-center mb-12">Tu Carrito</h1>
+        <div class="bg-white shadow-md rounded-lg p-6 overflow-x-auto">
+            <table class="min-w-full table-auto border border-gray-200">
                 <thead>
-                <tr class="bg-green-100">
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Imagen</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Precio</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Cantidad</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
+                <tr class="bg-green-200">
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Imagen</th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Nombre</th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Precio</th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Cantidad</th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Total</th>
+                    <th class="px-6 py-4 text-left text-sm font-medium text-green-800">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="entry : ${products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
-                    <td class="px-4 py-2">
+                    <td class="px-6 py-4">
                         <img th:src="${entry.key.imagePath}" alt="Imagen del producto"
-                             class="w-12 h-12 object-cover rounded-md">
+                             class="w-16 h-16 object-cover rounded-md">
                     </td>
-                    <td class="px-4 py-2" th:text="${entry.key.name}"></td>
-                    <td class="px-4 py-2" th:text="${'€' + entry.key.price}"></td>
-                    <td class="px-4 py-2">
+                    <td class="px-6 py-4" th:text="${entry.key.name}"></td>
+                    <td class="px-6 py-4" th:text="${'€' + entry.key.price}"></td>
+                    <td class="px-6 py-4">
                         <div class="flex items-center space-x-2">
                             <a th:href="@{/cart/decrease/{reference}(reference=${entry.key.reference})}"
-                               class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300">-</a>
+                               class="bg-green-200 text-green-800 px-3 py-1 rounded-full hover:bg-green-300 transition-colors duration-300">-</a>
                             <span th:text="${entry.value}"></span>
                             <a th:href="@{/cart/increase/{reference}(reference=${entry.key.reference})}"
-                               class="bg-green-100 text-green-800 px-2 py-1 rounded-md hover:bg-green-200 transition-colors duration-300">+</a>
+                               class="bg-green-200 text-green-800 px-3 py-1 rounded-full hover:bg-green-300 transition-colors duration-300">+</a>
                         </div>
                     </td>
-                    <td class="px-4 py-2" th:text="${'€' + (entry.key.price * entry.value)}"></td>
-                    <td class="px-4 py-2">
+                    <td class="px-6 py-4" th:text="${'€' + (entry.key.price * entry.value)}"></td>
+                    <td class="px-6 py-4">
                         <a th:href="@{/cart/remove/{reference}(reference=${entry.key.reference})}"
-                           class="bg-red-100 text-red-800 px-4 py-2 rounded-md hover:bg-red-200 transition-colors duration-300">
+                           class="bg-red-200 text-red-800 px-4 py-2 rounded-md hover:bg-red-300 transition-colors duration-300">
                             Eliminar
                         </a>
                     </td>
@@ -51,17 +51,17 @@
             <!-- Resumen del Carrito -->
             <div class="mt-8 flex justify-between items-center">
                 <a th:href="@{/cart/clear}"
-                   class="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors duration-300">
+                   class="bg-red-300 text-gray-800 px-4 py-2 rounded-md hover:bg-red-400 transition-colors duration-300">
                     Vaciar Carrito
                 </a>
-                <div class="text-xl font-semibold text-green-800">
+                <div class="text-2xl font-semibold text-green-700">
                     Total: <span th:text="${'€' + totalAmount}"></span>
                 </div>
             </div>
             <!-- Botón Continuar con el Pago -->
             <div class="mt-8 text-center">
                 <a th:href="@{/order}"
-                   class="inline-block bg-green-600 text-white px-8 py-4 rounded-md font-semibold hover:bg-green-700 transition-colors duration-300">
+                   class="inline-block bg-green-300 text-gray-800 px-8 py-4 rounded-md font-semibold hover:bg-green-400 transition-colors duration-300">
                     Continuar con el Pago
                 </a>
             </div>

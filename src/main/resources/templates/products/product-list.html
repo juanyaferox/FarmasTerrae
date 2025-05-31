@@ -9,7 +9,10 @@
 <main class="bg-green-50 flex-grow py-20">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-bold text-green-800 text-center mb-12" th:text="${text}"></h1>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+
+        <div th:replace="~{fragments/search :: search('/products')}"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 pt-10">
             <div th:each="product : ${products.content}"
                  class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
@@ -29,17 +32,7 @@
             </div>
         </div>
         <!-- Paginación -->
-        <div class="mt-12 flex justify-center space-x-4">
-            <a th:if="${products.hasPrevious()}" th:href="@{/products(page=${products.number - 1})}"
-               class="px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-                Anterior
-            </a>
-            <span class="px-4 py-2 bg-green-600 text-white rounded-md">[[${products.number + 1}]]</span>
-            <a th:if="${products.hasNext()}" th:href="@{/products(page=${products.number + 1})}"
-               class="px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-                Siguiente
-            </a>
-        </div>
+        <div th:replace="~{fragments/pagination :: pagination(${products}, '/products', 'productos')}"></div>
     </div>
 </main>
 

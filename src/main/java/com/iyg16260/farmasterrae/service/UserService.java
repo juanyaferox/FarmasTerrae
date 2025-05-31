@@ -6,9 +6,12 @@ import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
+import com.iyg16260.farmasterrae.spec.UserSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -37,7 +40,7 @@ public class UserService implements UserDetailsService {
     @Autowired
     UserMapper userMapper;
 
-    private final int PAGE_SIZE_ADMIN = 50;
+    private final int PAGE_SIZE_ADMIN = 9;
 
     /**
      * Obtiene todos los perfiles disponibles en el sistema
@@ -85,8 +88,17 @@ public class UserService implements UserDetailsService {
      * @param page número de página
      * @return página de usuarios DTO
      */
-    public Page<UserDTO> getAllUsers(int page) {
-        return userRepository.findAll(Pageable.ofSize(PAGE_SIZE_ADMIN).withPage(page))
+    public Page<UserDTO> getAllUsers(int page, String keyword, String sort, String dir) {
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        Specification<User> spec = new UserSpecification()
+                .searchLike(keyword);
+
+        return userRepository.findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
                 .map(user -> userMapper.userToUserDTO(user));
     }
 

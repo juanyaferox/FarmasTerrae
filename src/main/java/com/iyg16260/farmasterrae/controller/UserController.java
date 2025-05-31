@@ -53,12 +53,14 @@ public class UserController {
      */
     @GetMapping ({"/dashboard/{section}", "/dashboard"})
     public ModelAndView changeSection(@PathVariable (required = false) String section,
-                                      @RequestParam (defaultValue = "0", required = false) int page) {
+                                      @RequestParam (defaultValue = "0", required = false) int page,
+                                      @RequestParam (required = false) String sort,
+                                      @RequestParam (defaultValue = "asc") String dir) {
 
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
 
-        return processSection(section, model, page);
+        return processSection(section, model, page, sort, dir);
     }
 
     /**
@@ -69,7 +71,7 @@ public class UserController {
      * @param page    page
      * @return vista de la seccion deseada
      */
-    private ModelAndView processSection(String section, ModelAndView model, int page) {
+    private ModelAndView processSection(String section, ModelAndView model, int page, String sort, String dir) {
 
         User user = null;
         if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User authUser)
@@ -80,7 +82,7 @@ public class UserController {
 
         switch (section) {
             case "orders" -> {
-                Page<OrderDTO> orders = orderService.getOrders(user, page);
+                Page<OrderDTO> orders = orderService.getOrders(user, page, sort, dir);
                 return model.addObject("orders", orders);
             }
             case "info-user" -> {
@@ -88,7 +90,7 @@ public class UserController {
                 return model.addObject("userView", userDTO);
             }
             case "reviews" -> {
-                Page<ReviewDTO> reviews = reviewService.getReviews(user, page);
+                Page<ReviewDTO> reviews = reviewService.getReviews(user, page, sort, dir);
                 List<ProductDTO> products = reviewService.getProductForReview(user);
                 return model.addObject("reviews", reviews)
                         .addObject("products", products);

@@ -29,17 +29,21 @@ public class ProductsController {
     }
 
     @GetMapping
-    public ModelAndView getProducts(@RequestParam (required = false) Category category, @RequestParam (defaultValue = "0", required = false) int page) {
-        Page<ProductPageDTO> products;
-        String text = "Todos los Productos";
-        if (category != null) {
-            products = productsService.getProductListByCategory(category, page);
-            text = category.getValue();
-        } else
-            products = productsService.getProductListByCategory(page);
+    public ModelAndView getProducts(@RequestParam (required = false) Category category,
+                                    @RequestParam (defaultValue = "0", required = false) int page,
+                                    @RequestParam (required = false) String search) {
+        Page<ProductPageDTO> products = productsService.getFilteredProducts(category, search, page);
+        String titlePage;
+        if (category != null)
+            titlePage = category.getValue();
+        else if (search != null && !search.isBlank())
+            titlePage = "Resultados para: " + search;
+        else
+            titlePage = "Todos los Productos";
+
         return new ModelAndView("products/product-list")
                 .addObject("products", products)
-                .addObject("text", text);
+                .addObject("text", titlePage);
     }
 
     @GetMapping ("/{reference}")
