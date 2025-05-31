@@ -12,7 +12,9 @@ import com.iyg16260.farmasterrae.spec.ProductSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -40,8 +42,8 @@ public class ProductsService {
     @Autowired
     ProductMapper productMapper;
 
-    private final int PAGE_SIZE = 12;
-    private final int PAGE_SIZE_ADMIN = 10;
+    private final int PAGE_SIZE = 20;
+    private final int PAGE_SIZE_ADMIN = 9;
     private final String PRODUCT_IMAGES_FOLDER = "product-images";
     private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
 
@@ -51,26 +53,31 @@ public class ProductsService {
      * @param page número de página
      * @return página de productos DTO
      */
-    public Page<ProductDTO> getProductList(int page) {
+    public Page<ProductDTO> getProductList(int page, String keyword, String sort, String dir) {
+
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        var specUtils = new ProductSpecification();
+        Specification<Product> spec = specUtils.searchLike(keyword)
+                .or(specUtils.searchLikeCategory(keyword));
+
         return productRepository
-                .findAll(Pageable.ofSize(PAGE_SIZE_ADMIN).withPage(page))
+                .findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
                 .map(productMapper::productToProductDTO);
     }
 
     public Page<ProductPageDTO> getFilteredProducts(Category category, String keyword, int page) {
-        Specification<Product> spec = Specification.where(null);
+
         ProductSpecification specUtil = new ProductSpecification();
+        Specification<Product> spec = specUtil.searchByCategory(category)
+                .and(specUtil.searchLike(keyword));
 
-        if (category != null) {
-            spec = spec.and(specUtil.searchByCategory(category));
-        }
-
-        if (keyword != null && !keyword.isBlank()) {
-            spec = spec.and(specUtil.searchInReferenceNameDescription(keyword));
-        }
-
-        Page<Product> products = productRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE).withPage(page));
-        return products.map(productMapper::productToProductPageDTO);
+        return productRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE).withPage(page))
+                .map(productMapper::productToProductPageDTO);
     }
 
     /**

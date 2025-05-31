@@ -10,7 +10,8 @@ import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ReviewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,12 +47,15 @@ public class ReviewService {
      * @return página de reviews DTO del usuario
      */
     @Transactional (readOnly = true)
-    public Page<ReviewDTO> getReviews(User user, int page) {
-        Pageable pageable = Pageable
-                .ofSize(PAGE_SIZE_USER)
-                .withPage(page);
+    public Page<ReviewDTO> getReviews(User user, int page, String sort, String dir) {
 
-        return reviewRepository.findByUser(user, pageable)
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        return reviewRepository.findByUser(user, PageRequest.of(page, PAGE_SIZE_USER, sortOrder))
                 .map(reviewMapper::reviewToReviewDTO);
     }
 

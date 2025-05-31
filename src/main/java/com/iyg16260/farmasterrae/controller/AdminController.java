@@ -37,12 +37,14 @@ public class AdminController {
     @GetMapping ({"/dashboard/{section}", "/dashboard"})
     public ModelAndView getDashboard(@PathVariable (required = false) String section,
                                      @RequestParam (defaultValue = "0", required = false) int page,
+                                     @RequestParam (required = false) String sort,
+                                     @RequestParam (defaultValue = "asc") String dir,
                                      @RequestParam (required = false) String search) {
 
         ModelAndView model = new ModelAndView("admin/dashboard")
                 .addObject("section", section);
 
-        return processSection(section, model, search, page);
+        return processSection(section, model, search, sort, dir, page);
     }
 
     /**
@@ -54,23 +56,23 @@ public class AdminController {
      * @param page    page
      * @return vista de la seccion deseada
      */
-    private ModelAndView processSection(String section, ModelAndView model, String search, int page) {
+    private ModelAndView processSection(String section, ModelAndView model, String search, String sort, String dir, int page) {
         if (section == null)
             return model;
 
         switch (section) {
             case "orders" -> {
-                Page<OrderDTO> orders = orderService.getAllOrders(page);
+                Page<OrderDTO> orders = orderService.getAllOrders(page, search, sort, dir);
                 model.addObject("orders", orders);
                 model.addObject("saleStatuses", SaleStatus.values());
             }
             case "products" -> {
-                Page<ProductDTO> products = productsService.getProductList(page);
+                Page<ProductDTO> products = productsService.getProductList(page, search, sort, dir);
                 model.addObject("products", products);
                 model.addObject("categories", Category.values());
             }
             case "users" -> {
-                Page<UserDTO> users = userService.getAllUsers(page, search);
+                Page<UserDTO> users = userService.getAllUsers(page, search, sort, dir);
                 List<Profile> profiles = userService.getProfiles();
                 model.addObject("users", users);
                 model.addObject("profiles", profiles);

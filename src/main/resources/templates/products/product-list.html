@@ -9,27 +9,10 @@
 <main class="bg-green-50 flex-grow py-20">
     <div class="container mx-auto px-4">
         <h1 class="text-4xl font-bold text-green-800 text-center mb-12" th:text="${text}"></h1>
-        <!-- Buscador Mejorado -->
-        <form th:action="@{/products}" method="get" class="mb-12">
-            <!-- Campos ocultos para preservar parámetros existentes -->
-            <input th:each="paramEntry : ${param}"
-                   th:unless="${paramEntry.key == 'search' or paramEntry.key == 'page'}"
-                   type="hidden"
-                   th:name="${paramEntry.key}"
-                   th:value="${paramEntry.value[0]}">
-            
-            <div class="flex justify-center">
-                <div class="relative w-3/4">
-                    <input type="text" name="search" placeholder="Buscar productos..."
-                           class="w-full bg-white border border-green-200 rounded-full px-6 py-3 text-gray-700 placeholder-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 transition">
-                    <button type="submit"
-                            class="absolute right-0 top-0 mt-1 mr-1 bg-green-300 text-white px-6 py-2 rounded-full hover:bg-green-400 transition-colors duration-300">
-                        Buscar
-                    </button>
-                </div>
-            </div>
-        </form>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+
+        <div th:replace="~{fragments/search :: search('/products')}"></div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 pt-10">
             <div th:each="product : ${products.content}"
                  class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
                 <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
@@ -48,7 +31,7 @@
                 </div>
             </div>
         </div>
-        <!-- Paginación Mejorada -->
+        <!-- Paginación -->
         <div th:replace="~{fragments/pagination :: pagination(${products}, '/products', 'productos')}"></div>
     </div>
 </main>

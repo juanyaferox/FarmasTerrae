@@ -21,7 +21,7 @@ public final class GenericSpecification {
      */
     public static <T> Specification<T> likeIgnoreCase(String[] fields, String keyword) {
         if (fields == null || fields.length == 0 || keyword == null || keyword.isBlank()) {
-            return null;
+            return Specification.where(null);
         }
         return (root, query, builder) -> {
             Predicate[] predicates = new Predicate[fields.length];
@@ -53,7 +53,7 @@ public final class GenericSpecification {
      */
     public static <T> Specification<T> equal(String attributeName, Object keyObject) throws ResponseStatusException {
         if (keyObject == null || attributeName == null || attributeName.isBlank()) {
-            return null;
+            return Specification.where(null);
         }
         return (root, query, builder) -> {
             Path<?> path = getNestedPath(root, attributeName);
@@ -62,6 +62,7 @@ public final class GenericSpecification {
         };
 
     }
+
 
     /**
      * Obtiene el {@code Path} de un atributo, manejando tanto atributos simples
