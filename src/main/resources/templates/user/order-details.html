@@ -50,10 +50,12 @@
                      class="flex flex-col md:flex-row items-center gap-6 border-b border-gray-200 pb-6 last:border-b-0">
                     <!-- Imagen del Producto -->
                     <div class="w-full md:w-32 h-32 flex-shrink-0">
-                        <div class="border border-gray-200 h-full flex items-center justify-center rounded-md">
-                            <p class="text-gray-400"
-                               th:text="${entry.key.imagePath} ? '[Imagen: ' + ${entry.key.imagePath} + ']' : '[Placeholder]'"></p>
-                        </div>
+                        <img th:if="${entry.key.imagePath != null}" th:src="@{${entry.key.imagePath}}"
+                             alt="Imagen del producto"
+                             class="border border-gray-200 h-full flex items-center justify-center rounded-md"/>
+                        <img th:unless="${entry.key.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
+                             alt="Imagen del producto"
+                             class="border border-gray-200 h-full flex items-center justify-center rounded-md"/>
                     </div>
                     <!-- Detalles del Producto -->
                     <div class="flex-1">

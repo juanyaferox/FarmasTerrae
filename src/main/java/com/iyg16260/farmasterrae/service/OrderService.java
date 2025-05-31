@@ -239,7 +239,6 @@ public class OrderService {
     @Transactional
     public OrderDTO updateOrder(long idOrder, String status) throws ResponseStatusException {
         try {
-            System.out.println("idOrder: " + idOrder + ", status: " + status);
             Order order = getOrderById(idOrder);
             order.setStatus(SaleStatus.valueOf(status.toUpperCase()));
             return orderMapper.orderToOrderDTO(

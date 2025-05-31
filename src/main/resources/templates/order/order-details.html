@@ -26,8 +26,12 @@
                     <tbody>
                     <tr th:each="entry : ${products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
                         <td class="px-4 py-2">
-                            <img th:src="${entry.key.imagePath}" alt="Imagen del producto"
-                                 class="w-12 h-12 object-cover rounded-md">
+                            <img th:if="${entry.key.imagePath != null}" th:src="@{${entry.key.imagePath}}"
+                                 alt="Imagen del producto"
+                                 class="w-12 h-12 object-cover rounded-md"/>
+                            <img th:unless="${entry.key.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
+                                 alt="Imagen del producto"
+                                 class="w-12 h-12 object-cover rounded-md"/>
                         </td>
                         <td class="px-4 py-2" th:text="${entry.key.name}"></td>
                         <td class="px-4 py-2" th:text="${entry.key.price + '€'}"></td>

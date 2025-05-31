@@ -235,9 +235,16 @@
                             <!-- Input de archivo -->
                             <input type="file" name="imageFile" x-ref="fileInput" class="hidden" accept="image/*"
                                    @change="if ($refs.fileInput.files.length) {
-                                       selectedProduct.imageName = $refs.fileInput.files[0].name;
-                                       selectedProduct.imageExists = true;
-                                   }"/>
+                   selectedProduct.imageName = $refs.fileInput.files[0].name;
+                   selectedProduct.imageExists = true;
+                   // Crear preview de la nueva imagen
+                   const file = $refs.fileInput.files[0];
+                   const reader = new FileReader();
+                   reader.onload = function(e) {
+                       selectedProduct.previewImage = e.target.result;
+                   };
+                   reader.readAsDataURL(file);
+               }"/>
                             <!-- Botón personalizado -->
                             <button type="button"
                                     class="w-full bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
@@ -245,20 +252,52 @@
                                 Seleccionar Imagen (Tamaño Máximo: 10MB)
                             </button>
                         </div>
-                        <!-- Texto de estado debajo del botón -->
-                        <p class="mt-2 text-sm text-gray-600"
-                           x-text="selectedProduct.imageName
-                            ? 'Nueva imagen seleccionada: ' + selectedProduct.imageName
-                            : (selectedProduct.imageExists && selectedProduct.imagePath
-                                ? 'Imagen actual: ' + selectedProduct.imagePath.split('/').pop()
-                                : 'No hay imagen seleccionada')"></p>
 
-                        <!-- Mostrar imagen actual si existe -->
-                        <template
-                                x-if="!selectedProduct.imageName && selectedProduct.imageExists && selectedProduct.imagePath">
-                            <div class="mt-2">
-                                <img :src="selectedProduct.imagePath" alt="Imagen actual"
-                                     class="max-w-32 h-20 object-cover rounded border">
+                        <!-- Contenedor con altura fija para la imagen -->
+                        <div class="mt-2 h-20 flex items-center justify-center">
+                            <!-- Preview de nueva imagen seleccionada -->
+                            <template x-if="selectedProduct.previewImage">
+                                <div class="relative">
+                                    <img :src="selectedProduct.previewImage" alt="Preview imagen nueva"
+                                         class="h-20 w-32 object-cover rounded border border-green-300">
+                                    <!-- Indicador de nueva imagen -->
+                                    <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                        Nueva
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Imagen actual existente (solo si no hay preview) -->
+                            <template
+                                    x-if="!selectedProduct.previewImage && selectedProduct.imageExists && selectedProduct.imagePath">
+                                <div class="relative">
+                                    <img :src="selectedProduct.imagePath" alt="Imagen actual"
+                                         class="h-20 w-32 object-cover rounded border border-gray-300">
+                                    <!-- Indicador de imagen actual -->
+                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                        Actual
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Placeholder cuando no hay imagen -->
+                            <template
+                                    x-if="!selectedProduct.previewImage && (!selectedProduct.imageExists || !selectedProduct.imagePath)">
+                                <div class="h-20 w-32 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
+                                    <span class="text-sm text-gray-500">Sin imagen</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Confirmación visual de imagen cargada -->
+                        <template x-if="selectedProduct.previewImage">
+                            <div class="mt-2 flex items-center justify-center text-sm text-green-600">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Imagen cargada y lista para subir</span>
                             </div>
                         </template>
                     </div>

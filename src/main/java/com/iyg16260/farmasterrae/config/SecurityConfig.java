@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +18,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebSecurity
 public class SecurityConfig implements WebMvcConfigurer {
 
+    @Value ("${app.env:dev}") // por defecto desarollo
+    private String appEnv;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -34,11 +37,13 @@ public class SecurityConfig implements WebMvcConfigurer {
                         .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/order/**").authenticated()
                         .anyRequest().permitAll()
-                )
-                // Configuración para H2
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .formLogin(form -> form
+                );
+        // Configuración para H2 en desarrollo
+        if ("dev".equals(appEnv)) {
+            http.csrf(AbstractHttpConfigurer::disable)
+                    .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        }
+        http.formLogin(form -> form
                         .loginPage("/auth")  // Configuramos la URL de la página de login personalizada
                         .defaultSuccessUrl("/", true)
                         .permitAll()

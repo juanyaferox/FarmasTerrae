@@ -37,13 +37,13 @@
     <div th:if="${errorMessage}" x-data="{ show: true }"
          th:attr="x-init=|setTimeout(() => show = false, 10000)|"
          x-show="show"
-         class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow">
+         class="fixed top-4 right-4 bg-red-500 text-white p-3 rounded shadow z-50">
         <span th:utext="${errorMessage}"></span>
     </div>
     <div th:if="${successMessage}" x-data="{ show: true }"
          th:attr="x-init=|setTimeout(() => show = false, 10000)|"
          x-show="show"
-         class="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow">
+         class="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow z-49">
         <span th:text="${successMessage}"></span>
     </div>
 </header>
