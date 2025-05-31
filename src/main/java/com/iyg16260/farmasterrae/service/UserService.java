@@ -15,7 +15,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,9 +32,6 @@ public class UserService implements UserDetailsService {
 
     @Autowired
     ProfileRepository profileRepository;
-
-    @Autowired
-    PasswordEncoder passwordEncoder;
 
     @Autowired
     UserMapper userMapper;

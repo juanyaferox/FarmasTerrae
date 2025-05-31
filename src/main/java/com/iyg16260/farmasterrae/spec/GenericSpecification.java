@@ -23,17 +23,13 @@ public final class GenericSpecification {
         if (fields == null || fields.length == 0 || keyword == null || keyword.isBlank()) {
             return Specification.where(null);
         }
-        return (root, query, builder) -> {
-            Predicate[] predicates = new Predicate[fields.length];
-
-            return builder.or(
-                    Arrays.stream(fields)
-                            .map(field -> builder.like(
-                                    builder.lower(getNestedPath(root, field)),
-                                    "%" + keyword.toLowerCase() + "%")
-                            ).toList().toArray(new Predicate[0])
-            );
-        };
+        return (root, query, builder) -> builder.or(
+                Arrays.stream(fields)
+                        .map(field -> builder.like(
+                                builder.lower(getNestedPath(root, field)),
+                                "%" + keyword.toLowerCase() + "%")
+                        ).toList().toArray(new Predicate[0])
+        );
     }
 
     /**

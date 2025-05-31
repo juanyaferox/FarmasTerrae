@@ -154,10 +154,6 @@ public class ProductsService {
         );
     }
 
-    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference) throws ResponseStatusException {
-        return updateProduct(productDTO, oldReference, null);
-    }
-
     /**
      * Guarda un nuevo producto en la base de datos
      *
@@ -195,29 +191,6 @@ public class ProductsService {
     public List<ReviewDTO> getReviewsFromProduct(String reference) {
         Product product = getProductByReference(reference);
         return product.getReviewList().stream().map(reviewMapper::reviewToReviewDTO).toList();
-    }
-
-    private ProductDTO convertToProductDTOWithSignedUrl(Product product) {
-        ProductDTO productDTO = productMapper.productToProductDTO(product);
-
-        if (productDTO.getImagePath() != null && !productDTO.getImagePath().isEmpty()) {
-            try {
-                // Usar el método utilitario del servicio S3
-                String key = s3StorageService.extractKeyFromUrl(productDTO.getImagePath());
-
-                if (key != null) {
-                    String signedUrl = s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
-                    productDTO.setImagePath(signedUrl);
-                }
-
-            } catch (Exception e) {
-                System.err.println("Error generando URL firmada para producto " +
-                        product.getReference() + ": " + e.getMessage());
-                // Mantener URL original como fallback
-            }
-        }
-
-        return productDTO;
     }
 
 }

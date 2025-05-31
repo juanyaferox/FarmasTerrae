@@ -9,7 +9,6 @@ import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
-import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
 import jakarta.validation.Valid;
@@ -37,10 +36,7 @@ public class UserController {
 
     @Autowired
     OrderService orderService;
-
-    @Autowired
-    ProductsService productsService;
-
+    
     @Autowired
     ReviewService reviewService;
 

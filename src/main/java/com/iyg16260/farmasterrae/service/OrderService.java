@@ -5,7 +5,6 @@ import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.mapper.OrderMapper;
-import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import com.iyg16260.farmasterrae.model.Product;
@@ -47,9 +46,6 @@ public class OrderService {
 
     @Autowired
     OrderMapper orderMapper;
-
-    @Autowired
-    ProductMapper productMapper;
 
     @Autowired
     CartService cartService;
@@ -250,7 +246,6 @@ public class OrderService {
                     orderRepository.save(order)
             );
         } catch (IllegalArgumentException e) {
-            System.out.println(e);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado inválido: " + status);
         }
     }
