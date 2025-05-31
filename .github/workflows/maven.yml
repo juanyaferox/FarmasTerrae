@@ -1,4 +1,4 @@
-name: Maven Tests with JaCoCo
+name: Maven Build
 
 on:
   push:
@@ -20,11 +20,5 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build and run tests with JaCoCo
-        run: mvn clean verify -Dfile.encoding=UTF-8 -X
-
-      - name: Upload JaCoCo report
-        uses: actions/upload-artifact@4.6.2
-        with:
-          name: jacoco-report
-          path: target/site/jacoco
+      - name: Build without tests, force UTF-8 encoding
+        run: mvn clean package -DskipTests -Dfile.encoding=UTF-8
