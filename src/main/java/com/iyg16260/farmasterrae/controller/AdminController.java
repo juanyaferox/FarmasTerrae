@@ -6,13 +6,11 @@ import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.model.Profile;
-import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,13 +36,13 @@ public class AdminController {
 
     @GetMapping ({"/dashboard/{section}", "/dashboard"})
     public ModelAndView getDashboard(@PathVariable (required = false) String section,
-                                     @AuthenticationPrincipal User user,
-                                     @RequestParam (defaultValue = "0", required = false) int page) {
+                                     @RequestParam (defaultValue = "0", required = false) int page,
+                                     @RequestParam (required = false) String search) {
 
         ModelAndView model = new ModelAndView("admin/dashboard")
                 .addObject("section", section);
 
-        return processSection(section, model, user, page);
+        return processSection(section, model, search, page);
     }
 
     /**
@@ -52,12 +50,11 @@ public class AdminController {
      *
      * @param section seccion del pathvariable
      * @param model   model
-     * @param user    user
+     * @param search  búsqueda
      * @param page    page
      * @return vista de la seccion deseada
      */
-    private ModelAndView processSection(String section, ModelAndView model,
-                                        User user, int page) {
+    private ModelAndView processSection(String section, ModelAndView model, String search, int page) {
         if (section == null)
             return model;
 
@@ -68,12 +65,12 @@ public class AdminController {
                 model.addObject("saleStatuses", SaleStatus.values());
             }
             case "products" -> {
-                Page<ProductDTO> products = productsService.getProductList(page, true);
+                Page<ProductDTO> products = productsService.getProductList(page);
                 model.addObject("products", products);
                 model.addObject("categories", Category.values());
             }
             case "users" -> {
-                Page<UserDTO> users = userService.getAllUsers(page);
+                Page<UserDTO> users = userService.getAllUsers(page, search);
                 List<Profile> profiles = userService.getProfiles();
                 model.addObject("users", users);
                 model.addObject("profiles", profiles);

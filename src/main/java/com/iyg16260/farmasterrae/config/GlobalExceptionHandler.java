@@ -3,6 +3,8 @@ package com.iyg16260.farmasterrae.config;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -138,6 +140,12 @@ public class GlobalExceptionHandler implements Filter {
                 .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));
     }
 
+    /**
+     * Solo genera un log si no se trata de un error de validación un 400
+     *
+     * @param ex excepción
+     * @return si se deberia logear o no
+     */
     private boolean shouldLogException(Exception ex) {
 
         if (ex instanceof BindException) {
@@ -232,8 +240,7 @@ public class GlobalExceptionHandler implements Filter {
      * Construye el mensaje de error de manera detallada con la información del usuario
      */
     private void logException(String errorId, Exception ex, AuditInfo auditInfo) {
-        log.error("Excepción [{}] | Usuario: {} | IP: {} | Agente de Usuario: {}| URI: {} | Método: {} | Sesión: {} | " +
-                        "Mensaje: {} | Tipo: {}",
+        String baseMsg = String.format("Excepción [%s] | Usuario: %s | IP: %s | Agente: %s | URI: %s | Método: %s | Sesión: %s |Tipo: %s",
                 errorId,
                 auditInfo.username(),
                 auditInfo.remoteAddress(),
@@ -241,7 +248,13 @@ public class GlobalExceptionHandler implements Filter {
                 auditInfo.requestUri(),
                 auditInfo.method(),
                 auditInfo.sessionId(),
-                ex.getMessage(),
                 ex.getClass().getSimpleName());
+
+        // En consola
+        log.trace(baseMsg);
+
+        // En el achivo
+        Logger fileLogger = LoggerFactory.getLogger("errorLogger");
+        fileLogger.error(baseMsg, ex);
     }
 }

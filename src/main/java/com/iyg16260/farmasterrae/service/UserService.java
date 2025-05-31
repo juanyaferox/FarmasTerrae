@@ -6,9 +6,11 @@ import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
+import com.iyg16260.farmasterrae.spec.UserSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -85,8 +87,11 @@ public class UserService implements UserDetailsService {
      * @param page número de página
      * @return página de usuarios DTO
      */
-    public Page<UserDTO> getAllUsers(int page) {
-        return userRepository.findAll(Pageable.ofSize(PAGE_SIZE_ADMIN).withPage(page))
+    public Page<UserDTO> getAllUsers(int page, String keyword) {
+        Specification<User> spec = new UserSpecification()
+                .searchLike(keyword);
+
+        return userRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE_ADMIN).withPage(page))
                 .map(user -> userMapper.userToUserDTO(user));
     }
 

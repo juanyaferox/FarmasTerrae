@@ -4,7 +4,7 @@
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <!-- %ex{0} imprime solo la cabecera de excepción si la hubiera -->
-            <pattern>%d{HH:mm:ss} %highlight([%level]) %logger{36} - %msg %ex{0}%n</pattern>
+            <pattern>%d{HH:mm:ss} %highlight([%level]) %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -49,7 +49,7 @@
             <level>ERROR</level>
         </filter>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %highlight([%level]) %logger{36} - %msg%ex{0}%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %highlight([%level]) %logger{36} - %msg%xEx%n</pattern>
         </encoder>
     </appender>
 

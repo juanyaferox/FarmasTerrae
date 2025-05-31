@@ -4,6 +4,18 @@
 <div th:fragment="usersSection(users)" x-data="{ showModal: false, selectedUser: null }"
      class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
     <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Usuarios</h2>
+    <form th:action="@{/admin/dashboard/users}" method="get" class="mb-12">
+        <div class="flex justify-center">
+            <div class="relative w-3/4">
+                <input type="text" name="search" placeholder="Buscar productos..."
+                       class="w-full bg-white border border-green-200 rounded-full px-6 py-3 text-gray-700 placeholder-gray-400 shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 transition">
+                <button type="submit"
+                        class="absolute right-0 top-0 mt-1 mr-1 bg-green-300 text-white px-6 py-2 rounded-full hover:bg-green-400 transition-colors duration-300">
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </form>
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
         <tr class="bg-green-100">
@@ -129,17 +141,7 @@
     </form>
 
     <!-- Paginación -->
-    <div class="mt-6 flex justify-center space-x-2">
-        <a th:if="${users.hasPrevious()}" th:href="@{/admin/dashboard/users(page=${users.number - 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Anterior
-        </a>
-        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${users.number + 1}]]</span>
-        <a th:if="${users.hasNext()}" th:href="@{/admin/dashboard/users(page=${users.number + 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Siguiente
-        </a>
-    </div>
+    <div th:replace="~{fragments/pagination :: pagination(${users}, '/admin/dashboard/users', 'usuarios')}"></div>
 </div>
 </body>
 </html>

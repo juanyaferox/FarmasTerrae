@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="pagination(pageData, baseUrl, entityName)" class="mt-12">
+    <!-- Contenedor de paginación -->
+    <div class="flex justify-center space-x-2" th:if="${pageData != null and pageData.totalPages > 1}">
+        <!-- Texto de página actual y total -->
+        <span class="px-4 py-2 text-gray-600">
+            Página [[${pageData.number + 1}]] de [[${pageData.totalPages}]]
+        </span>
+
+        <!-- Enlace Anterior -->
+        <form th:if="${pageData.hasPrevious()}" method="get" style="display: inline;">
+            <input type="hidden" name="page" th:value="${pageData.number - 1}">
+            <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                   type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+            <button type="submit"
+                    class="px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+                Anterior
+            </button>
+        </form>
+
+        <!-- Páginas -->
+        <th:block th:with="startPage=${pageData.number > 1 ? pageData.number - 1 : 0},
+                           endPage=${pageData.number + 2 < pageData.totalPages ? pageData.number + 2 : pageData.totalPages - 1}">
+            <span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <span th:if="${i == pageData.number}"
+                      class="px-4 py-2 bg-green-600 text-white rounded-md">[[${i + 1}]]</span>
+
+                <form th:unless="${i == pageData.number}" method="get" style="display: inline;">
+                    <input type="hidden" name="page" th:value="${i}">
+                    <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                           type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+                    <button type="submit"
+                            class="px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+                        [[${i + 1}]]
+                    </button>
+                </form>
+            </span>
+        </th:block>
+
+        <!-- Indicador "..." si hay más páginas -->
+        <span th:if="${pageData.number + 2 < pageData.totalPages - 1}" class="px-4 py-2 text-gray-600">...</span>
+
+        <!-- Enlace Siguiente -->
+        <form th:if="${pageData.hasNext()}" method="get" style="display: inline;">
+            <input type="hidden" name="page" th:value="${pageData.number + 1}">
+            <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                   type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+            <button type="submit"
+                    class="px-4 py-2 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
+                Siguiente
+            </button>
+        </form>
+    </div>
+
+    <!-- Mensaje cuando no hay páginas -->
+    <div th:unless="${pageData != null and pageData.totalPages > 1}" class="text-center text-gray-600">
+        <span th:text="${'No hay más ' + entityName + ' disponibles para mostrar.'}"></span>
+    </div>
+</div>
+</html>
