@@ -3,7 +3,6 @@ package com.iyg16260.farmasterrae.config;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -28,11 +27,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @ControllerAdvice
-@Order (Ordered.HIGHEST_PRECEDENCE)
+@Order (1)
 public class GlobalExceptionHandler implements Filter {
 
     /**
-     * Captura errores de parse de la vista
+     * Captura errores de parse de la vista. Si es BAD_REQUEST o BindException no genera archivo de log
      *
      * @param req   The request to process
      * @param res   The response associated with the request

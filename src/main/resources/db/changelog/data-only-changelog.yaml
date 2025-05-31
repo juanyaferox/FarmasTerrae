@@ -1,0 +1,36 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-profiles
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/profiles.sql
+
+  - changeSet:
+      id: 002-users
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/users.sql
+
+  - changeSet:
+      id: 003-products
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/products.sql
+
+  - changeSet:
+      id: 004-orders
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/orders.sql
+
+  - changeSet:
+      id: 005-order-details
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/order_details.sql
+
+  - changeSet:
+      id: 006-reviews
+      author: juanya
+      sqlFile:
+        path: classpath:db/changelog/data/reviews.sql

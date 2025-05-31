@@ -8,6 +8,7 @@ import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 
+@Slf4j
 @Service
 public class ProductsService {
 
@@ -52,7 +54,7 @@ public class ProductsService {
         int pageSize = isAdmin ? PAGE_SIZE_ADMIN : PAGE_SIZE;
         return productRepository
                 .findAll(Pageable.ofSize(pageSize).withPage(page))
-                .map(this::convertToProductDTOWithSignedUrl);
+                .map(productMapper::productToProductDTO);
     }
 
     /**
@@ -75,7 +77,7 @@ public class ProductsService {
     public Page<ProductPageDTO> getProductListByCategory(Category category, int page) {
         return productRepository
                 .findByCategory(category, Pageable.ofSize(PAGE_SIZE).withPage(page))
-                .map(this::convertToProductPageDTOWithSignedUrl);
+                .map(productMapper::productToProductPageDTO);
     }
 
     /**
@@ -87,7 +89,7 @@ public class ProductsService {
     public Page<ProductPageDTO> getProductListByCategory(int page) {
         return productRepository
                 .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
-                .map(this::convertToProductPageDTOWithSignedUrl);
+                .map(productMapper::productToProductPageDTO);
     }
 
     /**
@@ -100,7 +102,7 @@ public class ProductsService {
         Product product = productRepository.findByReference(reference)
                 .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
 
-        return convertToProductDTOWithSignedUrl(product);
+        return productMapper.productToProductDTO(product);
     }
 
     /**
@@ -228,27 +230,6 @@ public class ProductsService {
         }
 
         return productDTO;
-    }
-
-    private ProductPageDTO convertToProductPageDTOWithSignedUrl(Product product) {
-        ProductPageDTO productPageDTO = productMapper.productToProductPageDTO(product);
-
-        if (productPageDTO.getImagePath() != null && !productPageDTO.getImagePath().isEmpty()) {
-            try {
-                String key = s3StorageService.extractKeyFromUrl(productPageDTO.getImagePath());
-
-                if (key != null) {
-                    String signedUrl = s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
-                    productPageDTO.setImagePath(signedUrl);
-                }
-
-            } catch (Exception e) {
-                System.err.println("Error generando URL firmada para producto " +
-                        product.getReference() + ": " + e.getMessage());
-            }
-        }
-
-        return productPageDTO;
     }
 
 }

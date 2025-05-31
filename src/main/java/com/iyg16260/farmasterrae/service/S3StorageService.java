@@ -32,8 +32,14 @@ public class S3StorageService {
     @Value ("${aws.s3.bucket-name}")
     private String bucketName;
 
-    @Value ("${aws.s3.endpoint}")
+    @Value ("${aws.region}")
+    private String region;
+
+    @Value ("${aws.s3.endpoint:}")
     private String s3Endpoint;
+
+    @Value ("${app.env:dev}")
+    private String appEnv;
 
     /**
      * Sube un archivo al bucket de S3 y devuelve la URL
@@ -69,7 +75,12 @@ public class S3StorageService {
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
             // Construir y devolver la URL
-            return s3Endpoint + "/" + bucketName + "/" + key;
+            if ("dev".equalsIgnoreCase(appEnv) && s3Endpoint != null && !s3Endpoint.isBlank()) {
+                return s3Endpoint + "/" + bucketName + "/" + key;
+            } else {
+                // URL pública de AWS S3 (si el bucket es público o tiene políticas adecuadas)
+                return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
+            }
 
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al procesar el archivo", e);

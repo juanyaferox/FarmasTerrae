@@ -8,6 +8,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
@@ -25,8 +26,11 @@ public class S3Config {
     @Value ("${aws.region}")
     private String region;
 
-    @Value ("${aws.s3.endpoint}")
+    @Value ("${aws.s3.endpoint:}") // opcional
     private String endpoint;
+
+    @Value ("${app.env:dev}") // por defecto desarollo
+    private String appEnv;
 
     @Bean
     public S3Client s3Client() {
@@ -36,26 +40,34 @@ public class S3Config {
                 .pathStyleAccessEnabled(true)
                 .build();
 
-        return S3Client.builder()
-                .endpointOverride(URI.create(endpoint))
+        S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
                 .serviceConfiguration(serviceConfig)
-                .overrideConfiguration(ClientOverrideConfiguration.builder().build())
-                .build();
+                .overrideConfiguration(ClientOverrideConfiguration.builder().build());
+
+        if ("dev".equalsIgnoreCase(appEnv)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        return builder.build();
     }
 
     @Bean
     public S3Presigner s3Presigner() {
         AwsBasicCredentials creds = AwsBasicCredentials.create(accessKey, secretKey);
 
-        return S3Presigner.builder()
-                .endpointOverride(URI.create(endpoint))
+        S3Presigner.Builder builder = S3Presigner.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(creds))
                 .serviceConfiguration(S3Configuration.builder()
                         .pathStyleAccessEnabled(true)
-                        .build())
-                .build();
+                        .build());
+
+        if ("dev".equalsIgnoreCase(appEnv)) {
+            builder.endpointOverride(URI.create(endpoint));
+        }
+
+        return builder.build();
     }
 }
