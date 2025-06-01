@@ -68,7 +68,7 @@ public class OrderController {
         paymentDetails.setAddress(user.getAddress());
         paymentDetails.setFullName(user.getFullName());
 
-        return new ModelAndView("/order/order-details")
+        return new ModelAndView("order/order-details")
                 .addObject("products", cartProducts)
                 .addObject("paymentMethod", PaymentMethod.values())
                 .addObject("paymentDetails", paymentDetails);
@@ -129,7 +129,7 @@ public class OrderController {
     public ModelAndView successOrder(@ModelAttribute Order order, HttpSession session) {
         cartService.clearCart(session);
 
-        return new ModelAndView("/order/success")
+        return new ModelAndView("order/success")
                 .addObject("order", order);
     }
      */
