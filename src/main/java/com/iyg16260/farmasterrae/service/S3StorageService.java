@@ -78,7 +78,9 @@ public class S3StorageService {
 
             // Construir y devolver la URL
             if ("dev".equalsIgnoreCase(appEnv) && s3Endpoint != null && !s3Endpoint.isBlank()) {
-                return s3Endpoint + "/" + bucketName + "/" + key;
+                // En caso de usar docker compose
+                String fixedEndpoint = s3Endpoint.replace("http://minio:9000", "http://localhost:9000");
+                return fixedEndpoint + "/" + bucketName + "/" + key;
             } else {
                 // URL pública de AWS S3 (si el bucket es público o tiene políticas adecuadas)
                 return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;

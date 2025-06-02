@@ -75,7 +75,9 @@ public class S3Config {
                     );
 
             if (!endpoint.isBlank()) {
-                presignerBuilder.endpointOverride(URI.create(endpoint));
+                // En caso de usar docker compose
+                String fixedEndpoint = endpoint.replace("http://minio:9000", "http://localhost:9000");
+                presignerBuilder.endpointOverride(URI.create(fixedEndpoint));
             }
             return presignerBuilder.build();
         } else {
