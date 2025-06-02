@@ -19,12 +19,8 @@ public class IndexController {
 
     @GetMapping
     public String index(Model model) {
-        // Obtener 3 productos aleatorios para la sección de productos destacados
         List<ProductDTO> featuredProducts = productService.getRandomProducts(4);
-
-        // Agregar los productos al modelo para que estén disponibles en la vista
         model.addAttribute("featuredProducts", featuredProducts);
-
         return "index";
     }
 }

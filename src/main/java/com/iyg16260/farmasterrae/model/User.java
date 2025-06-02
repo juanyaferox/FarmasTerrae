@@ -103,14 +103,11 @@ public class User implements UserDetails, Serializable {
         if (input == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El nombre de usuario no puede ser nulo");
         }
+        input = input.trim();
         if (!input.matches("^[a-zA-Z0-9_]{3,20}$")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El nombre de usuario debe tener entre 3 y 20 caracteres alfanuméricos sin espacios.");
         }
         return input.toLowerCase();
-    }
-
-    public String getNormalizedUsername() {
-        return username != null ? username.toLowerCase() : null;
     }
 }

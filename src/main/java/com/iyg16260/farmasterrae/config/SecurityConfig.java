@@ -91,6 +91,4 @@ public class SecurityConfig implements WebMvcConfigurer {
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/auth").setViewName("auth/login");
     }
-
-
 }

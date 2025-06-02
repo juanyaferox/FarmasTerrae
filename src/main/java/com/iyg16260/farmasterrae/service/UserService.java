@@ -108,7 +108,8 @@ public class UserService implements UserDetailsService {
      */
     public User updateUserById(long id, UserDTO userDetails) throws ResponseStatusException {
         User userDB = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-
+        if (userDetails.getType() == null)
+            userDetails.setType(userDB.getProfile().getType());
         return userRepository.save(
                 validateUserDTOAndReturnUserModified(userDB, userDetails)
         );

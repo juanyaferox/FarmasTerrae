@@ -111,7 +111,7 @@ public class OrderService {
         if (Objects.equals(user.getProfile().getType(), "ADMIN"))
             return orderMapper.orderToOrderDetailsDTO(order);
 
-        if (user.getOrderList().stream().anyMatch(o -> !Objects.equals(o.getId(), order.getId())))
+        if (user.getOrderList().stream().noneMatch(o -> Objects.equals(o.getId(), order.getId())))
             throw new ResponseStatusException
                     (HttpStatus.FORBIDDEN, "No tienes permiso para acceder a este recurso.");
 

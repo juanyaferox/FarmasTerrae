@@ -30,7 +30,7 @@ public class S3Config {
     @Value ("${aws.s3.endpoint:}") // opcional
     private String endpoint;
 
-    @Value ("${app.env:dev}") // por defecto desarollo
+    @Value ("${app.env:dev}") // por defecto desarrollo
     private String appEnv;
 
     @Bean
@@ -43,9 +43,8 @@ public class S3Config {
                                 .build()
                 )
                 .overrideConfiguration(ClientOverrideConfiguration.builder().build());
-
+        // En modo desarrollo usamos credenciales estáticas
         if ("dev".equalsIgnoreCase(appEnv)) {
-            // En local (dev) usamos credenciales estáticas
             AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
             builder.credentialsProvider(StaticCredentialsProvider.create(awsCreds));
 
@@ -53,9 +52,8 @@ public class S3Config {
                 builder.endpointOverride(URI.create(endpoint));
             }
         } else {
-            // En producción (o cualquier otro entorno), confiamos en el rol de la instancia
+            // En producción confiamos en el rol de la instancia
             builder.credentialsProvider(DefaultCredentialsProvider.create());
-            // No es necesario endpointOverride; usa AWS S3 “real”
         }
 
         return builder.build();

@@ -80,5 +80,4 @@ public class AdminController {
         }
         return model;
     }
-
 }

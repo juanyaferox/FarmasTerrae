@@ -153,7 +153,7 @@ public class GlobalExceptionHandler implements Filter {
         }
 
         if (ex instanceof ResponseStatusException rse) {
-            return !HttpStatus.BAD_REQUEST.equals(rse.getStatusCode());
+            return !HttpStatus.BAD_REQUEST.equals(rse.getStatusCode()) || !HttpStatus.FORBIDDEN.equals(rse.getStatusCode());
         }
 
         return true;

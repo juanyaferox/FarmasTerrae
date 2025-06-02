@@ -11,7 +11,8 @@ import java.util.List;
 @Entity
 @Data
 @EqualsAndHashCode (onlyExplicitlyIncluded = true)
-@Table (name = "products", indexes = {@Index (name = "idxProductCategory", columnList = "category"), @Index (name = "idxProductReference", columnList = "reference")})
+@Table (name = "products", indexes = {@Index (name = "idxProductCategory", columnList = "category"),
+        @Index (name = "idxProductReference", columnList = "reference")})
 public class Product {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
