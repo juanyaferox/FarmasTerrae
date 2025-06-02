@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -32,6 +33,9 @@ public class ProductsService {
 
     @Autowired
     S3StorageService s3StorageService;
+
+    @Autowired
+    ImageCompressionService compressionService;
 
     @Autowired
     ProductRepository productRepository;
@@ -140,9 +144,15 @@ public class ProductsService {
             if (oldProduct.getImagePath() != null && !oldProduct.getImagePath().isEmpty()) {
                 s3StorageService.deleteFile(oldProduct.getImagePath());
             }
+            MultipartFile imageToUpload;
+            try {
+                imageToUpload = compressionService.compressImage(image);
+            } catch (IOException e) {
+                imageToUpload = image;
+            }
 
             // Subir la nueva imagen
-            String imageUrl = s3StorageService.uploadFile(image, PRODUCT_IMAGES_FOLDER);
+            String imageUrl = s3StorageService.uploadFile(imageToUpload, PRODUCT_IMAGES_FOLDER);
             product.setImagePath(imageUrl);
         } else {
             // Mantener la imagen anterior
