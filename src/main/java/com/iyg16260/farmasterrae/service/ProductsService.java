@@ -8,16 +8,21 @@ import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import com.iyg16260.farmasterrae.spec.ProductSpecification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +35,9 @@ public class ProductsService {
     S3StorageService s3StorageService;
 
     @Autowired
+    ImageCompressionService compressionService;
+
+    @Autowired
     ProductRepository productRepository;
 
     @Autowired
@@ -38,57 +46,41 @@ public class ProductsService {
     @Autowired
     ProductMapper productMapper;
 
-    private final int PAGE_SIZE = 24;
-    private final int PAGE_SIZE_ADMIN = 10;
+    private final int PAGE_SIZE = 20;
+    private final int PAGE_SIZE_ADMIN = 9;
     private final String PRODUCT_IMAGES_FOLDER = "product-images";
     private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
 
     /**
      * Obtiene una página de productos con opción de tamaño personalizado para admin
      *
-     * @param page    número de página
-     * @param isAdmin si es admin para usar tamaño de página diferente
+     * @param page número de página
      * @return página de productos DTO
      */
-    public Page<ProductDTO> getProductList(int page, boolean isAdmin) {
-        int pageSize = isAdmin ? PAGE_SIZE_ADMIN : PAGE_SIZE;
+    public Page<ProductDTO> getProductList(int page, String keyword, String sort, String dir) {
+
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        var specUtils = new ProductSpecification();
+        Specification<Product> spec = specUtils.searchLike(keyword)
+                .or(specUtils.searchLikeCategory(keyword));
+
         return productRepository
-                .findAll(Pageable.ofSize(pageSize).withPage(page))
+                .findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
                 .map(productMapper::productToProductDTO);
     }
 
-    /**
-     * Obtiene una página de productos con tamaño estándar
-     *
-     * @param page número de página
-     * @return página de productos DTO
-     */
-    public Page<ProductDTO> getProductList(int page) {
-        return getProductList(page, false);
-    }
+    public Page<ProductPageDTO> getFilteredProducts(Category category, String keyword, int page) {
 
-    /**
-     * Obtiene una página de productos filtrados por categoría
-     *
-     * @param category categoría a filtrar
-     * @param page     número de página
-     * @return página de productos DTO para página de productos
-     */
-    public Page<ProductPageDTO> getProductListByCategory(Category category, int page) {
-        return productRepository
-                .findByCategory(category, Pageable.ofSize(PAGE_SIZE).withPage(page))
-                .map(productMapper::productToProductPageDTO);
-    }
+        ProductSpecification specUtil = new ProductSpecification();
+        Specification<Product> spec = specUtil.searchByCategory(category)
+                .and(specUtil.searchLike(keyword));
 
-    /**
-     * Obtiene una página de todos los productos sin filtro de categoría
-     *
-     * @param page número de página
-     * @return página de productos DTO para página de productos
-     */
-    public Page<ProductPageDTO> getProductListByCategory(int page) {
-        return productRepository
-                .findAll(Pageable.ofSize(PAGE_SIZE).withPage(page))
+        return productRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE).withPage(page))
                 .map(productMapper::productToProductPageDTO);
     }
 
@@ -152,9 +144,15 @@ public class ProductsService {
             if (oldProduct.getImagePath() != null && !oldProduct.getImagePath().isEmpty()) {
                 s3StorageService.deleteFile(oldProduct.getImagePath());
             }
+            MultipartFile imageToUpload;
+            try {
+                imageToUpload = compressionService.compressImage(image);
+            } catch (IOException e) {
+                imageToUpload = image;
+            }
 
             // Subir la nueva imagen
-            String imageUrl = s3StorageService.uploadFile(image, PRODUCT_IMAGES_FOLDER);
+            String imageUrl = s3StorageService.uploadFile(imageToUpload, PRODUCT_IMAGES_FOLDER);
             product.setImagePath(imageUrl);
         } else {
             // Mantener la imagen anterior
@@ -164,10 +162,6 @@ public class ProductsService {
         return productMapper.productToProductDTO(
                 productRepository.save(product)
         );
-    }
-
-    public ProductDTO updateProduct(ProductDTO productDTO, String oldReference) throws ResponseStatusException {
-        return updateProduct(productDTO, oldReference, null);
     }
 
     /**
@@ -198,6 +192,17 @@ public class ProductsService {
     }
 
     /**
+     * Obtiene una cantidad específica de productos aleatorios de la base de datos
+     *
+     * @param count número de productos a obtener
+     * @return lista de productos aleatorios
+     */
+    public List<ProductDTO> getRandomProducts(int count) {
+        return productRepository.findRandomProducts(count)
+                .stream().map(productMapper::productToProductDTO).toList();
+    }
+
+    /**
      * Obtiene todas las reviews de un producto por su referencia
      *
      * @param reference referencia del producto
@@ -207,29 +212,6 @@ public class ProductsService {
     public List<ReviewDTO> getReviewsFromProduct(String reference) {
         Product product = getProductByReference(reference);
         return product.getReviewList().stream().map(reviewMapper::reviewToReviewDTO).toList();
-    }
-
-    private ProductDTO convertToProductDTOWithSignedUrl(Product product) {
-        ProductDTO productDTO = productMapper.productToProductDTO(product);
-
-        if (productDTO.getImagePath() != null && !productDTO.getImagePath().isEmpty()) {
-            try {
-                // Usar el método utilitario del servicio S3
-                String key = s3StorageService.extractKeyFromUrl(productDTO.getImagePath());
-
-                if (key != null) {
-                    String signedUrl = s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
-                    productDTO.setImagePath(signedUrl);
-                }
-
-            } catch (Exception e) {
-                System.err.println("Error generando URL firmada para producto " +
-                        product.getReference() + ": " + e.getMessage());
-                // Mantener URL original como fallback
-            }
-        }
-
-        return productDTO;
     }
 
 }

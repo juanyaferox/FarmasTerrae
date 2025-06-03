@@ -23,8 +23,8 @@ public class DashboardProductController {
     private final String PRODUCT_PATH = "redirect:/admin/dashboard/products";
 
     @PostMapping (consumes = {"multipart/form-data"})
-    public String addProduct(@Valid @ModelAttribute ProductDTO productDTO, @RequestParam (required = false) MultipartFile imageFile,
-                             RedirectAttributes ra) {
+    public String addProduct(@Valid @ModelAttribute ProductDTO productDTO,
+                             @RequestParam (required = false) MultipartFile imageFile, RedirectAttributes ra) {
         productsService.saveProduct(productDTO);
         buildSuccessMessage(ra, EntityType.PRODUCTS, Operation.POST);
         return PRODUCT_PATH;

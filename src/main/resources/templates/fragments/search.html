@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<div th:fragment="search (actionUrl)">
+    <form th:action="@{${actionUrl}}" method="get" class="mb-4">
+        <!-- Campos ocultos para preservar parámetros existentes -->
+        <input th:each="paramEntry : ${param}"
+               th:unless="${paramEntry.key == 'search' or paramEntry.key == 'page'}"
+               type="hidden"
+               th:name="${paramEntry.key}"
+               th:value="${paramEntry.value[0]}">
+
+        <div class="flex justify-center">
+            <div class="relative w-3/4">
+                <input type="text" name="search" placeholder="Buscar productos..."
+                       class="w-full bg-white border border-green-200 rounded-full px-6 py-3
+                                  text-gray-700 placeholder-gray-400 shadow-md
+                                  focus:outline-none focus:ring-2 focus:ring-green-400 transition"
+                       th:value="${param.search != null ? param.search[0] : ''}">
+                <button type="submit"
+                        class="absolute right-0 top-0 mt-1 mr-1 bg-green-300 text-white
+                                   px-6 py-2 rounded-full hover:bg-green-400 transition-colors duration-300">
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+</html>

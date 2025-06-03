@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+
+  # 1) Servicio de base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql_farmasterrae
+    restart: always
+    environment:
+      # Estas variables se heredan del fichero .env
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+
+  # 2) Servicio de la aplicación Spring Boot
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring_farmasterrae
+    restart: always
+    depends_on:
+      - db
+    environment:
+      # Variables del .env
+      - SPRING_PROFILES_ACTIVE
+      - SECRET_KEY
+      - DB_NAME
+      - DB_HOST
+      - DB_PORT
+      - DB_USERNAME
+      - DB_PASSWORD
+      - EMAIL
+      - PASSWORD
+      - AWS_REGION
+      - AWS_BUCKET
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_farmasterrae
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:
+    driver: bridge

@@ -26,23 +26,121 @@
     }
   }
     </script>
+    <h2 class="text-2xl font-bold mb-4 text-green-700">Lista de Productos</h2>
+    <div th:replace="~{fragments/search :: search('/admin/dashboard/products')}"></div>
+
     <div class="flex justify-end mb-4">
         <button type="button"
-                class="bg-[#E6E6FA] text-purple-800 px-4 py-2 rounded-md shadow-sm hover:bg-[#D8BFD8]
-                transition-colors duration-300 uppercase tracking-wider font-bold"
+                class="bg-green-300 text-white px-3 py-1 rounded-md shadow-sm hover:bg-green-400
+            transition-colors duration-300 uppercase tracking-wider font-bold"
                 @click="openNew()">
-            <span class="text-xl">+</span>
-            <span>Añadir Nuevo Producto</span>
+            Añadir Nuevo Producto
         </button>
     </div>
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
         <tr class="bg-green-100">
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Precio</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Stock</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Referencia</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Categoría</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <!-- Preservar parámetros existentes excepto sort y dir -->
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="name">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'name' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Nombre
+                        <span th:if="${param.sort != null and param.sort[0] == 'name'}" class="ml-1">
+                        <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                        <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                    </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="price">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'price' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Precio
+                        <span th:if="${param.sort != null and param.sort[0] == 'price'}" class="ml-1">
+                        <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                        <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                    </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="stock">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'stock' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Stock
+                        <span th:if="${param.sort != null and param.sort[0] == 'stock'}" class="ml-1">
+                        <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                        <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                    </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="reference">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'reference' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Referencia
+                        <span th:if="${param.sort != null and param.sort[0] == 'reference'}" class="ml-1">
+                        <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                        <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                    </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="category">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'category' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Categoría
+                        <span th:if="${param.sort != null and param.sort[0] == 'category'}" class="ml-1">
+                        <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                        <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                    </span>
+                    </button>
+                </form>
+            </th>
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
         </tr>
         </thead>
@@ -137,9 +235,16 @@
                             <!-- Input de archivo -->
                             <input type="file" name="imageFile" x-ref="fileInput" class="hidden" accept="image/*"
                                    @change="if ($refs.fileInput.files.length) {
-                                       selectedProduct.imageName = $refs.fileInput.files[0].name;
-                                       selectedProduct.imageExists = true;
-                                   }"/>
+                   selectedProduct.imageName = $refs.fileInput.files[0].name;
+                   selectedProduct.imageExists = true;
+                   // Crear preview de la nueva imagen
+                   const file = $refs.fileInput.files[0];
+                   const reader = new FileReader();
+                   reader.onload = function(e) {
+                       selectedProduct.previewImage = e.target.result;
+                   };
+                   reader.readAsDataURL(file);
+               }"/>
                             <!-- Botón personalizado -->
                             <button type="button"
                                     class="w-full bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300"
@@ -147,20 +252,52 @@
                                 Seleccionar Imagen (Tamaño Máximo: 10MB)
                             </button>
                         </div>
-                        <!-- Texto de estado debajo del botón -->
-                        <p class="mt-2 text-sm text-gray-600"
-                           x-text="selectedProduct.imageName
-                            ? 'Nueva imagen seleccionada: ' + selectedProduct.imageName
-                            : (selectedProduct.imageExists && selectedProduct.imagePath
-                                ? 'Imagen actual: ' + selectedProduct.imagePath.split('/').pop()
-                                : 'No hay imagen seleccionada')"></p>
 
-                        <!-- Mostrar imagen actual si existe -->
-                        <template
-                                x-if="!selectedProduct.imageName && selectedProduct.imageExists && selectedProduct.imagePath">
-                            <div class="mt-2">
-                                <img :src="selectedProduct.imagePath" alt="Imagen actual"
-                                     class="max-w-32 h-20 object-cover rounded border">
+                        <!-- Contenedor con altura fija para la imagen -->
+                        <div class="mt-2 h-20 flex items-center justify-center">
+                            <!-- Preview de nueva imagen seleccionada -->
+                            <template x-if="selectedProduct.previewImage">
+                                <div class="relative">
+                                    <img :src="selectedProduct.previewImage" alt="Preview imagen nueva"
+                                         class="h-20 w-32 object-cover rounded border border-green-300">
+                                    <!-- Indicador de nueva imagen -->
+                                    <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                                        Nueva
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Imagen actual existente (solo si no hay preview) -->
+                            <template
+                                    x-if="!selectedProduct.previewImage && selectedProduct.imageExists && selectedProduct.imagePath">
+                                <div class="relative">
+                                    <img :src="selectedProduct.imagePath" alt="Imagen actual"
+                                         class="h-20 w-32 object-cover rounded border border-gray-300">
+                                    <!-- Indicador de imagen actual -->
+                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                        Actual
+                                    </div>
+                                </div>
+                            </template>
+
+                            <!-- Placeholder cuando no hay imagen -->
+                            <template
+                                    x-if="!selectedProduct.previewImage && (!selectedProduct.imageExists || !selectedProduct.imagePath)">
+                                <div class="h-20 w-32 flex items-center justify-center bg-gray-50 rounded border border-dashed border-gray-300">
+                                    <span class="text-sm text-gray-500">Sin imagen</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Confirmación visual de imagen cargada -->
+                        <template x-if="selectedProduct.previewImage">
+                            <div class="mt-2 flex items-center justify-center text-sm text-green-600">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clip-rule="evenodd"></path>
+                                </svg>
+                                <span>Imagen cargada y lista para subir</span>
                             </div>
                         </template>
                     </div>
@@ -226,19 +363,7 @@
     </form>
 
     <!-- Paginación -->
-    <div class="mt-6 flex justify-center space-x-2">
-        <a th:if="${products.hasPrevious()}"
-           th:href="@{/admin/dashboard/products(page=${products.number - 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Anterior
-        </a>
-        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${products.number + 1}]]</span>
-        <a th:if="${products.hasNext()}"
-           th:href="@{/admin/dashboard/products(page=${products.number + 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Siguiente
-        </a>
-    </div>
+    <div th:replace="~{fragments/pagination :: pagination(${products}, '/admin/dashboard/products', 'productos')}"></div>
 </div>
 </body>
 </html>

@@ -17,6 +17,8 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.UUID;
 
@@ -76,7 +78,9 @@ public class S3StorageService {
 
             // Construir y devolver la URL
             if ("dev".equalsIgnoreCase(appEnv) && s3Endpoint != null && !s3Endpoint.isBlank()) {
-                return s3Endpoint + "/" + bucketName + "/" + key;
+                // En caso de usar docker compose
+                String fixedEndpoint = s3Endpoint.replace("http://minio:9000", "http://localhost:9000");
+                return fixedEndpoint + "/" + bucketName + "/" + key;
             } else {
                 // URL pública de AWS S3 (si el bucket es público o tiene políticas adecuadas)
                 return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
@@ -154,9 +158,38 @@ public class S3StorageService {
             return fileUrl;
         }
 
-        // Si es URL completa, extraer la clave
-        if (fileUrl.contains(bucketName)) {
-            return fileUrl.substring(fileUrl.indexOf(bucketName) + bucketName.length() + 1);
+        if ("dev".equalsIgnoreCase(appEnv)) {
+            // Busca "bucketName/" en la URL y devuelve lo que venga después
+            if (!fileUrl.contains(bucketName + "/")) {
+                return fileUrl.substring(fileUrl.indexOf(bucketName + "/") + bucketName.length() + 1);
+            }
+        }
+
+        try {
+            URI uri = new URI(fileUrl);
+            String host = uri.getHost();
+            String path = uri.getPath();
+            String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
+
+            if (host != null && host.startsWith(bucketName + ".s3.")) {
+                return normalizedPath;
+            }
+
+            if (host != null && (host.equals("s3.amazonaws.com")
+                    || (host.startsWith("s3.") && host.endsWith(".amazonaws.com")))) {
+                String[] parts = normalizedPath.split("/", 2);
+                if (parts.length == 2 && parts[0].equals(bucketName)) {
+                    return parts[1];
+                }
+            }
+
+            String[] parts = normalizedPath.split("/", 2);
+            if (parts.length == 2 && parts[0].equals(bucketName)) {
+                return parts[1];
+            }
+
+        } catch (URISyntaxException e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al obtener la imagen");
         }
 
         return fileUrl;

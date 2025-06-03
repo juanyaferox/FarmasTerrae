@@ -1,0 +1,84 @@
+version: "3.8"
+
+services:
+
+  # 1) Servicio de base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: mysql_farmasterrae
+    restart: always
+    environment:
+      MYSQL_DATABASE: "${DB_NAME}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_ROOT_HOST: "%"
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+
+  # 2) Servicio de la aplicación Spring Boot
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring_farmasterrae
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - SPRING_PROFILES_ACTIVE=prodminio
+      - DB_NAME
+      - DB_USERNAME
+      - DB_PASSWORD
+      - EMAIL
+      - PASSWORD
+    ports:
+      - "8080:8080"
+    networks:
+      - backend
+
+  # 3) Servidor MinIO (almacenamiento S3-compatible)
+  minio:
+    image: minio/minio
+    container_name: minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_BUCKET: farmasterrae
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    networks:
+      - backend
+
+  minio-init:
+    image: minio/mc
+    container_name: minio_init
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        sleep 10;
+        mc alias set local http://minio:9000 minioadmin minioadmin &&
+        mc mb local/farmasterrae --ignore-existing &&
+        mc policy set public local/farmasterrae;
+      "
+    networks:
+      - backend
+
+volumes:
+  db_data:
+  minio_data:
+
+networks:
+  backend:
+    driver: bridge

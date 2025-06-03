@@ -16,10 +16,8 @@ import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMe
 @Controller
 @RequestMapping ("/admin/dashboard/users")
 public class DashboardUserController {
-
     @Autowired
     UserService userService;
-
     private final String USER_PATH = "redirect:/admin/dashboard/users";
 
     @GetMapping ("/{username}")
@@ -30,7 +28,8 @@ public class DashboardUserController {
     }
 
     @PutMapping
-    public String updateUser(@Valid @ModelAttribute UserDTO userDTO, @RequestParam String oldUsername, RedirectAttributes ra) {
+    public String updateUser(@Valid @ModelAttribute UserDTO userDTO,
+                             @RequestParam String oldUsername, RedirectAttributes ra) {
         userService.updateUserByUsername(userDTO, oldUsername);
         buildSuccessMessage(ra, EntityType.USERS, Operation.PUT);
         return USER_PATH;

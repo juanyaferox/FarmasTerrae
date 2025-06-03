@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Map;
 
 @Controller
@@ -55,8 +53,7 @@ public class CartController {
      * @return
      */
     @GetMapping ("/remove/{reference}")
-    public String deleteFromCart(@PathVariable String reference,
-                                 HttpSession session) {
+    public String deleteFromCart(@PathVariable String reference, HttpSession session) {
         cartService.deleteAllSameProductFromCart(reference, session);
         return CART_URL;
     }
@@ -74,7 +71,8 @@ public class CartController {
      * Añadir un producto del mismo al carrito
      */
     @GetMapping ("/increase/{reference}")
-    public String increaseCart(@PathVariable String reference, HttpSession session, RedirectAttributes ra) {
+    public String increaseCart(@PathVariable String reference, HttpSession session,
+                               RedirectAttributes ra) {
         cartService.addProductToCart(reference, session);
         return CART_URL;
     }

@@ -1,22 +1,26 @@
 package com.iyg16260.farmasterrae.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig implements WebMvcConfigurer {
+public class SecurityConfig {
 
+    @Value ("${app.env:dev}") // por defecto desarollo
+    private String appEnv;
+
+    @Value ("${app.security}")
+    private String securityKey;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -31,14 +35,18 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/auth/changePassword/**").authenticated()
                         .requestMatchers("/order/**").authenticated()
                         .anyRequest().permitAll()
-                )
-                // Configuración para H2
-                .csrf(AbstractHttpConfigurer::disable)
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin))
-                .formLogin(form -> form
+                );
+        // Configuración para H2
+        if ("dev".equals(appEnv)) {
+            http.csrf(csrf ->
+                            csrf.ignoringRequestMatchers("/h2-console/**"))
+                    .headers(headers ->
+                            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+        }
+        http.formLogin(form -> form
                         .loginPage("/auth")  // Configuramos la URL de la página de login personalizada
                         .defaultSuccessUrl("/", true)
                         .permitAll()
@@ -46,15 +54,18 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/auth?logout")
+                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID", "remember-me")
                         .permitAll()
                 )
                 .rememberMe(remember -> remember
-                        .key("uniqueAndSecret")  // Clave para cifrar las cookies de remember-me
+                        .key(securityKey)  // Clave para cifrar las cookies de remember-me
                         .tokenValiditySeconds(604800)  // 7 días
                         .userDetailsService(userDetailsService)
                 )
                 .sessionManagement(session -> session
-                        .sessionFixation().newSession()  // Crea una nueva sesión después de autenticación
+                        .sessionFixation().migrateSession()  // Migra a la nueva sesión después de autenticación
                         .maximumSessions(1).expiredUrl("/auth?expired")  // Expira sesiones viejas
                 )
                 .exceptionHandling(ex -> ex
@@ -73,11 +84,4 @@ public class SecurityConfig implements WebMvcConfigurer {
                 );
         return http.build();
     }
-
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/auth").setViewName("auth/login");
-    }
-
-
 }

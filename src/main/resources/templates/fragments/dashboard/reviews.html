@@ -16,9 +16,66 @@
     <table class="min-w-full table-auto border border-gray-200">
         <thead>
         <tr class="bg-green-100">
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Título</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Contenido</th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Puntuación</th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="title">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'title' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Título
+                        <span th:if="${param.sort != null and param.sort[0] == 'title'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="content">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'content' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Contenido
+                        <span th:if="${param.sort != null and param.sort[0] == 'content'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
+            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
+                <form method="get" style="display: inline;">
+                    <input th:each="paramEntry : ${param}"
+                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
+                           type="hidden"
+                           th:name="${paramEntry.key}"
+                           th:value="${paramEntry.value[0]}">
+                    <input type="hidden" name="sort" value="scoring">
+                    <input type="hidden" name="dir"
+                           th:value="${param.sort != null and param.sort[0] == 'scoring' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
+                    <button type="submit"
+                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
+                        Puntuación
+                        <span th:if="${param.sort != null and param.sort[0] == 'scoring'}" class="ml-1">
+                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
+                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
+                </span>
+                    </button>
+                </form>
+            </th>
             <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
         </tr>
         </thead>

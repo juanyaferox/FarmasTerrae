@@ -9,11 +9,9 @@ import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.service.OrderService;
-import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,7 +25,6 @@ import java.util.List;
 
 import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
 
-@Slf4j
 @Controller
 @RequestMapping ("/user")
 public class UserController {
@@ -37,9 +34,6 @@ public class UserController {
 
     @Autowired
     OrderService orderService;
-
-    @Autowired
-    ProductsService productsService;
 
     @Autowired
     ReviewService reviewService;
@@ -53,12 +47,14 @@ public class UserController {
      */
     @GetMapping ({"/dashboard/{section}", "/dashboard"})
     public ModelAndView changeSection(@PathVariable (required = false) String section,
-                                      @RequestParam (defaultValue = "0", required = false) int page) {
+                                      @RequestParam (defaultValue = "0", required = false) int page,
+                                      @RequestParam (required = false) String sort,
+                                      @RequestParam (defaultValue = "asc") String dir) {
 
         ModelAndView model = new ModelAndView("user/dashboard")
                 .addObject("section", section);
 
-        return processSection(section, model, page);
+        return processSection(section, model, page, sort, dir);
     }
 
     /**
@@ -69,7 +65,7 @@ public class UserController {
      * @param page    page
      * @return vista de la seccion deseada
      */
-    private ModelAndView processSection(String section, ModelAndView model, int page) {
+    private ModelAndView processSection(String section, ModelAndView model, int page, String sort, String dir) {
 
         User user = null;
         if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User authUser)
@@ -80,7 +76,7 @@ public class UserController {
 
         switch (section) {
             case "orders" -> {
-                Page<OrderDTO> orders = orderService.getOrders(user, page);
+                Page<OrderDTO> orders = orderService.getOrders(user, page, sort, dir);
                 return model.addObject("orders", orders);
             }
             case "info-user" -> {
@@ -88,7 +84,7 @@ public class UserController {
                 return model.addObject("userView", userDTO);
             }
             case "reviews" -> {
-                Page<ReviewDTO> reviews = reviewService.getReviews(user, page);
+                Page<ReviewDTO> reviews = reviewService.getReviews(user, page, sort, dir);
                 List<ProductDTO> products = reviewService.getProductForReview(user);
                 return model.addObject("reviews", reviews)
                         .addObject("products", products);
@@ -122,7 +118,6 @@ public class UserController {
     @GetMapping ("/dashboard/orders/{idOrder}")
     public ModelAndView getOrder(@PathVariable int idOrder, @RequestParam (defaultValue = "false", required = false) boolean success, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-        System.out.println(orderDetails);
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails)
                 .addObject("success", success);
@@ -150,6 +145,5 @@ public class UserController {
         reviewService.deleteReview(idReview, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.DELETE);
         return "redirect:/user/dashboard/reviews";
-
     }
 }

@@ -10,8 +10,6 @@ public class SessionCart implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    // Posible mejora, usar ProductoDTO dentro de un CartDTO para asi tener la info del producto en caché
-
     // Usando MAP puedo evitar tener que recorrer la lista contando los productos para conocer la cantidad
     private final Map<String, Integer> products = new HashMap<>();
 

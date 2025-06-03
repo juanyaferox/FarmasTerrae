@@ -5,17 +5,19 @@ import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.mapper.OrderMapper;
-import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
+import com.iyg16260.farmasterrae.spec.OrderSpecification;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,8 +32,8 @@ import static com.iyg16260.farmasterrae.utils.GenericUtils.priceAmountCalc;
 @Service
 public class OrderService {
 
-    private final int PAGE_SIZE_USER = 10;
-    private final int PAGE_SIZE_ADMIN = 50;
+    private final int PAGE_SIZE_USER = 9;
+    private final int PAGE_SIZE_ADMIN = 9;
 
     @Autowired
     OrderRepository orderRepository;
@@ -46,9 +48,6 @@ public class OrderService {
     OrderMapper orderMapper;
 
     @Autowired
-    ProductMapper productMapper;
-
-    @Autowired
     CartService cartService;
 
     /**
@@ -58,27 +57,39 @@ public class OrderService {
      * @param page página actual
      * @return página con los pedidos actual
      */
-    public Page<OrderDTO> getOrders(User user, int page) {
-        Pageable pageable = Pageable
-                .ofSize(PAGE_SIZE_USER)
-                .withPage(page);
+    public Page<OrderDTO> getOrders(User user, int page, String sort, String dir) {
 
-        return orderRepository.findByUser(user, pageable)
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        return orderRepository.findByUser(user, PageRequest.of(page, PAGE_SIZE_USER, sortOrder))
                 .map(orderMapper::orderToOrderDTO);
     }
 
     /**
      * Página con todos los pedidos
      *
-     * @param page página actual
+     * @param page    página actual
+     * @param keyword palabra a buscar
      * @return página de los pedidos actual
      */
-    public Page<OrderDTO> getAllOrders(int page) {
-        Pageable pageable = Pageable
-                .ofSize(PAGE_SIZE_ADMIN)
-                .withPage(page);
+    public Page<OrderDTO> getAllOrders(int page, String keyword, String sort, String dir) {
 
-        return orderRepository.findAll(pageable)
+        Sort sortOrder = Sort.unsorted();
+        if (sort != null) {
+            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortOrder = Sort.by(direction, sort);
+        }
+
+        OrderSpecification specUtil = new OrderSpecification();
+        Specification<Order> spec = specUtil.searchLike(keyword)
+                .or(specUtil.searchLikeSaleStatus(keyword))
+                .or(specUtil.searchLikePaymentMethod(keyword));
+
+        return orderRepository.findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
                 .map(orderMapper::orderToOrderDTO);
     }
 
@@ -100,7 +111,7 @@ public class OrderService {
         if (Objects.equals(user.getProfile().getType(), "ADMIN"))
             return orderMapper.orderToOrderDetailsDTO(order);
 
-        if (user.getOrderList().stream().anyMatch(o -> !Objects.equals(o.getId(), order.getId())))
+        if (user.getOrderList().stream().noneMatch(o -> Objects.equals(o.getId(), order.getId())))
             throw new ResponseStatusException
                     (HttpStatus.FORBIDDEN, "No tienes permiso para acceder a este recurso.");
 
@@ -228,14 +239,12 @@ public class OrderService {
     @Transactional
     public OrderDTO updateOrder(long idOrder, String status) throws ResponseStatusException {
         try {
-            System.out.println("idOrder: " + idOrder + ", status: " + status);
             Order order = getOrderById(idOrder);
             order.setStatus(SaleStatus.valueOf(status.toUpperCase()));
             return orderMapper.orderToOrderDTO(
                     orderRepository.save(order)
             );
         } catch (IllegalArgumentException e) {
-            System.out.println(e);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado inválido: " + status);
         }
     }

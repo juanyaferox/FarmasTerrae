@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
@@ -18,10 +19,10 @@ import java.net.URI;
 public class S3Config {
 
     @Value ("${aws.accessKey}")
-    private String accessKey;
+    private String accessKey; // únicamente para desarrollo con MINIO
 
     @Value ("${aws.secretKey}")
-    private String secretKey;
+    private String secretKey;  // únicamente para desarrollo con MINIO
 
     @Value ("${aws.region}")
     private String region;
@@ -29,25 +30,30 @@ public class S3Config {
     @Value ("${aws.s3.endpoint:}") // opcional
     private String endpoint;
 
-    @Value ("${app.env:dev}") // por defecto desarollo
+    @Value ("${app.env:dev}") // por defecto desarrollo
     private String appEnv;
 
     @Bean
     public S3Client s3Client() {
-        AwsBasicCredentials awsCredentials = AwsBasicCredentials.create(accessKey, secretKey);
-
-        S3Configuration serviceConfig = S3Configuration.builder()
-                .pathStyleAccessEnabled(true)
-                .build();
-
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(awsCredentials))
-                .serviceConfiguration(serviceConfig)
+                .serviceConfiguration(
+                        S3Configuration.builder()
+                                .pathStyleAccessEnabled(true)
+                                .build()
+                )
                 .overrideConfiguration(ClientOverrideConfiguration.builder().build());
-
+        // En modo desarrollo usamos credenciales estáticas
         if ("dev".equalsIgnoreCase(appEnv)) {
-            builder.endpointOverride(URI.create(endpoint));
+            AwsBasicCredentials awsCreds = AwsBasicCredentials.create(accessKey, secretKey);
+            builder.credentialsProvider(StaticCredentialsProvider.create(awsCreds));
+
+            if (!endpoint.isBlank()) {
+                builder.endpointOverride(URI.create(endpoint));
+            }
+        } else {
+            // En producción confiamos en el rol de la instancia
+            builder.credentialsProvider(DefaultCredentialsProvider.create());
         }
 
         return builder.build();
@@ -55,19 +61,35 @@ public class S3Config {
 
     @Bean
     public S3Presigner s3Presigner() {
-        AwsBasicCredentials creds = AwsBasicCredentials.create(accessKey, secretKey);
-
-        S3Presigner.Builder builder = S3Presigner.builder()
-                .region(Region.of(region))
-                .credentialsProvider(StaticCredentialsProvider.create(creds))
-                .serviceConfiguration(S3Configuration.builder()
-                        .pathStyleAccessEnabled(true)
-                        .build());
-
         if ("dev".equalsIgnoreCase(appEnv)) {
-            builder.endpointOverride(URI.create(endpoint));
-        }
+            AwsBasicCredentials creds = AwsBasicCredentials.create(accessKey, secretKey);
+            S3Presigner.Builder presignerBuilder = S3Presigner.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(StaticCredentialsProvider.create(creds))
+                    .serviceConfiguration(
+                            S3Configuration.builder()
+                                    .pathStyleAccessEnabled(true)
+                                    .build()
+                    );
 
-        return builder.build();
+            if (!endpoint.isBlank()) {
+                // En caso de usar docker compose
+                String fixedEndpoint = endpoint.replace("http://minio:9000",
+                        "http://localhost:9000");
+                presignerBuilder.endpointOverride(URI.create(fixedEndpoint));
+            }
+            return presignerBuilder.build();
+        } else {
+            // En prod: también usamos DefaultCredentialsProvider para el presigner
+            return S3Presigner.builder()
+                    .region(Region.of(region))
+                    .credentialsProvider(DefaultCredentialsProvider.create())
+                    .serviceConfiguration(
+                            S3Configuration.builder()
+                                    .pathStyleAccessEnabled(true)
+                                    .build()
+                    )
+                    .build();
+        }
     }
 }
