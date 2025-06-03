@@ -11,12 +11,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig implements WebMvcConfigurer {
+public class SecurityConfig {
 
     @Value ("${app.env:dev}") // por defecto desarollo
     private String appEnv;
@@ -85,12 +83,5 @@ public class SecurityConfig implements WebMvcConfigurer {
                         })
                 );
         return http.build();
-    }
-
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/auth").setViewName("auth/login");
-        registry.addViewController("/common/error")
-                .setViewName("common/error");
     }
 }
