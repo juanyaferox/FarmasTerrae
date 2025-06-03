@@ -19,10 +19,10 @@ import java.net.URI;
 public class S3Config {
 
     @Value ("${aws.accessKey}")
-    private String accessKey;
+    private String accessKey; // únicamente para desarrollo con MINIO
 
     @Value ("${aws.secretKey}")
-    private String secretKey;
+    private String secretKey;  // únicamente para desarrollo con MINIO
 
     @Value ("${aws.region}")
     private String region;
@@ -74,7 +74,8 @@ public class S3Config {
 
             if (!endpoint.isBlank()) {
                 // En caso de usar docker compose
-                String fixedEndpoint = endpoint.replace("http://minio:9000", "http://localhost:9000");
+                String fixedEndpoint = endpoint.replace("http://minio:9000",
+                        "http://localhost:9000");
                 presignerBuilder.endpointOverride(URI.create(fixedEndpoint));
             }
             return presignerBuilder.build();

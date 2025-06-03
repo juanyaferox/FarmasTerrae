@@ -11,7 +11,6 @@ import com.iyg16260.farmasterrae.utils.GenericUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -26,7 +25,6 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 @Controller
-@Slf4j
 @RequestMapping ("/order")
 public class OrderController {
 
@@ -44,22 +42,21 @@ public class OrderController {
      * @return la vista con el listado de productos y un array paymentMethod
      */
     @GetMapping
-    public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes, @AuthenticationPrincipal User user) {
+    public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes,
+                                 @AuthenticationPrincipal User user) {
         SessionCart cart = cartService.getCart(session);
-
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
             return new ModelAndView("redirect:/cart");
         }
-
         // Verificar que las reservas de stock son válidas
         if (!cartService.validateCartReservations(session)) {
             // Si no son válidas, redirigir al carrito con un mensaje de error
             redirectAttributes.addFlashAttribute("errorMessage",
-                    "Algunos productos no tienen suficiente stock o tu reserva ha expirado. Por favor, revisa tu carrito.");
+                    "Algunos productos no tienen suficiente stock " +
+                            "o tu reserva ha expirado. Por favor, revisa tu carrito.");
             return new ModelAndView("redirect:/cart");
         }
-
         Map<ProductDTO, Integer> cartProducts = cartService.getDetailedProducts(session);
         BigDecimal totalAmount = GenericUtils.priceAmountCalc(cartProducts);
 

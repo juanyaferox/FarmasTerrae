@@ -12,7 +12,6 @@ import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ReviewService;
 import com.iyg16260.farmasterrae.service.UserService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +25,6 @@ import java.util.List;
 
 import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
 
-@Slf4j
 @Controller
 @RequestMapping ("/user")
 public class UserController {
@@ -147,6 +145,5 @@ public class UserController {
         reviewService.deleteReview(idReview, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.DELETE);
         return "redirect:/user/dashboard/reviews";
-
     }
 }

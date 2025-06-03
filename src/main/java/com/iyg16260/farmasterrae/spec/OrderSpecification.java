@@ -11,8 +11,10 @@ public class OrderSpecification {
      * {@code Like} en todos los campo string y de los productos relacionados
      */
     public Specification<Order> searchLike(String keyword) {
-        return GenericSpecification.likeIgnoreCase(new String[]{"address", "name",
-                "orderDetails.product.reference", "orderDetails.product.name", "orderDetails.product.description"}, keyword);
+        return GenericSpecification.likeIgnoreCase(new String[]{
+                "address", "name",
+                "orderDetails.product.reference", "orderDetails.product.name",
+                "orderDetails.product.description"}, keyword);
     }
 
     // Coincidencia en sale status

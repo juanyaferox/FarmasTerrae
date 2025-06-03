@@ -37,7 +37,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/auth/changePassword/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/auth/changePassword/**").authenticated()
                         .requestMatchers("/order/**").authenticated()
                         .anyRequest().permitAll()
                 );
@@ -90,5 +90,7 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/auth").setViewName("auth/login");
+        registry.addViewController("/common/error")
+                .setViewName("common/error");
     }
 }

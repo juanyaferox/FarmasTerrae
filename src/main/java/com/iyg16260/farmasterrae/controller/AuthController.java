@@ -46,7 +46,8 @@ public class AuthController {
     }
 
     @PostMapping ("/register")
-    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO, RedirectAttributes ra) {
+    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO,
+                                        RedirectAttributes ra) {
         authService.setRegister(registerFormDTO);
         SuccessMessageUtils.buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
         return new ModelAndView("redirect:/auth");
@@ -62,6 +63,7 @@ public class AuthController {
     public ModelAndView setChangePasswordForm(@ModelAttribute PasswordRecoveryDTO passwordRequest,
                                               @AuthenticationPrincipal User user) {
         return new ModelAndView("auth/new-password")
-                .addObject("passwordRecovery", authService.setPasswordAuthenticated(passwordRequest, user));
+                .addObject("passwordRecovery",
+                        authService.setPasswordAuthenticated(passwordRequest, user));
     }
 }

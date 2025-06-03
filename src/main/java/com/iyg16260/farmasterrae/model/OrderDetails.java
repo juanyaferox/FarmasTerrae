@@ -1,15 +1,12 @@
 package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Getter
-@Setter
-@ToString
+@Data
 @NoArgsConstructor
 @Table (name = "orderDetails")
 public class OrderDetails {
