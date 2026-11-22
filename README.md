@@ -36,11 +36,21 @@ AWS_BUCKET=farmasterrae-bucket
 
 CORS_ALLOWED_ORIGINS=http://localhost:5173 (opcional, solo si el frontend está en otro origen; separados por comas)
 
+OPENAPI_ENABLED=true (opcional, activa Swagger UI en el perfil prod; por defecto está desactivado en prod)
+
 
 
 # API REST
 
 El proyecto es un backend puro: no hay vistas, todos los endpoints están bajo `/api` y devuelven JSON.
+
+## Documentación OpenAPI
+
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Especificación OpenAPI 3.0 (JSON): `http://localhost:8080/v3/api-docs`
+
+Desde Swagger UI se puede probar todo: primero `POST /api/auth/login` y después cualquier endpoint protegido.
+Swagger UI envía el token CSRF automáticamente. En el perfil `prod` está desactivado salvo que se defina `OPENAPI_ENABLED=true`.
 
 ## Autenticación y CSRF
 

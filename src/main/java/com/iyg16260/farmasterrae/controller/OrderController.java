@@ -17,6 +17,12 @@ import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.utils.GenericUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import com.iyg16260.farmasterrae.utils.SuccessMessageUtils;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +37,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static com.iyg16260.farmasterrae.config.OpenApiConfig.*;
+
+@Tag (name = TAG_ORDER)
+@SecurityRequirement (name = SESSION_COOKIE)
+@ApiResponse (responseCode = "401", ref = UNAUTHORIZED)
 @RestController
 @RequestMapping ("/api/order")
 public class OrderController {
@@ -50,6 +61,15 @@ public class OrderController {
      * @param user    usuario autenticado
      * @return el listado de productos, los métodos de pago y los detalles del pago precargados
      */
+    @io.swagger.v3.oas.annotations.Operation (summary = "Resumen del pedido",
+            description = "Versión inicial del pedido a partir del carrito: productos, métodos de pago " +
+                    "y detalles del pago precargados con los datos del usuario")
+    @ApiResponse (responseCode = "200", description = "Resumen del pedido",
+            content = @Content (schema = @Schema (implementation = CheckoutResponseDTO.class)))
+    @ApiResponse (responseCode = "400", description = "El carrito está vacío",
+            content = @Content (schema = @Schema (implementation = ErrorResponseDTO.class)))
+    @ApiResponse (responseCode = "409", description = "No hay stock suficiente o la reserva ha expirado",
+            content = @Content (schema = @Schema (implementation = ErrorResponseDTO.class)))
     @GetMapping
     public ResponseEntity<?> getOrder(HttpSession session, @AuthenticationPrincipal User user) {
         SessionCart cart = cartService.getCart(session);
@@ -87,6 +107,18 @@ public class OrderController {
      * @param paymentDetails detalles del pago
      * @return 201 con el id del pedido creado y su ubicación
      */
+    @io.swagger.v3.oas.annotations.Operation (summary = "Confirmar el pedido",
+            description = "Crea el pedido con los productos del carrito, en estado pendiente, " +
+                    "y confirma la reserva de stock")
+    @ApiResponse (responseCode = "201", description = "Pedido creado",
+            headers = @Header (name = "Location", description = "URL del detalle del pedido",
+                    schema = @Schema (type = "string")),
+            content = @Content (schema = @Schema (implementation = OrderCreatedResponseDTO.class)))
+    @ApiResponse (responseCode = "400", description = "Errores de validación o carrito vacío",
+            content = @Content (schema = @Schema (implementation = ErrorResponseDTO.class)))
+    @ApiResponse (responseCode = "403", ref = FORBIDDEN)
+    @ApiResponse (responseCode = "409", description = "No hay stock suficiente o la reserva ha expirado",
+            content = @Content (schema = @Schema (implementation = ErrorResponseDTO.class)))
     @PostMapping ("/confirm")
     public ResponseEntity<?> getPayment(@Valid @RequestBody PaymentDetailsDTO paymentDetails,
                                         @AuthenticationPrincipal User user,

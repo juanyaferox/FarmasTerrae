@@ -45,6 +45,7 @@ services:
       - AWS_REGION
       - AWS_BUCKET
       - CORS_ALLOWED_ORIGINS
+      - OPENAPI_ENABLED
     ports:
       - "8080:8080"
     networks:

@@ -1,6 +1,9 @@
 package com.iyg16260.farmasterrae.config;
 
 import com.iyg16260.farmasterrae.dto.response.ErrorResponseDTO;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -68,6 +71,8 @@ public class GlobalExceptionHandler implements Filter {
      * Si la excepción se registra en el log se incluye su identificador (errorId) en la respuesta.
      */
     @ExceptionHandler (Exception.class)
+    @ApiResponse (responseCode = "500", description = "Error interno del servidor",
+            content = @Content (schema = @Schema (implementation = ErrorResponseDTO.class)))
     public ResponseEntity<ErrorResponseDTO> handleAllExceptions(Exception ex,
                                                                 HttpServletRequest request) {
 
