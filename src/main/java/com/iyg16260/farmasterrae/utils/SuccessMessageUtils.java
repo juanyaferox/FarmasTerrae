@@ -1,21 +1,20 @@
 package com.iyg16260.farmasterrae.utils;
 
+import com.iyg16260.farmasterrae.dto.response.MessageResponseDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 public class SuccessMessageUtils {
 
     /**
      * Construye el mensaje de éxito de la operación
      *
-     * @param ra        atributo de redirección
      * @param type      tipo de entidad
      * @param operation operación realizada
+     * @return respuesta con el mensaje de éxito
      */
-    public static void buildSuccessMessage(RedirectAttributes ra, EntityType type, Operation operation) {
-        String message = auxiliarForSuccessMessage(type, operation);
-        ra.addFlashAttribute("successMessage", message);
+    public static MessageResponseDTO buildSuccessMessage(EntityType type, Operation operation) {
+        return new MessageResponseDTO(auxiliarForSuccessMessage(type, operation));
     }
 
 

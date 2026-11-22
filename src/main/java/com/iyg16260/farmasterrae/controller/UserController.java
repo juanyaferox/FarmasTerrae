@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.response.MessageResponseDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
@@ -14,19 +15,17 @@ import com.iyg16260.farmasterrae.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.web.PagedModel;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
 import static com.iyg16260.farmasterrae.utils.SuccessMessageUtils.buildSuccessMessage;
 
-@Controller
-@RequestMapping ("/user")
+@RestController
+@RequestMapping ("/api/user")
 public class UserController {
 
     @Autowired
@@ -39,111 +38,107 @@ public class UserController {
     ReviewService reviewService;
 
     /**
-     * Para acceder al dashboard y cambiar entre secciones
+     * Pedidos del usuario
      *
-     * @param section nombre de la seccion a validar en el if ternario de la vista, no obligatorio
-     * @param page    pagina actual de la seccion de pedido, no obligatorio
-     * @return dashboard + seccion solicitada, caso no coincida solo el dashboard
+     * @param page página actual, no obligatoria
+     * @param sort campo por el que ordenar, no obligatorio
+     * @param dir  dirección de la ordenación (asc/desc)
+     * @return página de pedidos
      */
-    @GetMapping ({"/dashboard/{section}", "/dashboard"})
-    public ModelAndView changeSection(@PathVariable (required = false) String section,
-                                      @RequestParam (defaultValue = "0", required = false) int page,
-                                      @RequestParam (required = false) String sort,
-                                      @RequestParam (defaultValue = "asc") String dir) {
-
-        ModelAndView model = new ModelAndView("user/dashboard")
-                .addObject("section", section);
-
-        return processSection(section, model, page, sort, dir);
+    @GetMapping ("/orders")
+    public PagedModel<OrderDTO> getOrders(@AuthenticationPrincipal User user,
+                                          @RequestParam (defaultValue = "0", required = false) int page,
+                                          @RequestParam (required = false) String sort,
+                                          @RequestParam (defaultValue = "asc") String dir) {
+        Page<OrderDTO> orders = orderService.getOrders(user, page, sort, dir);
+        return new PagedModel<>(orders);
     }
 
     /**
-     * Método_ para añadir secciones sin modificar el GetMapping, manteniendo el principio SOLID
+     * Detalles de un pedido con la informacion del pedido y una lista de sus productos
      *
-     * @param section seccion del pathvariable
-     * @param model   model
-     * @param page    page
-     * @return vista de la seccion deseada
+     * @param idOrder id del pedido
+     * @param user    usuario autenticado
+     * @return detalles del pedido
      */
-    private ModelAndView processSection(String section, ModelAndView model, int page, String sort, String dir) {
+    @GetMapping ("/orders/{idOrder}")
+    public OrderDetailsDTO getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
+        return orderService.getOrder(user.getId(), idOrder);
+    }
 
-        User user = null;
-        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof User authUser)
-            user = authUser;
-
-        if (section == null)
-            return model;
-
-        switch (section) {
-            case "orders" -> {
-                Page<OrderDTO> orders = orderService.getOrders(user, page, sort, dir);
-                return model.addObject("orders", orders);
-            }
-            case "info-user" -> {
-                UserDTO userDTO = userService.getUserById(user.getId());
-                return model.addObject("userView", userDTO);
-            }
-            case "reviews" -> {
-                Page<ReviewDTO> reviews = reviewService.getReviews(user, page, sort, dir);
-                List<ProductDTO> products = reviewService.getProductForReview(user);
-                return model.addObject("reviews", reviews)
-                        .addObject("products", products);
-            }
-        }
-
-        return model;
+    /**
+     * Información del usuario
+     *
+     * @param user usuario autenticado
+     * @return datos del usuario
+     */
+    @GetMapping ("/info")
+    public UserDTO getInfoUser(@AuthenticationPrincipal User user) {
+        return userService.getUserById(user.getId());
     }
 
     /**
      * Cambia la informacion del usuario recibiendo el userDto
      *
-     * @param user
-     * @param userdto
-     * @return redirecciona al dashboard
+     * @param user    usuario autenticado
+     * @param userdto nuevos datos del usuario
+     * @return mensaje de éxito
      */
-    @PostMapping ("/dashboard/info-user")
-    public ModelAndView setInfoUser(@AuthenticationPrincipal User user, @ModelAttribute ("userView") UserDTO userdto, RedirectAttributes ra) {
+    @PutMapping ("/info")
+    public MessageResponseDTO setInfoUser(@AuthenticationPrincipal User user, @RequestBody UserDTO userdto) {
         userService.updateUserById(user.getId(), userdto);
-        buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
-        return new ModelAndView("redirect:/user/dashboard/info-user");
+        return buildSuccessMessage(EntityType.USERS, Operation.PUT);
     }
 
     /**
-     * Vista de detalles de un pedido con la informacion del pedido y una lista de sus productos
+     * Reseñas del usuario
      *
-     * @param idOrder
-     * @param user
-     * @return
+     * @param page página actual, no obligatoria
+     * @param sort campo por el que ordenar, no obligatorio
+     * @param dir  dirección de la ordenación (asc/desc)
+     * @return página de reseñas
      */
-    @GetMapping ("/dashboard/orders/{idOrder}")
-    public ModelAndView getOrder(@PathVariable int idOrder, @RequestParam (defaultValue = "false", required = false) boolean success, @AuthenticationPrincipal User user) {
-        OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-        return new ModelAndView("user/order-details")
-                .addObject("order", orderDetails)
-                .addObject("success", success);
+    @GetMapping ("/reviews")
+    public PagedModel<ReviewDTO> getReviews(@AuthenticationPrincipal User user,
+                                            @RequestParam (defaultValue = "0", required = false) int page,
+                                            @RequestParam (required = false) String sort,
+                                            @RequestParam (defaultValue = "asc") String dir) {
+        Page<ReviewDTO> reviews = reviewService.getReviews(user, page, sort, dir);
+        return new PagedModel<>(reviews);
     }
 
-    @PutMapping ("/dashboard/reviews")
-    public String updateReview(@AuthenticationPrincipal User user,
-                               @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
-        reviewService.updateReview(reviewDTO, user);
-        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.PUT);
-        return "redirect:/user/dashboard/reviews";
+    /**
+     * Productos comprados por el usuario que todavía no ha reseñado
+     *
+     * @param user usuario autenticado
+     * @return listado de productos
+     */
+    @GetMapping ("/reviews/products")
+    public List<ProductDTO> getProductsForReview(@AuthenticationPrincipal User user) {
+        return reviewService.getProductForReview(user);
     }
 
-    @PostMapping ("/dashboard/reviews")
-    public String addReview(@AuthenticationPrincipal User user,
-                            @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+    @PostMapping ("/reviews")
+    @ResponseStatus (HttpStatus.CREATED)
+    public MessageResponseDTO addReview(@AuthenticationPrincipal User user,
+                                        @Valid @RequestBody ReviewDTO reviewDTO) {
         reviewService.setReview(reviewDTO, user);
-        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.POST);
-        return "redirect:/user/dashboard/reviews";
+        return buildSuccessMessage(EntityType.REVIEWS, Operation.POST);
     }
 
-    @DeleteMapping ("/dashboard/reviews")
-    public String deleteReview(@RequestParam long idReview,
-                               @AuthenticationPrincipal User user, RedirectAttributes ra) {
+    @PutMapping ("/reviews/{idReview}")
+    public MessageResponseDTO updateReview(@AuthenticationPrincipal User user,
+                                           @PathVariable long idReview,
+                                           @Valid @RequestBody ReviewDTO reviewDTO) {
+        reviewDTO.setId(idReview);
+        reviewService.updateReview(reviewDTO, user);
+        return buildSuccessMessage(EntityType.REVIEWS, Operation.PUT);
+    }
+
+    @DeleteMapping ("/reviews/{idReview}")
+    public MessageResponseDTO deleteReview(@PathVariable long idReview,
+                                           @AuthenticationPrincipal User user) {
         reviewService.deleteReview(idReview, user);
-        buildSuccessMessage(ra, EntityType.REVIEWS, Operation.DELETE);
-        return "redirect:/user/dashboard/reviews";
+        return buildSuccessMessage(EntityType.REVIEWS, Operation.DELETE);
     }
 }

@@ -1,6 +1,8 @@
 package com.iyg16260.farmasterrae.dto.user;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.serializer.ProductQuantityMapSerializer;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import lombok.Data;
@@ -10,6 +12,7 @@ import java.util.Map;
 
 @Data
 public class OrderDetailsDTO {
+    @JsonSerialize (using = ProductQuantityMapSerializer.class)
     Map<ProductDTO, Integer> products;
     BigDecimal totalPrice;
     String status;

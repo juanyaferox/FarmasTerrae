@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.config;
 
+import com.iyg16260.farmasterrae.dto.response.ErrorResponseDTO;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -8,32 +9,37 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
-@ControllerAdvice
+@RestControllerAdvice
 @Order (1)
 public class GlobalExceptionHandler implements Filter {
 
     /**
-     * Captura errores de parse de la vista. Si es BAD_REQUEST o BindException no genera archivo de log
+     * Captura las excepciones no controladas de la cadena de filtros. Si es BAD_REQUEST o BindException no genera archivo de log
      *
      * @param req   The request to process
      * @param res   The response associated with the request
@@ -58,45 +64,30 @@ public class GlobalExceptionHandler implements Filter {
     }
 
     /**
-     * Captura cualquier tipo de excepción
-     * Si existe Referer: añade flashAttribute y redirige allí.
-     * Si no existe Referer: muestra una pantalla genérica con el código y mensaje.
+     * Captura cualquier tipo de excepción y la devuelve como JSON con el código HTTP correspondiente.
+     * Si la excepción se registra en el log se incluye su identificador (errorId) en la respuesta.
      */
     @ExceptionHandler (Exception.class)
-    public ModelAndView handleAllExceptions(Exception ex,
-                                            RedirectAttributes redirectAttributes,
-                                            HttpServletRequest request) {
-
+    public ResponseEntity<ErrorResponseDTO> handleAllExceptions(Exception ex,
+                                                                HttpServletRequest request) {
 
         // Construcción mensaje del error
         ErrorInfo errorInfo = getErrorInfo(ex);
 
-        String messageError;
         // Log con la información excepto si es un error de validación o un 400
+        String errorId = null;
         if (shouldLogException(ex)) {
-            String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
+            errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
                     .orElse(UUID.randomUUID().toString());
-            messageError = errorInfo.message() + " " + errorId;
             request.setAttribute("errorId", errorId);
             logException(errorId, ex, collectAuditInfo(request));
-        } else {
-            messageError = errorInfo.message();
         }
 
-        // Se determina si se debería redirigir
-        if (determineIfShouldRedirect(ex, request)) {
-            String referer = request.getHeader("Referer");
-            if (ex instanceof BindException) {
-                String errors = processBindingErrors((BindException) ex);
-                String message = "Errores de validación: " + errors;
-                return handleRedirect(redirectAttributes, referer, message);
-            }
+        // Errores de validación de los campos
+        List<String> errors = ex instanceof BindException be ? processBindingErrors(be) : null;
 
-            return handleRedirect(redirectAttributes, referer, messageError);
-        }
-
-        // Caso no tenga dirección, se devuelve una pantalla genérica
-        return createErrorModelAndView(errorInfo.status(), errorInfo.message());
+        return ResponseEntity.status(errorInfo.status())
+                .body(ErrorResponseDTO.of(errorInfo.status(), errorInfo.message(), errors, errorId));
     }
 
     /**
@@ -115,6 +106,26 @@ public class GlobalExceptionHandler implements Filter {
         return switch (ex) {
             case ResponseStatusException rse -> new ErrorInfo(rse.getStatusCode(), rse.getReason());
 
+            case BindException ignored -> new ErrorInfo(HttpStatus.BAD_REQUEST, "Errores de validación");
+
+            case HttpMessageNotReadableException ignored ->
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "El cuerpo de la petición no es válido");
+
+            case MissingServletRequestParameterException paramEx ->
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Falta el parámetro obligatorio: " + paramEx.getParameterName());
+
+            case MissingServletRequestPartException partEx ->
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Falta la parte obligatoria: " + partEx.getRequestPartName());
+
+            case MethodArgumentTypeMismatchException typeEx ->
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Valor inválido para el parámetro: " + typeEx.getName());
+
+            case HttpMediaTypeNotSupportedException mediaEx ->
+                    new ErrorInfo(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de contenido no soportado: " + mediaEx.getContentType());
+
+            case MaxUploadSizeExceededException ignored ->
+                    new ErrorInfo(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño máximo permitido");
+
             case TransactionSystemException ignored ->
                     new ErrorInfo(HttpStatus.BAD_GATEWAY, "Error en la transacción. Verifique los datos.");
 
@@ -132,12 +143,13 @@ public class GlobalExceptionHandler implements Filter {
         };
     }
 
-    private String processBindingErrors(BindException be) {
+    /**
+     * Listado de errores de validación con el formato "campo: mensaje"
+     */
+    private List<String> processBindingErrors(BindException be) {
         return be.getBindingResult().getFieldErrors().stream()
-                .map(fe -> "<li>"
-                        + fe.getDefaultMessage()
-                        + "</li>")
-                .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .toList();
     }
 
     /**
@@ -152,45 +164,21 @@ public class GlobalExceptionHandler implements Filter {
             return false;
         }
 
+        // Errores en los datos de la petición enviados por el cliente
+        if (ex instanceof HttpMessageNotReadableException
+                || ex instanceof MissingServletRequestParameterException
+                || ex instanceof MissingServletRequestPartException
+                || ex instanceof MethodArgumentTypeMismatchException
+                || ex instanceof HttpMediaTypeNotSupportedException
+                || ex instanceof MaxUploadSizeExceededException) {
+            return false;
+        }
+
         if (ex instanceof ResponseStatusException rse) {
             return !HttpStatus.BAD_REQUEST.equals(rse.getStatusCode()) || !HttpStatus.FORBIDDEN.equals(rse.getStatusCode());
         }
 
         return true;
-    }
-
-    /**
-     * Determina si debería devolver un redirect en base al tipo de error y la cabecera
-     */
-    private boolean determineIfShouldRedirect(Exception ex, HttpServletRequest request) {
-        boolean haveReferer = request.getHeader("Referer") != null;
-        return switch (ex) {
-            case ResponseStatusException ignore -> haveReferer;
-            case TransactionSystemException ignore -> haveReferer;
-            case BindException ignore -> haveReferer;
-            default -> false;
-        };
-    }
-
-    /**
-     * Se redirige añadiendo el error en el redirect
-     */
-    private ModelAndView handleRedirect(RedirectAttributes redirectAttributes,
-                                        String referer, String message) {
-
-        redirectAttributes.addFlashAttribute("errorMessage", message);
-        return new ModelAndView("redirect:" + referer);
-    }
-
-    /**
-     * Se devuelve una pantalla genérica con el error
-     */
-    private ModelAndView createErrorModelAndView(HttpStatusCode status, String message) {
-        ModelAndView mav = new ModelAndView("common/error");
-        mav.setStatus(status);
-        mav.addObject("errorCode", status.value());
-        mav.addObject("errorMessageLabel", message);
-        return mav;
     }
 
     /**

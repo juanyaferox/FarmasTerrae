@@ -2,6 +2,13 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.payment.PaymentDetailsDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.products.ProductQuantityDTO;
+import com.iyg16260.farmasterrae.dto.response.CheckoutResponseDTO;
+import com.iyg16260.farmasterrae.dto.response.EnumOptionDTO;
+import com.iyg16260.farmasterrae.dto.response.ErrorResponseDTO;
+import com.iyg16260.farmasterrae.dto.response.OrderCreatedResponseDTO;
+import com.iyg16260.farmasterrae.enums.EntityType;
+import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.enums.PaymentMethod;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.model.User;
@@ -9,24 +16,26 @@ import com.iyg16260.farmasterrae.service.CartService;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.utils.GenericUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
+import com.iyg16260.farmasterrae.utils.SuccessMessageUtils;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
-@Controller
-@RequestMapping ("/order")
+@RestController
+@RequestMapping ("/api/order")
 public class OrderController {
+
+    private static final String EMPTY_CART_MESSAGE = "El carrito está vacío";
 
     @Autowired
     OrderService orderService;
@@ -37,25 +46,24 @@ public class OrderController {
     /**
      * Genera una version inicial del pedido
      *
-     * @param session
-     * @param redirectAttributes
-     * @return la vista con el listado de productos y un array paymentMethod
+     * @param session sesión http
+     * @param user    usuario autenticado
+     * @return el listado de productos, los métodos de pago y los detalles del pago precargados
      */
     @GetMapping
-    public ModelAndView getOrder(HttpSession session, RedirectAttributes redirectAttributes,
-                                 @AuthenticationPrincipal User user) {
+    public ResponseEntity<?> getOrder(HttpSession session, @AuthenticationPrincipal User user) {
         SessionCart cart = cartService.getCart(session);
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
-            return new ModelAndView("redirect:/cart");
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponseDTO.of(HttpStatus.BAD_REQUEST, EMPTY_CART_MESSAGE));
         }
         // Verificar que las reservas de stock son válidas
         if (!cartService.validateCartReservations(session)) {
-            // Si no son válidas, redirigir al carrito con un mensaje de error
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Algunos productos no tienen suficiente stock " +
-                            "o tu reserva ha expirado. Por favor, revisa tu carrito.");
-            return new ModelAndView("redirect:/cart");
+            // Si no son válidas, se devuelve un error para que revise el carrito
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ErrorResponseDTO.of(HttpStatus.CONFLICT,
+                            "Algunos productos no tienen suficiente stock " +
+                                    "o tu reserva ha expirado. Por favor, revisa tu carrito."));
         }
         Map<ProductDTO, Integer> cartProducts = cartService.getDetailedProducts(session);
         BigDecimal totalAmount = GenericUtils.priceAmountCalc(cartProducts);
@@ -65,69 +73,45 @@ public class OrderController {
         paymentDetails.setAddress(user.getAddress());
         paymentDetails.setFullName(user.getFullName());
 
-        return new ModelAndView("order/order-details")
-                .addObject("products", cartProducts)
-                .addObject("paymentMethod", PaymentMethod.values())
-                .addObject("paymentDetails", paymentDetails);
+        List<EnumOptionDTO> paymentMethods = Arrays.stream(PaymentMethod.values())
+                .map(method -> new EnumOptionDTO(method.name(), method.getValue()))
+                .toList();
+
+        return ResponseEntity.ok(
+                new CheckoutResponseDTO(ProductQuantityDTO.fromMap(cartProducts), paymentMethods, paymentDetails));
     }
 
     /**
-     * Direcciona a la vista de pago con él metodo de pago
+     * Confirma el pedido con el método de pago
      *
-     * @param paymentDetails
-     * @return
+     * @param paymentDetails detalles del pago
+     * @return 201 con el id del pedido creado y su ubicación
      */
     @PostMapping ("/confirm")
-    public ModelAndView getPayment(@Valid @ModelAttribute PaymentDetailsDTO paymentDetails,
-                                   @AuthenticationPrincipal User user,
-                                   HttpSession session,
-                                   RedirectAttributes redirectAttributes) {
+    public ResponseEntity<?> getPayment(@Valid @RequestBody PaymentDetailsDTO paymentDetails,
+                                        @AuthenticationPrincipal User user,
+                                        HttpSession session) {
 
         // Verificar nuevamente las reservas de stock
         if (!cartService.validateCartReservations(session)) {
-            redirectAttributes.addFlashAttribute("errorMessage",
-                    "Algunos productos no tienen suficiente stock o tu reserva ha expirado. Por favor, revisa tu carrito.");
-            return new ModelAndView("redirect:/cart");
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(ErrorResponseDTO.of(HttpStatus.CONFLICT,
+                            "Algunos productos no tienen suficiente stock o tu reserva ha expirado. Por favor, revisa tu carrito."));
         }
 
         SessionCart cart = cartService.getCart(session);
 
         if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
-            return new ModelAndView("redirect:/cart");
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponseDTO.of(HttpStatus.BAD_REQUEST, EMPTY_CART_MESSAGE));
         }
 
-        var order = orderService.setOrder(user, cart, SaleStatus.PENDING, paymentDetails, session);
         // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
-        redirectAttributes.addFlashAttribute(order);
+        var order = orderService.setOrder(user, cart, SaleStatus.PENDING, paymentDetails, session);
 
-        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId() + "?success=true");
+        String message = SuccessMessageUtils.buildSuccessMessage(EntityType.ORDERS, Operation.POST).message();
+
+        return ResponseEntity.created(URI.create("/api/user/orders/" + order.getId()))
+                .body(new OrderCreatedResponseDTO(order.getId(), message));
     }
-
-    // SIN USAR, ENFOQUE ORIGINAL PARA TENER UN PAGO MAS DETALLADO
-    /*
-    @PostMapping("/payment")
-    public ModelAndView setPayment(@ModelAttribute PaymentMethod paymentMethod,
-                                   @AuthenticationPrincipal User user, HttpSession session,
-                                   RedirectAttributes redirectAttributes) {
-        SessionCart cart = cartService.getCart(session);
-
-        if (cart.getProducts() == null || cart.getProducts().isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "El carrito está vacío");
-            return new ModelAndView("redirect:/cart");
-        }
-            // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
-            redirectAttributes.addFlashAttribute(
-                    orderService.setOrder(user, cart, SaleStatus.COMPLETED, paymentMethod, session)
-            );
-            return new ModelAndView("redirect:/order/success");
-    }
-    @GetMapping ("/success")
-    public ModelAndView successOrder(@ModelAttribute Order order, HttpSession session) {
-        cartService.clearCart(session);
-
-        return new ModelAndView("order/success")
-                .addObject("order", order);
-    }
-     */
 }

@@ -2,6 +2,9 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.auth.PasswordRecoveryDTO;
 import com.iyg16260.farmasterrae.dto.auth.RegisterFormDTO;
+import com.iyg16260.farmasterrae.dto.response.AuthenticatedUserDTO;
+import com.iyg16260.farmasterrae.dto.response.CsrfTokenDTO;
+import com.iyg16260.farmasterrae.dto.response.MessageResponseDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
 import com.iyg16260.farmasterrae.model.User;
@@ -10,60 +13,68 @@ import com.iyg16260.farmasterrae.utils.SuccessMessageUtils;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.bind.annotation.*;
 
+/**
+ * El login (POST /api/auth/login) y el logout (POST /api/auth/logout) los gestiona Spring Security,
+ * ver {@link com.iyg16260.farmasterrae.config.SecurityConfig}
+ */
 @Slf4j
-@Controller
-@RequestMapping ("/auth")
+@RestController
+@RequestMapping ("/api/auth")
 public class AuthController {
+
+    private static final String MESSAGE_TYPE_ERROR = "error";
 
     @Autowired
     AuthService authService;
 
-    @GetMapping ("/forgotPassword")
-    public ModelAndView getPasswordRecovery() {
-        return new ModelAndView("auth/forgot-password")
-                .addObject("passwordRecovery", new PasswordRecoveryDTO());
+    /**
+     * Token CSRF necesario para las peticiones POST, PUT y DELETE
+     */
+    @GetMapping ("/csrf")
+    public CsrfTokenDTO getCsrfToken(CsrfToken csrfToken) {
+        return new CsrfTokenDTO(csrfToken.getHeaderName(), csrfToken.getParameterName(), csrfToken.getToken());
     }
 
-    @PostMapping ("/forgotPassword")
-    public ModelAndView setPasswordRecovery(@ModelAttribute PasswordRecoveryDTO passwordRequest) {
-        return new ModelAndView("auth/forgot-password")
-                .addObject("passwordRecovery", authService.setPassword(passwordRequest));
+    /**
+     * Usuario autenticado actualmente
+     */
+    @GetMapping ("/me")
+    public AuthenticatedUserDTO getAuthenticatedUser(Authentication authentication) {
+        return AuthenticatedUserDTO.from(authentication);
     }
 
-    @GetMapping ("/register")
-    public ModelAndView getRegisterForm() {
-        return new ModelAndView("auth/register")
-                .addObject("registerForm", new RegisterFormDTO());
+    @PostMapping ("/forgot-password")
+    public ResponseEntity<PasswordRecoveryDTO> setPasswordRecovery(@RequestBody PasswordRecoveryDTO passwordRequest) {
+        return buildPasswordResponse(authService.setPassword(passwordRequest));
     }
 
     @PostMapping ("/register")
-    public ModelAndView setRegisterForm(@Valid @ModelAttribute RegisterFormDTO registerFormDTO,
-                                        RedirectAttributes ra) {
+    @ResponseStatus (HttpStatus.CREATED)
+    public MessageResponseDTO setRegisterForm(@Valid @RequestBody RegisterFormDTO registerFormDTO) {
         authService.setRegister(registerFormDTO);
-        SuccessMessageUtils.buildSuccessMessage(ra, EntityType.USERS, Operation.POST);
-        return new ModelAndView("redirect:/auth");
+        return SuccessMessageUtils.buildSuccessMessage(EntityType.USERS, Operation.POST);
     }
 
-    @GetMapping ("/changePassword")
-    public ModelAndView getChangePasswordForm() {
-        return new ModelAndView("auth/new-password")
-                .addObject("passwordRecovery", new PasswordRecoveryDTO());
+    @PostMapping ("/change-password")
+    public ResponseEntity<PasswordRecoveryDTO> setChangePasswordForm(@RequestBody PasswordRecoveryDTO passwordRequest,
+                                                                     @AuthenticationPrincipal User user) {
+        return buildPasswordResponse(authService.setPasswordAuthenticated(passwordRequest, user));
     }
 
-    @PostMapping ("/changePassword")
-    public ModelAndView setChangePasswordForm(@ModelAttribute PasswordRecoveryDTO passwordRequest,
-                                              @AuthenticationPrincipal User user) {
-        return new ModelAndView("auth/new-password")
-                .addObject("passwordRecovery",
-                        authService.setPasswordAuthenticated(passwordRequest, user));
+    /**
+     * Devuelve el resultado de la operación con 400 si el servicio lo marcó como error, 200 en otro caso
+     */
+    private ResponseEntity<PasswordRecoveryDTO> buildPasswordResponse(PasswordRecoveryDTO result) {
+        HttpStatus status = MESSAGE_TYPE_ERROR.equals(result.getMessageType())
+                ? HttpStatus.BAD_REQUEST
+                : HttpStatus.OK;
+        return ResponseEntity.status(status).body(result);
     }
 }

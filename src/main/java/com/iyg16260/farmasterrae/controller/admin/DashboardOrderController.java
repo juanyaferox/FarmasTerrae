@@ -1,5 +1,6 @@
 package com.iyg16260.farmasterrae.controller.admin;
 
+import com.iyg16260.farmasterrae.dto.response.MessageResponseDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
 import com.iyg16260.farmasterrae.enums.Operation;
@@ -8,38 +9,35 @@ import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.utils.SuccessMessageUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@Controller
-@RequestMapping ("/admin/dashboard/orders")
+@RestController
+@RequestMapping ("/api/admin/orders")
 public class DashboardOrderController {
 
     @Autowired
     OrderService orderService;
 
-    private final String ORDER_PATH = "redirect:/admin/dashboard/orders";
-
     @GetMapping ("/{idOrder}")
-    public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
-        OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
-        return new ModelAndView("user/order-details")
-                .addObject("order", orderDetails);
+    public OrderDetailsDTO getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
+        return orderService.getOrder(user.getId(), idOrder);
     }
 
-    @PutMapping
-    public String updateOrder(@RequestParam long idOrder, @RequestParam String status, RedirectAttributes ra) {
+    /**
+     * Cambia el estado del pedido
+     *
+     * @param idOrder id del pedido
+     * @param status  nuevo estado (nombre del enum SaleStatus)
+     */
+    @PutMapping ("/{idOrder}")
+    public MessageResponseDTO updateOrder(@PathVariable long idOrder, @RequestParam String status) {
         orderService.updateOrder(idOrder, status);
-        SuccessMessageUtils.buildSuccessMessage(ra, EntityType.ORDERS, Operation.PUT);
-        return ORDER_PATH;
+        return SuccessMessageUtils.buildSuccessMessage(EntityType.ORDERS, Operation.PUT);
     }
 
-    @DeleteMapping
-    public String deleteOrder(@RequestParam long idOrder, RedirectAttributes ra) {
+    @DeleteMapping ("/{idOrder}")
+    public MessageResponseDTO deleteOrder(@PathVariable long idOrder) {
         orderService.deleteOrderById(idOrder);
-        SuccessMessageUtils.buildSuccessMessage(ra, EntityType.ORDERS, Operation.DELETE);
-        return ORDER_PATH;
+        return SuccessMessageUtils.buildSuccessMessage(EntityType.ORDERS, Operation.DELETE);
     }
 }

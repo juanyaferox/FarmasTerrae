@@ -2,26 +2,30 @@ package com.iyg16260.farmasterrae.controller;
 
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
+import com.iyg16260.farmasterrae.dto.response.EnumOptionDTO;
+import com.iyg16260.farmasterrae.dto.user.ProfileDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
-import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.enums.SaleStatus;
-import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.service.OrderService;
 import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Controller;
+import org.springframework.data.web.PagedModel;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Arrays;
 import java.util.List;
 
-@Controller
-@RequestMapping ("/admin")
+/**
+ * Listados del panel de administración. Las operaciones sobre cada entidad están en
+ * {@link com.iyg16260.farmasterrae.controller.admin}
+ */
+@RestController
+@RequestMapping ("/api/admin")
 public class AdminController {
 
     @Autowired
@@ -33,51 +37,50 @@ public class AdminController {
     @Autowired
     UserService userService;
 
+    @GetMapping ("/orders")
+    public PagedModel<OrderDTO> getOrders(@RequestParam (defaultValue = "0", required = false) int page,
+                                          @RequestParam (required = false) String sort,
+                                          @RequestParam (defaultValue = "asc") String dir,
+                                          @RequestParam (required = false) String search) {
+        Page<OrderDTO> orders = orderService.getAllOrders(page, search, sort, dir);
+        return new PagedModel<>(orders);
+    }
 
-    @GetMapping ({"/dashboard/{section}", "/dashboard"})
-    public ModelAndView getDashboard(@PathVariable (required = false) String section,
-                                     @RequestParam (defaultValue = "0", required = false) int page,
-                                     @RequestParam (required = false) String sort,
-                                     @RequestParam (defaultValue = "asc") String dir,
-                                     @RequestParam (required = false) String search) {
+    @GetMapping ("/products")
+    public PagedModel<ProductDTO> getProducts(@RequestParam (defaultValue = "0", required = false) int page,
+                                              @RequestParam (required = false) String sort,
+                                              @RequestParam (defaultValue = "asc") String dir,
+                                              @RequestParam (required = false) String search) {
+        Page<ProductDTO> products = productsService.getProductList(page, search, sort, dir);
+        return new PagedModel<>(products);
+    }
 
-        ModelAndView model = new ModelAndView("admin/dashboard")
-                .addObject("section", section);
-
-        return processSection(section, model, search, sort, dir, page);
+    @GetMapping ("/users")
+    public PagedModel<UserDTO> getUsers(@RequestParam (defaultValue = "0", required = false) int page,
+                                        @RequestParam (required = false) String sort,
+                                        @RequestParam (defaultValue = "asc") String dir,
+                                        @RequestParam (required = false) String search) {
+        Page<UserDTO> users = userService.getAllUsers(page, search, sort, dir);
+        return new PagedModel<>(users);
     }
 
     /**
-     * Método_ para añadir secciones sin modificar el GetMapping, manteniendo el principio SOLID
-     *
-     * @param section seccion del pathvariable
-     * @param model   model
-     * @param search  búsqueda
-     * @param page    page
-     * @return vista de la seccion deseada
+     * Estados de venta disponibles para los pedidos
      */
-    private ModelAndView processSection(String section, ModelAndView model, String search, String sort, String dir, int page) {
-        if (section == null)
-            return model;
+    @GetMapping ("/sale-statuses")
+    public List<EnumOptionDTO> getSaleStatuses() {
+        return Arrays.stream(SaleStatus.values())
+                .map(status -> new EnumOptionDTO(status.name(), status.getValue()))
+                .toList();
+    }
 
-        switch (section) {
-            case "orders" -> {
-                Page<OrderDTO> orders = orderService.getAllOrders(page, search, sort, dir);
-                model.addObject("orders", orders);
-                model.addObject("saleStatuses", SaleStatus.values());
-            }
-            case "products" -> {
-                Page<ProductDTO> products = productsService.getProductList(page, search, sort, dir);
-                model.addObject("products", products);
-                model.addObject("categories", Category.values());
-            }
-            case "users" -> {
-                Page<UserDTO> users = userService.getAllUsers(page, search, sort, dir);
-                List<Profile> profiles = userService.getProfiles();
-                model.addObject("users", users);
-                model.addObject("profiles", profiles);
-            }
-        }
-        return model;
+    /**
+     * Perfiles disponibles para los usuarios
+     */
+    @GetMapping ("/profiles")
+    public List<ProfileDTO> getProfiles() {
+        return userService.getProfiles().stream()
+                .map(ProfileDTO::from)
+                .toList();
     }
 }

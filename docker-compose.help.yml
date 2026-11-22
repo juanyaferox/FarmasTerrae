@@ -37,6 +37,7 @@ services:
       - DB_PASSWORD
       - EMAIL
       - PASSWORD
+      - CORS_ALLOWED_ORIGINS
     ports:
       - "8080:8080"
     networks:
