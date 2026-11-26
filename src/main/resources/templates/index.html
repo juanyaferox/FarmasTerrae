@@ -1,177 +1,201 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae', '/dist/output.css')}"></head>
-<body class="bg-green-50">
+<head th:replace="~{fragments/head :: head('FarmasTerrae — Farmacia online', '/css/layout.css')}"></head>
+<body>
 <!-- Header -->
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Banner -->
-<section class="bg-green-50 py-20">
-    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-8">
-        <div class="md:w-1/2 text-center md:text-left">
-            <h1 class="text-4xl md:text-5xl font-bold text-green-800 mb-4">Tu Salud, Nuestra Prioridad</h1>
-            <p class="text-gray-600 text-lg mb-6">Recibe tus medicamentos en la puerta de tu casa, rápido, confiable y
-                seguro.</p>
-            <a th:href="@{/products/categories}"
-               class="inline-block bg-[#a4fcc4] text-gray-800 px-6 py-3 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                Comprar Ahora
-            </a>
-        </div>
-        <div class="md:w-1/2 mt-8 md:mt-0">
-            <div class="border border-gray-200 h-64 flex items-center justify-center mb-4 rounded-md shadow-sm overflow-hidden">
-                <img th:src="@{/assets/img/main.jpg}" alt="Vitamina"
-                     class="object-cover h-full w-full">
-            </div>
-        </div>
-    </div>
-</section>
+<main id="main-content">
 
-<!-- Categorías Populares -->
-<section class="py-20">
-    <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-green-800 mb-12 text-center">Categorías Populares</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            <div class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <div class="border border-gray-200 h-48 flex items-center justify-center mb-4 rounded-md overflow-hidden">
-                    <!--p class="text-gray-400">[Placeholder]</p-->
-                    <img th:src="@{/assets/img/categories/medicine.jpg}" alt="Alivio al dolor"
-                         class="object-cover h-full w-full">
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Alivio del Dolor</h3>
-                <p class="text-gray-600">Explora medicamentos para el dolor</p>
-                <a class="block mt-4 bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300"
-                   th:href="@{/products(category='MEDICINE')}">
-                    Ver detalles
-                </a>
-            </div>
-            <div class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <div class="border border-gray-200 h-48 flex items-center justify-center mb-4 rounded-md overflow-hidden">
-                    <!--p class="text-gray-400">[Placeholder]</p-->
-                    <img th:src="@{/assets/img/categories/vitamin.jpg}" alt="Vitamina"
-                         class="object-cover h-full w-full">
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Vitaminas</h3>
-                <p class="text-gray-600">Vitaminas y suplementos esenciales</p>
-                <a class="block mt-4 bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300"
-                   th:href="@{/products(category='VITAMIN')}">
-                    Ver detalles
-                </a>
-            </div>
-            <div class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <div class="border border-gray-200 h-48 flex items-center justify-center mb-4 rounded-md overflow-hidden">
-                    <!--p class="text-gray-400">[Placeholder]</p-->
-                    <img th:src="@{/assets/img/categories/first-aid.jpg}" alt="Primeros auxilios"
-                         class="object-cover h-full w-full">
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Primeros Auxilios</h3>
-                <p class="text-gray-600">Suministros y kits de primeros auxilios</p>
-                <a class="block mt-4 bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300"
-                   th:href="@{/products(category='FIRST_AID')}">
-                    Ver detalles
-                </a>
-            </div>
-            <div class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <div class="border border-gray-200 h-48 flex items-center justify-center mb-4 rounded-md overflow-hidden">
-                    <!--p class="text-gray-400">[Placeholder]</p-->
-                    <img th:src="@{/assets/img/categories/self-care.jpg}" alt="Cuidado personal"
-                         class="object-cover h-full w-full">
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Cuidado Personal</h3>
-                <p class="text-gray-600">Productos de cuidado personal</p>
-                <a class="block mt-4 bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300"
-                   th:href="@{/products(category='CARE')}">
-                    Ver detalles
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Productos Destacados -->
-<section class="py-20 bg-green-50">
-    <div class="container mx-auto px-4">
-        <h2 class="text-4xl font-bold text-green-800 mb-12 text-center">Productos Recomendados</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
-            <div th:each="product : ${featuredProducts}"
-                 class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <div class="border border-gray-200 h-48 flex items-center justify-center mb-4 rounded-md overflow-hidden">
-                    <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
-                         alt="Imagen del producto"
-                         class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
-                    <img th:unless="${product.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
-                         alt="Imagen del producto"
-                         class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2" th:text="${product.name}">Nombre del Producto</h3>
-                <p class="text-green-800 font-bold mb-4"
-                   th:text="${#numbers.formatDecimal(product.price, 1, 2)} + ' €'">
-                    0.00 €</p>
-                <a th:href="@{/products/{reference}(reference=${product.reference})}"
-                   class="inline-block bg-[#a4fcc4] text-gray-800 px-4 py-2 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                    Ver detalles
-                </a>
-            </div>
-
-            <!-- Productos de relleno si hay menos de 3 productos en la BD -->
-            <div th:if="${#lists.size(featuredProducts) < 4}"
-                 th:each="i : ${#numbers.sequence(#lists.size(featuredProducts) + 1, 4)}"
-                 class="bg-white shadow-sm p-6 rounded-md text-center hover:shadow-md transition-shadow duration-300">
-                <img th:src="@{/assets/img/placeholder.svg}"
-                     alt="Imagen del producto"
-                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Producto Próximamente</h3>
-                <p class="text-gray-600 mb-2">Estará disponible pronto</p>
-                <p class="text-green-800 font-bold mb-4">0.00 €</p>
-                <button disabled
-                        class="bg-gray-300 text-gray-500 px-4 py-2 rounded-md uppercase tracking-wide font-semibold cursor-not-allowed">
-                    No disponible
-                </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-
-<!-- Beneficios -->
-<section class="py-20">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+    <!-- 1. HERO EDITORIAL (Deep Teal) -->
+    <section class="ft-hero" aria-labelledby="hero-title">
+        <div class="ft-container ft-hero__grid">
             <div>
-                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M3 10h18M3 6h18M3 14h18M3 18h18"></path>
-                    </svg>
+                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>FarmasTerrae · Farmacia online</span>
+                <h1 id="hero-title" class="ft-hero__title">Tu Salud, Nuestra Prioridad</h1>
+                <p class="ft-hero__desc">
+                    Recibe tus medicamentos en la puerta de tu casa, rápido, confiable y seguro.
+                </p>
+                <div class="ft-hero__actions">
+                    <a th:href="@{/products/categories}" class="ft-btn ft-btn--mint">Comprar Ahora</a>
+                    <a th:href="@{/products}" class="ft-btn ft-btn--outline-mint">Ver todos los productos</a>
                 </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Envío Gratis</h3>
-                <p class="text-gray-600">En pedidos superiores a $50</p>
+                <ul class="ft-hero__trust" aria-label="Garantías del servicio" style="list-style:none;margin:0;padding-left:0;">
+                    <li class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span>Envío gratis <span class="ft-tabular">+50 €</span></li>
+                    <li class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span>Soporte <span class="ft-tabular">24/7</span></li>
+                    <li class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span>Pagos <span class="ft-tabular">100%</span> seguros</li>
+                </ul>
             </div>
-            <div>
-                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+
+            <figure class="ft-hero__media" style="margin:0;">
+                <img th:src="@{/assets/img/main.jpg}" alt="Vitamina" width="800" height="600"/>
+                <figcaption class="ft-hero__caption">
+                    <p class="ft-hero__caption-text">
+                        <strong>Entrega a domicilio</strong>
+                        Rápido, confiable y seguro en cada pedido
+                    </p>
+                    <span class="ft-dosage-pill ft-tabular">24/7</span>
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- 2. CATEGORÍAS POPULARES -->
+    <section class="ft-section" aria-labelledby="cats-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Catálogo</span>
+                    <h2 id="cats-title" class="ft-section-head__title">Categorías Populares</h2>
+                    <p class="ix-section-sub">Explora nuestras categorías principales de farmacia y cuidado diario.</p>
                 </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Soporte 24/7</h3>
-                <p class="text-gray-600">Atención al cliente todo el día</p>
+                <a th:href="@{/products/categories}" class="ft-section-head__link">Ver las <span class="ft-tabular">6</span> categorías <span aria-hidden="true">→</span></a>
             </div>
-            <div>
-                <div class="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <svg class="w-8 h-8 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                         xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M12 11c1.104 0 2-.896 2-2s-.896-2-2-2-2 .896-2 2 .896 2 2 2zm0 2c-2.761 0-5 2.239-5 5v1h10v-1c0-2.761-2.239-5-5-5z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-green-700 mb-2">Pagos Seguros</h3>
-                <p class="text-gray-600">Transacciones 100% seguras</p>
+
+            <div class="ft-grid-4">
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/medicine.jpg}" alt="Alivio al dolor" loading="lazy"/>
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <h3 class="ft-cat-card__title">Alivio del Dolor</h3>
+                        <p class="ft-cat-card__desc">Explora medicamentos para el dolor</p>
+                        <a th:href="@{/products(category='MEDICINE')}" class="ft-btn ft-btn--sm ft-btn--ghost ft-btn--full">Ver detalles<span class="ft-sr-only"> de Alivio del Dolor</span></a>
+                    </div>
+                </article>
+
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/vitamin.jpg}" alt="Vitamina" loading="lazy"/>
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <h3 class="ft-cat-card__title">Vitaminas</h3>
+                        <p class="ft-cat-card__desc">Vitaminas y suplementos esenciales</p>
+                        <a th:href="@{/products(category='VITAMIN')}" class="ft-btn ft-btn--sm ft-btn--ghost ft-btn--full">Ver detalles<span class="ft-sr-only"> de Vitaminas</span></a>
+                    </div>
+                </article>
+
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/first-aid.jpg}" alt="Primeros auxilios" loading="lazy"/>
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <h3 class="ft-cat-card__title">Primeros Auxilios</h3>
+                        <p class="ft-cat-card__desc">Suministros y kits de primeros auxilios</p>
+                        <a th:href="@{/products(category='FIRST_AID')}" class="ft-btn ft-btn--sm ft-btn--ghost ft-btn--full">Ver detalles<span class="ft-sr-only"> de Primeros Auxilios</span></a>
+                    </div>
+                </article>
+
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/self-care.jpg}" alt="Cuidado personal" loading="lazy"/>
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <h3 class="ft-cat-card__title">Cuidado Personal</h3>
+                        <p class="ft-cat-card__desc">Productos de cuidado personal</p>
+                        <a th:href="@{/products(category='CARE')}" class="ft-btn ft-btn--sm ft-btn--ghost ft-btn--full">Ver detalles<span class="ft-sr-only"> de Cuidado Personal</span></a>
+                    </div>
+                </article>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+
+    <!-- 3. PRODUCTOS RECOMENDADOS (IndexController → featuredProducts: List<ProductDTO>) -->
+    <section class="ft-section ft-section--bone" aria-labelledby="prods-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Selección destacada</span>
+                    <h2 id="prods-title" class="ft-section-head__title">Productos Recomendados</h2>
+                </div>
+                <a th:href="@{/products}" class="ft-section-head__link">Ver todos los productos <span aria-hidden="true">→</span></a>
+            </div>
+
+            <div class="ft-grid-4">
+                <article th:each="product : ${featuredProducts}" class="ft-prod-card"
+                         th:with="hasImage=${product.imagePath != null and !#strings.isEmpty(product.imagePath)},
+                                  inStock=${product.stock != null and product.stock > 0}">
+                    <div class="ft-prod-card__stage">
+                        <img th:src="${hasImage} ? @{${product.imagePath}} : @{/assets/img/placeholder.svg}"
+                             th:alt="${hasImage ? product.name : product.name + ': imagen no disponible'}"
+                             alt="Imagen del producto" loading="lazy"/>
+                    </div>
+                    <div class="ix-card-meta">
+                        <span class="ft-prod-card__ref" th:text="${'REF ' + product.reference}">REF [reference]</span>
+                        <span class="ft-status-pill" th:classappend="${inStock} ? '' : 'ft-status-pill--danger'"><span class="ft-dot" aria-hidden="true"></span><span th:text="${inStock ? 'En stock' : 'Agotado'}">En stock</span></span>
+                    </div>
+                    <h3 class="ft-prod-card__name" th:text="${product.name}">Nombre del Producto</h3>
+                    <p class="ft-prod-card__sub" th:if="${product.description != null and !#strings.isEmpty(product.description)}"
+                       th:text="${product.description}">Descripción del producto</p>
+                    <div class="ft-prod-card__price-row ft-tabular">
+                        <span class="ft-price-now"
+                              th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA') + ' €' : 'Precio no disponible'}">0,00 €</span>
+                    </div>
+                    <div class="ft-prod-card__actions">
+                        <a th:if="${inStock}" th:href="@{/cart/add/{ref}(ref=${product.reference})}"
+                           class="ft-btn ft-btn--sm ft-btn--mint">Añadir<span class="ft-sr-only" th:text="${' ' + product.name + ' al carrito'}"> al carrito</span></a>
+                        <button th:unless="${inStock}" type="button" class="ft-btn ft-btn--sm ft-btn--ghost" disabled>Agotado</button>
+                        <a th:href="@{/products/{ref}(ref=${product.reference})}"
+                           class="ft-btn ft-btn--sm ft-btn--ghost">Detalles<span class="ft-sr-only" th:text="${' de ' + product.name}"> del producto</span></a>
+                    </div>
+                </article>
+
+                <!-- Productos de relleno si hay menos de 4 productos en la BD -->
+                <th:block th:if="${#lists.size(featuredProducts) < 4}">
+                    <article th:each="i : ${#numbers.sequence(1, 4 - #lists.size(featuredProducts))}"
+                             class="ft-prod-card ft-prod-card--placeholder">
+                        <div class="ft-prod-card__stage">
+                            <img th:src="@{/assets/img/placeholder.svg}" alt="" loading="lazy"/>
+                        </div>
+                        <div class="ix-card-meta">
+                            <span class="ft-prod-card__ref">PRÓXIMO INGRESO</span>
+                            <span class="ft-status-pill ft-status-pill--pending">En reposición</span>
+                        </div>
+                        <h3 class="ft-prod-card__name">Producto Próximamente</h3>
+                        <p class="ft-prod-card__sub">Estará disponible pronto</p>
+                        <div class="ft-prod-card__price-row">
+                            <span class="ft-code-tag">Precio no disponible</span>
+                        </div>
+                        <div class="ft-prod-card__actions">
+                            <button type="button" class="ft-btn ft-btn--sm ft-btn--ghost ft-btn--full" disabled>No disponible</button>
+                        </div>
+                    </article>
+                </th:block>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. BENEFICIOS (Banda Deep Teal) -->
+    <section class="ft-section ft-section--teal" aria-labelledby="benefits-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Por qué FarmasTerrae</span>
+                    <h2 id="benefits-title" class="ft-section-head__title">Ventajas en cada pedido</h2>
+                </div>
+            </div>
+
+            <div class="ft-stats-grid">
+                <div class="ft-stat-card">
+                    <div class="ft-stat-card__num ft-tabular">+50 €</div>
+                    <h3 class="ft-stat-card__label">Envío Gratis</h3>
+                    <p class="ft-stat-card__desc">En pedidos superiores a <span class="ft-tabular">50 €</span>.</p>
+                </div>
+                <div class="ft-stat-card">
+                    <div class="ft-stat-card__num ft-tabular">24/7</div>
+                    <h3 class="ft-stat-card__label">Soporte 24/7</h3>
+                    <p class="ft-stat-card__desc">Atención al cliente todo el día.</p>
+                </div>
+                <div class="ft-stat-card">
+                    <div class="ft-stat-card__num ft-tabular">100%</div>
+                    <h3 class="ft-stat-card__label">Pagos Seguros</h3>
+                    <p class="ft-stat-card__desc">Transacciones <span class="ft-tabular">100%</span> seguras.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</main>
 
 <!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>

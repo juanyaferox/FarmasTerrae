@@ -3,10 +3,19 @@
 <head th:fragment="head(title, cssPath)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title}">Farmasterrae</title>
-    <link rel="icon" th:href="@{/assets/icons/favicon/favicon.ico}" type="image/x-icon">
+    <title th:text="${title}">FarmasTerrae</title>
+    <link rel="icon" th:href="@{/assets/icons/favicon/favicon.ico}" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{/assets/icons/favicon/favicon-32x32.png}">
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{/assets/icons/favicon/favicon-16x16.png}">
+    <link rel="apple-touch-icon" sizes="180x180" th:href="@{/assets/icons/favicon/apple-touch-icon.png}">
     <link rel="manifest" th:href="@{/assets/icons/favicon/site.webmanifest}">
-    <link rel="stylesheet" th:href="@{${cssPath}}">
+    <link rel="stylesheet" th:href="@{/css/tokens.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
+    <link rel="stylesheet" th:href="@{/css/pages.css}">
+    <link rel="stylesheet"
+          th:if="${cssPath != null and cssPath != '/dist/output.css' and cssPath != '/css/layout.css'}"
+          th:href="@{${cssPath}}">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 </html>

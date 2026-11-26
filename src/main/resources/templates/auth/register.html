@@ -1,87 +1,84 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Registro', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('Crear cuenta — FarmasTerrae', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Main Content: Register -->
-<main class="flex-grow py-12">
-    <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Crea tu Cuenta</h1>
-        <div class="max-w-md mx-auto bg-white rounded-md shadow-md p-8">
-            <!-- Formulario de Registro -->
-            <form th:action="@{/auth/register}" method="post" class="space-y-6">
-                <!-- Campo Username -->
-                <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Nombre de Usuario
-                        *</label>
-                    <input type="text" id="username" name="username" required
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Tu nombre de usuario">
+<main id="main-content" class="ft-auth-shell">
+    <div class="ft-container">
+        <section class="ft-auth-card ft-auth-card--wide" aria-labelledby="register-title">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Crear cuenta</span>
+            </nav>
+
+            <div class="ft-auth-card__head">
+                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Nueva cuenta</span>
+                <h1 id="register-title" class="ft-auth-card__title">Crea tu Cuenta</h1>
+                <p class="ft-auth-card__sub">Regístrate para realizar pedidos, consultar tu historial de compras y valorar productos.</p>
+            </div>
+
+            <!-- POST /auth/register → RegisterFormDTO (@Valid). Los errores flash llegan como toast en header.html. -->
+            <form th:action="@{/auth/register}" th:object="${registerForm}" method="post" class="ft-form-stack" aria-describedby="register-legend">
+                <div th:if="${error != null}" class="ft-alert ft-alert--danger" role="alert">
+                    <span th:text="${error}">Error en el registro.</span>
                 </div>
-                <!-- Campo Full Name -->
-                <div>
-                    <label for="fullName" class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
-                    <input type="text" id="fullName" name="fullName"
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Tu nombre completo">
+
+                <span id="register-legend" class="ft-hint"><span class="ft-required" aria-hidden="true">*</span> Campos obligatorios</span>
+
+                <div class="ft-form-grid">
+                    <div class="ft-field">
+                        <label for="username" class="ft-label">Nombre de Usuario <span class="ft-required" aria-hidden="true">*</span></label>
+                        <input th:field="*{username}" id="username" type="text" class="ft-input" maxlength="50" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="username-hint" placeholder="Tu nombre de usuario">
+                        <span id="username-hint" class="ft-hint">Máximo 50 caracteres.</span>
+                    </div>
+
+                    <div class="ft-field">
+                        <label for="fullName" class="ft-label">Nombre Completo</label>
+                        <input th:field="*{fullName}" id="fullName" type="text" class="ft-input" autocomplete="name" placeholder="Tu nombre completo">
+                    </div>
+
+                    <div class="ft-field">
+                        <label for="email" class="ft-label">Correo Electrónico <span class="ft-required" aria-hidden="true">*</span></label>
+                        <input th:field="*{email}" id="email" type="email" class="ft-input" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="tuemail@ejemplo.com">
+                    </div>
+
+                    <div class="ft-field">
+                        <label for="phone" class="ft-label">Teléfono</label>
+                        <input th:field="*{phone}" id="phone" type="tel" class="ft-input" autocomplete="tel" inputmode="tel" placeholder="Tu número de teléfono">
+                    </div>
+
+                    <div class="ft-field">
+                        <label for="password" class="ft-label">Contraseña <span class="ft-required" aria-hidden="true">*</span></label>
+                        <input th:field="*{password}" id="password" type="password" class="ft-input" minlength="6" maxlength="20" pattern="(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,20}" autocomplete="new-password" required aria-describedby="password-rules" title="Entre 6 y 20 caracteres, con al menos una mayúscula, una minúscula y un número." placeholder="••••••••">
+                    </div>
+
+                    <div class="ft-field">
+                        <label for="confirmPassword" class="ft-label">Confirmar Contraseña <span class="ft-required" aria-hidden="true">*</span></label>
+                        <input th:field="*{confirmPassword}" id="confirmPassword" type="password" class="ft-input" minlength="6" maxlength="20" autocomplete="new-password" required aria-describedby="confirm-hint" placeholder="••••••••">
+                        <span id="confirm-hint" class="ft-hint">Repite la contraseña exactamente.</span>
+                    </div>
+
+                    <!-- Reglas exactas de @Size(min = 6, max = 20) y @Pattern("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$") en RegisterFormDTO -->
+                    <ul id="password-rules" class="ft-password-rules ft-form-grid__full" aria-label="Requisitos de la contraseña">
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Entre 6 y 20 caracteres</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos una letra mayúscula</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos una letra minúscula</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos un número</li>
+                    </ul>
                 </div>
-                <!-- Campo Email -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico *</label>
-                    <input type="email" id="email" name="email" required
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Tu email">
-                </div>
-                <!-- Campo Password -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
-                    <input type="password" id="password" name="password" required
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Mínimo 6 caracteres">
-                    <p class="text-sm text-gray-500 mt-1">Debe incluir mayúsculas, minúsculas y números.</p>
-                </div>
-                <!-- Campo Confirm Password -->
-                <div>
-                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirmar
-                        Contraseña</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Confirma tu contraseña">
-                </div>
-                <!-- Campo Phone (Opcional) -->
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
-                    <input type="text" id="phone" name="phone"
-                           class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                           placeholder="Tu número de teléfono">
-                </div>
-                <!-- Botón Enviar -->
-                <div class="text-center">
-                    <button type="submit"
-                            class="bg-green-600 text-white px-8 py-4 rounded-md font-semibold hover:bg-green-700 transition-colors duration-300">
-                        Registrarse
-                    </button>
-                </div>
+
+                <button type="submit" class="ft-btn ft-btn--mint ft-btn--full">Registrarse</button>
             </form>
 
-            <!-- Enlace para Iniciar Sesión -->
-            <div class="mt-6 text-center">
-                <p class="text-sm text-gray-600">¿Ya tienes una cuenta? <a th:href="@{/login}"
-                                                                           class="text-green-600 hover:underline">Inicia
-                    sesión aquí</a></p>
+            <div class="ft-auth-card__links">
+                <span>¿Ya tienes una cuenta? <a th:href="@{/auth}" class="ft-link">Inicia sesión aquí</a></span>
             </div>
-
-            <!-- Mensaje de Error -->
-            <div th:if="${errorMessage}" class="mt-6 p-4 rounded-md text-center bg-red-100 text-red-800">
-                <p th:text="${errorMessage}"></p>
-            </div>
-        </div>
+        </section>
     </div>
 </main>
 
-<!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

@@ -1,91 +1,194 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Detalles del Pedido', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
+<head th:replace="~{fragments/head :: head('FarmasTerrae — Detalles del Pedido', '/css/layout.css')}"></head>
+<body>
 <!-- Header -->
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Contenido Principal -->
-<main class="flex-grow py-12">
-    <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Detalles del Pedido</h1>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Columna Izquierda: Detalles del Pedido -->
-            <div class="bg-white rounded-md shadow-md p-6">
-                <h2 class="text-2xl font-semibold text-green-700 mb-4">Productos en el Pedido</h2>
-                <table class="min-w-full table-auto">
-                    <thead>
-                    <tr class="bg-green-100">
-                        <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Imagen</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Nombre</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Precio</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Cantidad</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Total</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="entry : ${products.entrySet()}" class="border-t border-gray-200 even:bg-green-50">
-                        <td class="px-4 py-2">
-                            <img th:if="${entry.key.imagePath != null}" th:src="@{${entry.key.imagePath}}"
-                                 alt="Imagen del producto"
-                                 class="w-12 h-12 object-cover rounded-md"/>
-                            <img th:unless="${entry.key.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
-                                 alt="Imagen del producto"
-                                 class="w-12 h-12 object-cover rounded-md"/>
-                        </td>
-                        <td class="px-4 py-2" th:text="${entry.key.name}"></td>
-                        <td class="px-4 py-2" th:text="${entry.key.price + '€'}"></td>
-                        <td class="px-4 py-2" th:text="${entry.value}"></td>
-                        <td class="px-4 py-2" th:text="${'€' + (entry.key.price * entry.value)}"></td>
-                    </tr>
-                    </tbody>
-                </table>
-                <p class="text-xl font-semibold text-green-700 text-right mb-4 py-4"
-                   th:text="${'TOTAL: ' + paymentDetails.amount + '€'}"></p>
-            </div>
+<main id="main-content" tabindex="-1">
+    <!-- Cabecera de página -->
+    <section class="ft-page-band ft-page-band--bone" aria-labelledby="checkout-title">
+        <div class="ft-container">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/cart}">Carrito</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Detalles del pedido</span>
+            </nav>
+            <h1 id="checkout-title" class="ft-page-band__title">Detalles del Pedido</h1>
+            <p class="ft-page-band__sub">
+                Revisa los productos de tu pedido, confirma tus datos de envío y selecciona el método de pago.
+            </p>
+        </div>
+    </section>
 
-            <!-- Columna Derecha: Formulario de Entrega y Pago -->
-            <div class="bg-white rounded-md shadow-md p-6">
-                <h2 class="text-2xl font-semibold text-green-700 mb-4">Información de Entrega y Pago</h2>
-                <form th:action="@{/order/confirm}" method="post">
-                    <!-- Campo Nombre -->
-                    <div class="mb-4">
-                        <label for="paymentDetails.fullName"
-                               class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text" id="paymentDetails.fullName" name="fullName" required
-                               th:value="${paymentDetails.fullName}"
-                               class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
+    <section class="ft-section" aria-label="Proceso de compra">
+        <div class="ft-container">
+            <!-- Progreso del pedido (flujo SSR real: carrito → entrega y confirmación) -->
+            <ol class="ft-steps" aria-label="Progreso del pedido">
+                <li class="ft-step ft-step--done">
+                    <span class="ft-step__num ft-tabular" aria-hidden="true">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                             stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </span>
+                    <a th:href="@{/cart}" class="ft-link">Carrito<span class="ft-sr-only"> (completado)</span></a>
+                </li>
+                <li class="ft-step ft-step--active" aria-current="step">
+                    <span class="ft-step__num ft-tabular" aria-hidden="true">2</span>
+                    <span><span class="ft-sr-only">Paso 2: </span>Entrega y confirmación</span>
+                </li>
+            </ol>
+
+            <div class="ft-split-layout">
+                <!-- Columna izquierda: formulario PaymentDetailsDTO -->
+                <div class="ft-panel">
+                    <div class="ft-panel__head">
+                        <div>
+                            <div class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Paso 2 de 2</div>
+                            <h2 class="ft-panel__title">Información de entrega y pago</h2>
+                        </div>
+                        <span class="ft-hint">Los campos con <span class="ft-required" aria-hidden="true">*</span> son obligatorios</span>
                     </div>
-                    <!-- Campo Dirección -->
-                    <div class="mb-4">
-                        <label for="paymentDetails.address" class="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
-                        <input type="text" id="paymentDetails.address" name="address" required
-                               th:value="${paymentDetails.address}"
-                               class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"/>
+
+                    <!-- POST /order/confirm → OrderController.getPayment (@Valid PaymentDetailsDTO) -->
+                    <form th:action="@{/order/confirm}" th:object="${paymentDetails}" method="post" class="ft-form-stack">
+                        <div class="ft-field">
+                            <label for="fullName" class="ft-label">
+                                Nombre Completo <span class="ft-required" aria-hidden="true">*</span>
+                            </label>
+                            <input type="text" th:field="*{fullName}" class="ft-input" autocomplete="name" required/>
+                        </div>
+
+                        <div class="ft-field">
+                            <label for="address" class="ft-label">
+                                Dirección de Envío <span class="ft-required" aria-hidden="true">*</span>
+                            </label>
+                            <input type="text" th:field="*{address}" class="ft-input" autocomplete="street-address" required/>
+                        </div>
+
+                        <!-- Métodos de pago del enum PaymentMethod (name() se convierte al enum en el binding) -->
+                        <fieldset class="ft-field" style="border: 0; margin: 0; padding: 0; min-width: 0;">
+                            <legend class="ft-label" style="padding: 0; margin-bottom: 6px;">
+                                Método de Pago <span class="ft-required" aria-hidden="true">*</span>
+                            </legend>
+                            <div class="ft-radio-grid">
+                                <label th:each="method, iterStat : ${paymentMethod}" class="ft-radio-card"
+                                       th:for="'paymentMethod-' + ${method.name()}">
+                                    <input type="radio" name="paymentMethod" required
+                                           th:id="'paymentMethod-' + ${method.name()}"
+                                           th:value="${method.name()}"
+                                           th:checked="${paymentDetails.paymentMethod != null ? paymentDetails.paymentMethod == method : iterStat.first}"/>
+                                    <svg th:if="${method.name() == 'CREDIT_CARD'}" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                         stroke="var(--ft-deep-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                                        <line x1="6" y1="15" x2="10" y2="15"></line>
+                                    </svg>
+                                    <svg th:if="${method.name() == 'PAYPAL'}" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                         stroke="var(--ft-deep-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                                        <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                                        <path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path>
+                                    </svg>
+                                    <svg th:if="${method.name() == 'TRANSFER'}" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                                         stroke="var(--ft-deep-teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                         aria-hidden="true">
+                                        <path d="M3 10h18"></path>
+                                        <path d="M12 3 3 8v2h18V8z"></path>
+                                        <path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"></path>
+                                        <path d="M3 21h18"></path>
+                                    </svg>
+                                    <span>
+                                        <span class="ft-radio-card__title" th:text="${method.value}">Método</span>
+                                        <span class="ft-radio-card__desc"
+                                              th:switch="${method.name()}">
+                                            <th:block th:case="'CREDIT_CARD'">Pago con tarjeta de crédito o débito.</th:block>
+                                            <th:block th:case="'PAYPAL'">Pago mediante cuenta de PayPal.</th:block>
+                                            <th:block th:case="'TRANSFER'">Pago mediante transferencia bancaria.</th:block>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <div class="ft-alert ft-alert--info" role="note">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0;">
+                                <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+                                <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                            </svg>
+                            <p style="margin: 0;">
+                                Al confirmar el pedido se verificará y confirmará la reserva de stock de tus productos y el pedido
+                                quedará registrado en estado <strong>Pendiente</strong>.
+                            </p>
+                        </div>
+
+                        <div class="ft-form-actions">
+                            <button type="submit" class="ft-btn ft-btn--mint">
+                                Confirmar Pedido
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                    <polyline points="12 5 19 12 12 19"></polyline>
+                                </svg>
+                            </button>
+                            <a th:href="@{/cart}" class="ft-btn ft-btn--ghost">Volver al carrito</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Columna derecha: resumen de productos y total (paymentDetails.amount) -->
+                <aside class="ft-summary-card" aria-labelledby="summary-title"
+                       th:with="unitCount=${#aggregates.sum(products.values())}">
+                    <div class="ft-eyebrow">Resumen ·
+                        <span class="ft-tabular" th:text="${#numbers.formatInteger(unitCount, 1)}">0</span>
+                        <th:block th:text="${unitCount == 1} ? 'unidad' : 'unidades'">unidades</th:block>
                     </div>
-                    <!-- Select para Método de Pago -->
-                    <div class="mb-6">
-                        <label for="paymentMethod" class="block text-sm font-medium text-gray-700 mb-1">Método de
-                            Pago</label>
-                        <select id="paymentMethod" name="paymentMethod" required
-                                class="w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition">
-                            <option th:each="method : ${paymentMethod}"
-                                    th:value="${method.name()}"
-                                    th:text="${method.value}">
-                            </option>
-                        </select>
-                    </div>
-                    <!-- Botón de Confirmación -->
-                    <div class="text-center">
-                        <button type="submit"
-                                class="bg-green-600 text-white px-8 py-4 rounded-md font-semibold hover:bg-green-700 transition-colors duration-300">
-                            Confirmar Pedido
-                        </button>
-                    </div>
-                </form>
+                    <h2 id="summary-title" class="ft-panel__title" style="font-size: 20px; margin-bottom: 8px;">Productos en el pedido</h2>
+                    <ul style="list-style: none; margin: 0 0 8px; padding: 0;">
+                        <li th:each="entry : ${products.entrySet()}" class="ft-order-item"
+                            style="flex-wrap: nowrap; gap: 12px; padding-block: 14px;"
+                            th:with="img=${entry.key.imagePath != null and !#strings.isEmpty(entry.key.imagePath) ? entry.key.imagePath : '/assets/img/placeholder.svg'}">
+                            <img th:src="@{${img}}" src="/assets/img/placeholder.svg" alt="" class="ft-order-item__img"
+                                 width="56" height="56" style="width: 56px; height: 56px;" loading="lazy"/>
+                            <div style="flex: 1; min-width: 0;">
+                                <p style="margin: 0; font-family: var(--ft-font-display); font-size: 15px; font-weight: 600; line-height: 1.3;"
+                                   th:text="${entry.key.name}">Producto</p>
+                                <p style="margin: 2px 0 0;"><span class="ft-code-tag" th:text="'REF ' + ${entry.key.reference}">REF</span></p>
+                                <p class="ft-hint" style="margin: 2px 0 0;">
+                                    Cantidad: <span class="ft-tabular" th:text="'×' + ${entry.value}">×1</span>
+                                    · <span class="ft-tabular"
+                                            th:text="${#numbers.formatDecimal(entry.key.price, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>/ud.
+                                </p>
+                            </div>
+                            <span class="ft-tabular" style="font-weight: 600; white-space: nowrap;"
+                                  th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>
+                        </li>
+                    </ul>
+                    <dl style="margin: 0 0 16px;">
+                        <div class="ft-summary-row ft-summary-row--total">
+                            <dt>Total</dt>
+                            <dd style="margin: 0;">
+                                <span class="ft-price-now ft-tabular"
+                                      th:text="${#numbers.formatDecimal(paymentDetails.amount, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>
+                            </dd>
+                        </div>
+                    </dl>
+                    <a th:href="@{/cart}" class="ft-btn ft-btn--ghost ft-btn--full">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"></path>
+                        </svg>
+                        Editar carrito
+                    </a>
+                </aside>
             </div>
         </div>
-    </div>
+    </section>
 </main>
 
 <!-- Footer -->

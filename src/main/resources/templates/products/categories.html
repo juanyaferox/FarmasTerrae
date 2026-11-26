@@ -1,119 +1,154 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Categorías', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('FarmasTerrae - Categorías', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Sección de Categorías -->
-<main class="flex-grow py-20 bg-green-50">
-    <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold text-green-800 text-center mb-12">Explora Nuestras Categorías</h1>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            <!-- Categoría 1: Medicamentos -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <img th:src="@{/assets/img/categories/medicine.jpg}" alt="Medicamentos"
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Medicamentos</h2>
-                    <p class="text-gray-600 mb-4">Encuentra los medicamentos que necesitas para tu bienestar.</p>
-                    <a th:href="@{/products(category='MEDICINE')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
+<main id="main-content">
+    <!-- Cabecera de página (Deep Teal) -->
+    <section class="ft-page-band" aria-labelledby="pg-title">
+        <div class="ft-container">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Categorías</span>
+            </nav>
+            <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Catálogo FarmasTerrae</span>
+            <h1 id="pg-title" class="ft-page-band__title">Explora Nuestras Categorías</h1>
+            <p class="ft-page-band__sub">
+                Seis categorías de farmacia y bienestar para encontrar rápidamente lo que necesitas.
+            </p>
+            <div class="ft-hero__trust pg-band-trust">
+                <span class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span><span><span class="ft-tabular">6</span> categorías</span></span>
+                <span class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span>Envío gratis <span class="ft-tabular">+50 €</span></span>
+                <span class="ft-hero__trust-item"><span class="ft-dot" aria-hidden="true"></span>Soporte <span class="ft-tabular">24/7</span></span>
             </div>
-            <!-- Categoría 2: Vitaminas y Suplementos -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <div class="h-48 overflow-hidden">
-                        <img th:src="@{/assets/img/categories/vitamin.jpg}" alt="Vitaminas y Suplementos"
-                             class="w-full h-full object-cover">
+        </div>
+    </section>
+
+    <!-- Rejilla de categorías (enum Category) -->
+    <section class="ft-section ft-section--bone" aria-labelledby="pg-grid-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow">Áreas de producto</span>
+                    <h2 id="pg-grid-title" class="ft-section-head__title">Elige una categoría</h2>
+                </div>
+                <a th:href="@{/products}" class="ft-section-head__link">Ver todos los productos <span aria-hidden="true">→</span></a>
+            </div>
+
+            <div class="ft-grid-3">
+                <!-- MEDICINE -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/medicine.jpg}" alt="Medicamentos" loading="lazy">
                     </div>
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Vitaminas y Suplementos</h2>
-                    <p class="text-gray-600 mb-4">Mejora tu salud con nuestros suplementos de calidad.</p>
-                    <a th:href="@{/products(category='VITAMIN')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">MEDICINE</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Medicamentos</h3>
+                        <p class="ft-cat-card__desc">Encuentra los medicamentos que necesitas para tu bienestar.</p>
+                        <a th:href="@{/products(category='MEDICINE')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Medicamentos</span></a>
+                    </div>
+                </article>
+
+                <!-- VITAMIN -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/vitamin.jpg}" alt="Vitaminas y Suplementos" loading="lazy">
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">VITAMIN</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Vitaminas y Suplementos</h3>
+                        <p class="ft-cat-card__desc">Mejora tu salud con nuestros suplementos de calidad.</p>
+                        <a th:href="@{/products(category='VITAMIN')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Vitaminas y Suplementos</span></a>
+                    </div>
+                </article>
+
+                <!-- CARE -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/self-care.jpg}" alt="Cuidado Personal" loading="lazy">
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">CARE</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Cuidado Personal</h3>
+                        <p class="ft-cat-card__desc">Productos para tu higiene y cuidado diario.</p>
+                        <a th:href="@{/products(category='CARE')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Cuidado Personal</span></a>
+                    </div>
+                </article>
+
+                <!-- FIRST_AID -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/first-aid.jpg}" alt="Primeros Auxilios" loading="lazy">
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">FIRST_AID</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Primeros Auxilios</h3>
+                        <p class="ft-cat-card__desc">Todo lo que necesitas para emergencias menores.</p>
+                        <a th:href="@{/products(category='FIRST_AID')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Primeros Auxilios</span></a>
+                    </div>
+                </article>
+
+                <!-- BEAUTY -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/beauty.jpg}" alt="Belleza y Cuidado de la Piel" loading="lazy">
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">BEAUTY</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Belleza y Cuidado de la Piel</h3>
+                        <p class="ft-cat-card__desc">Cuida tu piel con nuestros productos de belleza.</p>
+                        <a th:href="@{/products(category='BEAUTY')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Belleza y Cuidado de la Piel</span></a>
+                    </div>
+                </article>
+
+                <!-- BABY -->
+                <article class="ft-cat-card">
+                    <div class="ft-cat-card__media">
+                        <img th:src="@{/assets/img/categories/baby.jpg}" alt="Productos para Bebés" loading="lazy">
+                    </div>
+                    <div class="ft-cat-card__body">
+                        <div class="pg-cat-meta">
+                            <span class="ft-code-tag">BABY</span>
+                        </div>
+                        <h3 class="ft-cat-card__title">Productos para Bebés</h3>
+                        <p class="ft-cat-card__desc">Lo mejor para el cuidado de tu bebé.</p>
+                        <a th:href="@{/products(category='BABY')}"
+                           class="ft-btn ft-btn--ghost ft-btn--sm pg-cat-card__cta">Explorar<span class="ft-sr-only">: Productos para Bebés</span></a>
+                    </div>
+                </article>
             </div>
-            <!-- Categoría 3: Cuidado Personal -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <img th:src="@{/assets/img/categories/self-care.jpg}" alt="Cuidado Personal"
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Cuidado Personal</h2>
-                    <p class="text-gray-600 mb-4">Productos para tu higiene y cuidado diario.</p>
-                    <a th:href="@{/products(category='CARE')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
-            </div>
-            <!-- Categoría 4: Primeros Auxilios -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <img th:src="@{/assets/img/categories/first-aid.jpg}" alt="Primeros Auxilios"
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Primeros Auxilios</h2>
-                    <p class="text-gray-600 mb-4">Todo lo que necesitas para emergencias menores.</p>
-                    <a th:href="@{/products(category='FIRST_AID')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
-            </div>
-            <!-- Categoría 5: Belleza y Cuidado de la Piel -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <img th:src="@{/assets/img/categories/beauty.jpg}" alt="Belleza"
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Belleza y Cuidado de la Piel</h2>
-                    <p class="text-gray-600 mb-4">Cuida tu piel con nuestros productos de belleza.</p>
-                    <a th:href="@{/products(category='BEAUTY')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
-            </div>
-            <!-- Categoría 6: Productos para Bebés -->
-            <div class="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300">
-                <div class="h-48 overflow-hidden">
-                    <img th:src="@{/assets/img/categories/baby.jpg}" alt="Bebés"
-                         class="w-full h-full object-cover">
-                </div>
-                <div class="p-6 text-center">
-                    <h2 class="text-2xl font-semibold text-green-700 mb-2">Productos para Bebés</h2>
-                    <p class="text-gray-600 mb-4">Lo mejor para el cuidado de tu bebé.</p>
-                    <a th:href="@{/products(category='BABY')}"
-                       class="inline-block bg-green-100 text-green-800 font-semibold px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Explorar
-                    </a>
-                </div>
+
+            <!-- CTA inferior -->
+            <div class="pg-cta">
+                <span class="ft-eyebrow">Catálogo completo</span>
+                <h2 class="pg-cta__title">¿Prefieres ver todo el catálogo?</h2>
+                <p class="pg-cta__text">
+                    Explora todos los productos disponibles y filtra por categoría o búsqueda de texto.
+                    Envío gratis en pedidos superiores a <span class="ft-tabular">50 €</span>.
+                </p>
+                <a th:href="@{/products}" class="ft-btn ft-btn--mint">Ver todos los productos</a>
             </div>
         </div>
-        <!-- Botón Ver Todos -->
-        <div class="text-center mt-12">
-            <a th:href="@{/products}"
-               class="inline-block bg-[#a4fcc4] text-gray-800 px-8 py-4 rounded-md font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                Ver Todos los Productos
-            </a>
-        </div>
-    </div>
+    </section>
 </main>
 
-<!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

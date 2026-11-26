@@ -1,0 +1,755 @@
+/* ==========================================================================
+   FARMASTERRAE COMPONENT LIBRARY — v1.0
+   Requires: ./tokens.css
+   Flat clinical aesthetic: hairline 1px borders + tonal surface shifts.
+   ========================================================================== */
+
+/* 1. TYPOGRAPHY & SECTION SCAFFOLDING
+   ========================================================================== */
+.ft-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--ft-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  color: var(--ft-deep-teal);
+}
+
+.ft-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--ft-r-pill);
+  background: var(--ft-mint-pulse);
+  flex-shrink: 0;
+}
+
+.ft-section {
+  padding-block: var(--ft-space-section-sm);
+  background: var(--ft-paper);
+}
+
+.ft-section--bone {
+  background: var(--ft-bone);
+  border-top: 1px solid var(--ft-mist);
+  border-bottom: 1px solid var(--ft-mist);
+}
+
+.ft-section--teal {
+  background: var(--ft-deep-teal);
+  color: var(--ft-paper);
+}
+
+.ft-section--teal .ft-eyebrow {
+  color: var(--ft-soft-teal);
+}
+
+@media (min-width: 960px) {
+  .ft-section {
+    padding-block: var(--ft-space-section);
+  }
+}
+
+.ft-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.ft-section-head__title {
+  margin: 8px 0 0;
+  font-family: var(--ft-font-display);
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  color: var(--ft-ink);
+}
+
+.ft-section--teal .ft-section-head__title {
+  color: var(--ft-paper);
+}
+
+.ft-section-head__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ft-font-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ft-deep-teal);
+  padding: 8px 14px;
+  border-radius: var(--ft-r-pill);
+  border: 1px solid var(--ft-mist);
+  background: var(--ft-paper);
+  transition: border-color var(--ft-dur-fast) var(--ft-ease), background-color var(--ft-dur-fast) var(--ft-ease);
+}
+
+.ft-section-head__link:hover {
+  border-color: var(--ft-deep-teal);
+  background: var(--ft-mint-tint);
+}
+
+/* 2. ANNOUNCEMENT BAR & HEADER
+   ========================================================================== */
+.ft-announcement {
+  background: var(--ft-mint-pulse);
+  color: var(--ft-ink);
+  font-family: var(--ft-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ft-announcement__inner {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-block: 7px;
+  text-align: center;
+  flex-wrap: wrap;
+}
+
+.ft-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--ft-paper);
+  border-bottom: 1px solid var(--ft-mist);
+}
+
+.ft-header__inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding-block: 12px;
+  flex-wrap: wrap;
+}
+
+.ft-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--ft-font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ft-deep-teal);
+  flex-shrink: 0;
+}
+
+.ft-brand__mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--ft-deep-teal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ft-brand span {
+  color: var(--ft-ink);
+  font-weight: 500;
+}
+
+.ft-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ft-nav__link {
+  font-family: var(--ft-font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ft-ink);
+  padding: 8px 12px;
+  border-radius: var(--ft-r-pill);
+  transition: color var(--ft-dur-fast) var(--ft-ease), background-color var(--ft-dur-fast) var(--ft-ease);
+}
+
+.ft-nav__link:hover,
+.ft-nav__link[aria-current="page"] {
+  color: var(--ft-deep-teal);
+  background: var(--ft-bone);
+}
+
+/* 3. BUTTONS (2.AG Pill Geometry + AAA Contrast)
+   ========================================================================== */
+.ft-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 22px;
+  border-radius: var(--ft-r-pill);
+  font-family: var(--ft-font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--ft-dur-fast) var(--ft-ease),
+              border-color var(--ft-dur-fast) var(--ft-ease),
+              color var(--ft-dur-fast) var(--ft-ease),
+              transform 120ms ease;
+}
+
+.ft-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.ft-btn:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.ft-btn--sm {
+  min-height: 38px;
+  padding: 7px 15px;
+  font-size: 13px;
+}
+
+.ft-btn--mint {
+  background: var(--ft-mint-pulse);
+  color: var(--ft-ink);
+}
+
+.ft-btn--mint:hover:not(:disabled) {
+  background: var(--ft-mint-hover);
+}
+
+.ft-btn--teal {
+  background: var(--ft-deep-teal);
+  color: var(--ft-paper);
+}
+
+.ft-btn--teal:hover:not(:disabled) {
+  background: var(--ft-deep-teal-dark);
+}
+
+.ft-btn--ghost {
+  background: var(--ft-paper);
+  border-color: var(--ft-deep-teal);
+  color: var(--ft-deep-teal);
+}
+
+.ft-btn--ghost:hover:not(:disabled) {
+  background: var(--ft-mint-tint);
+}
+
+.ft-btn--outline-mint {
+  background: transparent;
+  border-color: var(--ft-mint-pulse);
+  color: var(--ft-paper);
+}
+
+.ft-btn--outline-mint:hover:not(:disabled) {
+  background: rgba(46, 206, 160, 0.14);
+}
+
+.ft-cart-count {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: var(--ft-r-pill);
+  background: var(--ft-mint-pulse);
+  color: var(--ft-ink);
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 4. BADGES, PILLS & FILTER CHIPS
+   ========================================================================== */
+.ft-dosage-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: var(--ft-r-pill);
+  background: var(--ft-mint-pulse);
+  color: var(--ft-ink);
+  font-family: var(--ft-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.ft-sale-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--ft-savings);
+  color: var(--ft-paper);
+  border-radius: var(--ft-r-sm);
+  padding: 4px 8px;
+  font-family: var(--ft-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.ft-rx-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--ft-warning-bg);
+  color: var(--ft-warning);
+  border: 1px solid #f0d19e;
+  border-radius: var(--ft-r-sm);
+  padding: 4px 8px;
+  font-family: var(--ft-font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.ft-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ft-deep-teal);
+  background: var(--ft-mint-tint);
+  padding: 5px 10px;
+  border-radius: var(--ft-r-pill);
+  white-space: nowrap;
+}
+
+.ft-code-tag {
+  font-family: var(--ft-font-mono);
+  font-size: 12px;
+  color: var(--ft-slate);
+}
+
+.ft-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ft-chip {
+  padding: 7px 14px;
+  border-radius: var(--ft-r-pill);
+  border: 1px solid var(--ft-mist);
+  background: var(--ft-paper);
+  color: var(--ft-ink);
+  font-family: var(--ft-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--ft-dur-fast) var(--ft-ease),
+              border-color var(--ft-dur-fast) var(--ft-ease),
+              color var(--ft-dur-fast) var(--ft-ease);
+}
+
+.ft-chip:hover {
+  border-color: var(--ft-deep-teal);
+}
+
+.ft-chip[aria-pressed="true"] {
+  background: var(--ft-deep-teal);
+  border-color: var(--ft-deep-teal);
+  color: var(--ft-paper);
+}
+
+/* Variant / Format Chips (TeePublic Pattern for 20 comp., 40 comp., 600 mg) */
+.ft-variant-chip {
+  padding: 8px 14px;
+  border-radius: var(--ft-r-input);
+  border: 1px solid var(--ft-border-input);
+  background: var(--ft-paper);
+  color: var(--ft-ink);
+  font-family: var(--ft-font-display);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ft-variant-chip[aria-pressed="true"] {
+  background: var(--ft-deep-teal);
+  border-color: var(--ft-deep-teal);
+  color: var(--ft-paper);
+}
+
+/* 5. SEARCH BAR, INPUTS & QUANTITY STEPPER (TeePublic Functional Pattern)
+   ========================================================================== */
+.ft-search {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+}
+
+.ft-search__icon {
+  position: absolute;
+  left: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ft-deep-teal);
+  pointer-events: none;
+}
+
+.ft-search__input,
+.ft-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--ft-border-input);
+  border-radius: var(--ft-r-input);
+  background: var(--ft-paper);
+  color: var(--ft-ink);
+  font-size: 15px;
+  transition: border-color var(--ft-dur-fast) var(--ft-ease);
+}
+
+.ft-search__input {
+  padding-left: 40px;
+  font-size: 14px;
+}
+
+.ft-search__input::placeholder,
+.ft-input::placeholder {
+  color: var(--ft-slate);
+}
+
+.ft-search__input:focus,
+.ft-input:focus {
+  border-color: var(--ft-deep-teal);
+}
+
+.ft-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ft-label {
+  font-family: var(--ft-font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ft-ink);
+}
+
+.ft-hint {
+  font-size: 13px;
+  color: var(--ft-slate);
+}
+
+.ft-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--ft-border-input);
+  border-radius: var(--ft-r-input);
+  background: var(--ft-paper);
+  overflow: hidden;
+  height: 40px;
+}
+
+.ft-stepper__btn {
+  width: 38px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: var(--ft-deep-teal);
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ft-stepper__btn:hover {
+  background: var(--ft-bone);
+}
+
+.ft-stepper__val {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--ft-ink);
+  border-inline: 1px solid var(--ft-mist);
+  line-height: 38px;
+}
+
+/* 6. PRODUCT & CATEGORY CARDS
+   ========================================================================== */
+.ft-grid-4 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 540px) {
+  .ft-grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 960px) {
+  .ft-grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+}
+
+.ft-prod-card,
+.ft-cat-card {
+  background: var(--ft-paper);
+  border: 1px solid var(--ft-mist);
+  border-radius: var(--ft-r-card);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: border-color var(--ft-dur-fast) var(--ft-ease);
+}
+
+.ft-prod-card:hover,
+.ft-cat-card:hover {
+  border-color: var(--ft-deep-teal);
+}
+
+.ft-prod-card--placeholder {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.ft-prod-card__stage {
+  background: var(--ft-bone);
+  border-radius: var(--ft-r-stage);
+  height: 168px;
+  padding: 14px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.ft-prod-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.ft-prod-card__ref {
+  font-family: var(--ft-font-mono);
+  font-size: 11px;
+  color: var(--ft-slate);
+  margin-bottom: 4px;
+}
+
+.ft-prod-card__name {
+  margin: 0 0 4px;
+  font-family: var(--ft-font-display);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.28;
+  color: var(--ft-ink);
+}
+
+.ft-prod-card__sub {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--ft-slate);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.ft-prod-card__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ft-price-now {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ft-ink);
+  line-height: 1.1;
+}
+
+.ft-price-old {
+  font-size: 13px;
+  color: var(--ft-slate);
+  text-decoration: line-through;
+}
+
+.ft-prod-card__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ft-prod-card__actions .ft-btn--mint {
+  flex: 1;
+}
+
+/* 7. CLINICAL STATS, FEATURE ROWS, REVIEWS & ALERTS
+   ========================================================================== */
+.ft-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .ft-stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
+.ft-stat-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(109, 221, 189, 0.24);
+  border-radius: var(--ft-r-card);
+  padding: 24px 22px;
+}
+
+.ft-stat-card__num {
+  font-family: var(--ft-font-body);
+  font-size: clamp(38px, 4.2vw, 52px);
+  font-weight: 500;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  background: linear-gradient(180deg, var(--ft-soft-teal) 0%, var(--ft-mint-pulse) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.ft-stat-card__label {
+  margin: 0 0 6px;
+  font-family: var(--ft-font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ft-paper);
+}
+
+.ft-stat-card__desc {
+  margin: 0;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.ft-feature-rows {
+  border-top: 1px solid var(--ft-mist);
+}
+
+.ft-feature-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--ft-mist);
+  flex-wrap: wrap;
+}
+
+.ft-feature-row__key {
+  font-family: var(--ft-font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--ft-deep-teal);
+}
+
+.ft-feature-row__val {
+  font-size: 14px;
+  color: var(--ft-slate);
+}
+
+.ft-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: var(--ft-r-stage);
+  border: 1px solid var(--ft-mist);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ft-alert--info {
+  background: var(--ft-mint-tint);
+  border-color: #bce8da;
+  color: var(--ft-deep-teal-dark);
+}
+
+.ft-alert--warning {
+  background: var(--ft-warning-bg);
+  border-color: #f0d19e;
+  color: #6b3f00;
+}
+
+.ft-alert--danger {
+  background: var(--ft-danger-bg);
+  border-color: #f6c7c3;
+  color: var(--ft-danger);
+}
+
+/* 8. STICKY CART TOAST (Vibrants Pattern)
+   ========================================================================== */
+.ft-toast {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 60;
+  max-width: 340px;
+  background: var(--ft-paper);
+  border: 1px solid var(--ft-deep-teal);
+  border-radius: var(--ft-r-stage);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity var(--ft-dur-base) var(--ft-ease), transform var(--ft-dur-base) var(--ft-ease);
+}
+
+.ft-toast.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.ft-toast__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--ft-r-pill);
+  background: var(--ft-mint-pulse);
+  color: var(--ft-ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
