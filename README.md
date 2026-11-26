@@ -5,33 +5,43 @@ Server-rendered online pharmacy e-commerce platform built with Java 21, Spring B
 [![Maven Build](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml/badge.svg)](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml)
 
 **Languages:** **English** · [Español](README.es.md) · [Português](README.pt.md)
-<br />
+
 **Contents:** [Highlights](#design--implementation-highlights) · [Features](#key-features) · [Stack](#tech-stack) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Configuration](#environment-variables--profiles) · [Routes](#access-control--main-routes) · [Structure](#project-structure) · [Build & CI](#build-logging--ci)
 
 > [!NOTE]
-> The application UI and validation messages are currently in Spanish, while repository documentation is maintained in English ([README.md](README.md)), Spanish ([README.es.md](README.es.md)), and Portuguese ([README.pt.md](README.pt.md)).
+> The application UI and validation messages are currently in Spanish. Documentation is maintained in English ([README.md](README.md)), Spanish ([README.es.md](README.es.md)), and Portuguese ([README.pt.md](README.pt.md)).
 
 ---
 
 ## Design & Implementation Highlights
 
-- **Post-Hibernate Liquibase Data Seeding** — `LiquibaseRunnerConfig` excludes default `LiquibaseAutoConfiguration` in `prod` and `prodminio`, triggering `SpringLiquibase` from a `CommandLineRunner` *after* Hibernate completes schema synchronization (`ddl-auto=update`) to seed datasets from `db/changelog/data-only-changelog.yaml`.
-- **Server-Side Image Optimization & Cloud Media Pipeline** — `ImageCompressionService` validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` via bicubic interpolation, flattens alpha channels onto white RGB, and encodes 85% JPEG. `S3StorageService` stores assets in AWS S3 (IAM instance role in `prod`) or MinIO (local Docker), and `ProductMapper` resolves 2-hour presigned URLs automatically in `@AfterMapping` hooks.
-- **Composable JPA Specifications** — `GenericSpecification` constructs multi-field case-insensitive `LIKE` and type-validated `EQUAL` Criteria predicates across nested entity paths using automatic `LEFT JOIN` traversal.
+- **Post-Hibernate Liquibase Data Seeding** — `LiquibaseRunnerConfig` disables default `LiquibaseAutoConfiguration` in `prod` and `prodminio`, triggering `SpringLiquibase` from a `CommandLineRunner` *after* Hibernate completes schema synchronization (`ddl-auto=update`) to seed datasets from `db/changelog/data-only-changelog.yaml`.
+
+- **Server-Side Image Pipeline & Cloud Storage** — `ImageCompressionService` validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` via bicubic interpolation, flattens alpha channels onto white RGB, and encodes 85% JPEG. `S3StorageService` stores assets in AWS S3 (IAM instance role in `prod`) or local MinIO, while `ProductMapper` resolves 2-hour presigned URLs automatically in `@AfterMapping` hooks.
+
+- **Composable JPA Specifications** — `GenericSpecification` builds multi-field, case-insensitive `LIKE` and type-validated `EQUAL` Criteria predicates across nested entity paths using automatic `LEFT JOIN` traversal.
+
 - **Temporary Checkout Stock Reservations** — `StockReservationService` holds session cart quantities for 15 minutes (`stock.reservation.timeout.minutes`) to reduce overselling during checkout and commits real inventory deductions on order confirmation.
-- **Privacy-Aware Soft Deletion** — `UserService` preserves historical order integrity on account removal by anonymizing PII (`username` and `email`, clearing phone and address), recording `deletedAt`, filtering transparently via `@Where(clause = "deletedAt IS NULL")`, and blocking deletion of the final administrator.
-- **Correlated Global Error Auditing** — `GlobalExceptionHandler` pairs a servlet `Filter` with `@ControllerAdvice` to tag unhandled errors with a unique UUID `errorId` alongside user identity, client IP (`X-Forwarded-For`), request URI, HTTP method, and session metadata.
+
+- **Privacy-Aware Soft Deletion** — `UserService` preserves historical order integrity when accounts are removed by anonymizing `username` and `email`, clearing phone and address, recording `deletedAt`, filtering transparently via `@Where(clause = "deletedAt IS NULL")`, and blocking deletion of the final administrator.
+
+- **Correlated Global Error Auditing** — `GlobalExceptionHandler` pairs a servlet `Filter` with `@ControllerAdvice` to tag unhandled errors with a unique UUID `errorId` alongside user identity, client IP (`X-Forwarded-For`), URI, HTTP method, and session metadata.
 
 ---
 
 ## Key Features
 
 - **Storefront & Catalog** — Home page with randomized featured products, curated pharmacy categories (medicines, vitamins & supplements, personal care, first aid, skincare & beauty, and baby care), keyword search, category filtering, pagination, and multi-column sorting.
+
 - **Shopping Cart & Checkout** — Session-backed cart (`SessionCart`) with add, increment, decrement, remove, and clear operations, live stock validation, prefilled shipping details, multiple payment options (credit card, PayPal, bank transfer), and end-to-end order status tracking across customer and admin views.
-- **Authentication & Account Recovery** — Spring Security 6 authentication supporting login by username or email, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, single concurrent session enforcement, Gmail SMTP password recovery, and authenticated password updates with complexity checks.
+
+- **Authentication & Account Recovery** — Spring Security 6 login by username or email, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, single concurrent session policy, Gmail SMTP password recovery, and authenticated password updates with complexity checks.
+
 - **Customer Dashboard (`/user/dashboard`)** — Profile editing, paginated order history with line-item details, and verified product reviews limited to purchased items.
+
 - **Admin Dashboard (`/admin/dashboard`)** — Searchable, sortable, paginated management for products, orders, and users, including multipart image uploads and order status updates.
-- **Environment-Agnostic Storage** — Switches cleanly between AWS S3 (IAM instance role) in production and MinIO in local Docker with no code changes.
+
+- **Environment-Agnostic Storage** — Switches cleanly between AWS S3 (IAM instance role) in production and local MinIO with no code changes.
 
 ---
 
@@ -40,10 +50,10 @@ Server-rendered online pharmacy e-commerce platform built with Java 21, Spring B
 | Layer | Technologies |
 | --- | --- |
 | **Backend** | Java 21, Spring Boot 3.4.1 (Web MVC, Data JPA, Security, Validation, Mail), MapStruct 1.6.3, Lombok |
-| **Frontend** | Thymeleaf, `thymeleaf-extras-springsecurity6`, Alpine.js 3, modular CSS design system (`tokens.css`, `components.css`, `layout.css`, `pages.css`) |
-| **Database & Seeding** | MySQL 8.0, Liquibase 4.32.0 (post-Hibernate data seeding), H2 2.3.232 (local `dev` profile) |
+| **Frontend** | Thymeleaf, `thymeleaf-extras-springsecurity6`, Alpine.js 3, modular CSS (`tokens.css`, `components.css`, `layout.css`, `pages.css`) |
+| **Database & Seeding** | MySQL 8.0, Liquibase 4.32.0 (post-Hibernate seeding), H2 2.3.232 (local `dev` profile) |
 | **Object Storage** | AWS SDK for Java v2 (`s3`), MinIO (local S3-compatible server) |
-| **Infrastructure & DevOps** | Multi-stage Dockerfile (`eclipse-temurin:21`), Docker Compose, Nginx reverse proxy (TLS 1.2/1.3), Logback rolling logs, GitHub Actions |
+| **Infrastructure & DevOps** | Multi-stage Dockerfile (`eclipse-temurin:21`), Docker Compose, Nginx TLS proxy, Logback, GitHub Actions |
 
 ---
 
@@ -77,7 +87,7 @@ flowchart LR
 
 Starts **MySQL 8.0**, **Spring Boot** (`prodminio` profile), and a local **MinIO** S3-compatible server with automatic bucket initialization (`farmasterrae`).
 
-1. Copy [`.env.example`](.env.example) to `.env` and fill in `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` (`EMAIL` and `PASSWORD` are optional unless testing password recovery emails):
+1. Copy [`.env.example`](.env.example) to `.env` and fill in `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` (`EMAIL` and `PASSWORD` are optional unless testing password recovery):
 
    ```bash
    cp .env.example .env
@@ -90,9 +100,9 @@ Starts **MySQL 8.0**, **Spring Boot** (`prodminio` profile), and a local **MinIO
    ```
 
 3. Open the running services:
-   - Storefront — `http://localhost:8080`
-   - MinIO Console — `http://localhost:9001` (`minioadmin` / `minioadmin`)
-   - MySQL — `localhost:3306`
+   - **Storefront** — `http://localhost:8080`
+   - **MinIO Console** — `http://localhost:9001` (`minioadmin` / `minioadmin`)
+   - **MySQL** — `localhost:3306`
 
 Sample profiles, users, products, orders, and reviews are seeded automatically via Liquibase (`src/main/resources/db/changelog/data/`).
 
@@ -100,11 +110,14 @@ Sample profiles, users, products, orders, and reviews are seeded automatically v
 
 Starts **MySQL 8.0**, **Spring Boot** (`prod` profile), and **Nginx** with HTTP-to-HTTPS redirection (ports `80` and `443`).
 
-1. Copy [`.env.example`](.env.example) to `.env` and populate all production variables (`SPRING_PROFILES_ACTIVE=prod`, `SECRET_KEY`, `DB_*`, `EMAIL`, `PASSWORD`, `AWS_REGION`, `AWS_BUCKET`).
-2. Place your TLS certificate and private key in `./ssl/`:
+1. Copy [`.env.example`](.env.example) to `.env` and set all production variables (`SPRING_PROFILES_ACTIVE=prod`, `SECRET_KEY`, `DB_*`, `EMAIL`, `PASSWORD`, `AWS_REGION`, `AWS_BUCKET`).
+
+2. Provide your TLS certificate and private key under `./ssl/`:
    - `ssl/farmasterrae.crt`
    - `ssl/farmasterrae.key`
-3. Attach an IAM role with S3 bucket access to the host (`S3Config` resolves credentials via `DefaultCredentialsProvider` in `prod`, requiring no static AWS keys).
+
+3. Attach an IAM role with S3 bucket access to the host (`S3Config` uses `DefaultCredentialsProvider` in `prod`, requiring no static AWS keys).
+
 4. Launch the stack:
 
    ```bash
@@ -118,7 +131,7 @@ Starts **MySQL 8.0**, **Spring Boot** (`prod` profile), and **Nginx** with HTTP-
 
 Runs Spring Boot directly against an in-memory H2 database (MySQL compatibility mode) seeded from `src/main/resources/data.sql`.
 
-1. Create the gitignored file `src/main/resources/application-secrets.properties` to satisfy mail and S3 property placeholders on startup:
+1. Create the gitignored file `src/main/resources/application-secrets.properties` to resolve mail and S3 placeholders on startup:
 
    ```properties
    spring.mail.username=dev@example.com
@@ -137,8 +150,8 @@ Runs Spring Boot directly against an in-memory H2 database (MySQL compatibility 
    ```
 
 3. Open the local endpoints:
-   - Application — `http://localhost:8080`
-   - H2 Console — `http://localhost:8080/h2-console`
+   - **Application** — `http://localhost:8080`
+   - **H2 Console** — `http://localhost:8080/h2-console`
      - JDBC URL: `jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_UPPER=false;DB_CLOSE_ON_EXIT=FALSE`
      - Username: `sa` (empty password)
 
@@ -150,10 +163,10 @@ Reference template: [`.env.example`](.env.example).
 
 | Variable | Profiles | Default | Description |
 | --- | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `prod` | `prod` (`Dockerfile`) | Active Spring profile (`prod` for AWS; fixed to `prodminio` in `docker-compose.help.yml`). |
+| `SPRING_PROFILES_ACTIVE` | `prod` | `prod` (`Dockerfile`) | Active Spring profile (`prod` on AWS; fixed to `prodminio` in `docker-compose.help.yml`). |
 | `SECRET_KEY` | `prod`, `prodminio` | `uniqueAndSecret` | Signing key for 7-day `remember-me` cookies (`app.security`). |
 | `DB_NAME` | `prod`, `prodminio` | `farmasterrae` | MySQL database name (also sets `spring.application.name`). |
-| `DB_HOST` | `prod`, `prodminio` | `localhost` (`prod`) / `db` (`prodminio`) | MySQL host (`db` inside Docker Compose). |
+| `DB_HOST` | `prod`, `prodminio` | `localhost` / `db` | MySQL host (`localhost` in `prod`, `db` in `prodminio` / Compose). |
 | `DB_PORT` | `prod`, `prodminio` | `3306` | MySQL port. |
 | `DB_USERNAME` | `prod`, `prodminio` | `root` | MySQL username. |
 | `DB_PASSWORD` | `prod`, `prodminio` | *(empty)* | MySQL password (also used as `MYSQL_ROOT_PASSWORD` in Compose). |

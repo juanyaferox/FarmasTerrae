@@ -5,33 +5,43 @@ Plataforma e-commerce de farmacia online renderizada en servidor, construida con
 [![Maven Build](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml/badge.svg)](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml)
 
 **Idiomas:** [English](README.md) · **Español** · [Português](README.pt.md)
-<br />
+
 **Contenido:** [Diseño](#aspectos-destacados-de-diseño-e-implementación) · [Funcionalidades](#funcionalidades-principales) · [Stack](#stack-tecnológico) · [Arquitectura](#arquitectura) · [Primeros Pasos](#primeros-pasos) · [Configuración](#variables-de-entorno-y-perfiles) · [Rutas](#control-de-acceso-y-rutas-principales) · [Estructura](#estructura-del-proyecto) · [Build y CI](#compilación-logs-y-ci)
 
 > [!NOTE]
-> La interfaz de la aplicación y los mensajes de validación están en español, mientras que la documentación del repositorio se mantiene en inglés ([README.md](README.md)), español ([README.es.md](README.es.md)) y portugués ([README.pt.md](README.pt.md)).
+> La interfaz de la aplicación y los mensajes de validación están en español. La documentación se mantiene en inglés ([README.md](README.md)), español ([README.es.md](README.es.md)) y portugués ([README.pt.md](README.pt.md)).
 
 ---
 
 ## Aspectos Destacados de Diseño e Implementación
 
-- **Carga de datos con Liquibase post-Hibernate** — `LiquibaseRunnerConfig` excluye la autoconfiguración estándar `LiquibaseAutoConfiguration` en `prod` y `prodminio`, invocando `SpringLiquibase` desde un `CommandLineRunner` *después* de que Hibernate sincronice el esquema (`ddl-auto=update`) para poblar los datos desde `db/changelog/data-only-changelog.yaml`.
-- **Optimización de imágenes en servidor y almacenamiento en la nube** — `ImageCompressionService` valida subidas (hasta 10 MB), redimensiona proporcionalmente a un máximo de `1200×800` con interpolación bicúbica, aplana transparencias sobre fondo blanco RGB y comprime en JPEG al 85%. `S3StorageService` almacena los recursos en AWS S3 (rol IAM de instancia en `prod`) o MinIO (Docker local), y `ProductMapper` resuelve URLs prefirmadas de 2 horas automáticamente en hooks `@AfterMapping`.
+- **Carga de datos con Liquibase post-Hibernate** — `LiquibaseRunnerConfig` desactiva `LiquibaseAutoConfiguration` en `prod` y `prodminio`, ejecutando `SpringLiquibase` desde un `CommandLineRunner` *después* de que Hibernate sincronice el esquema (`ddl-auto=update`) para poblar los datos desde `db/changelog/data-only-changelog.yaml`.
+
+- **Pipeline de imágenes en servidor y almacenamiento cloud** — `ImageCompressionService` valida subidas (hasta 10 MB), redimensiona proporcionalmente a un máximo de `1200×800` con interpolación bicúbica, aplana transparencias sobre fondo blanco RGB y codifica en JPEG al 85%. `S3StorageService` almacena los recursos en AWS S3 (rol IAM de instancia en `prod`) o MinIO local, mientras `ProductMapper` resuelve URLs prefirmadas de 2 horas automáticamente en hooks `@AfterMapping`.
+
 - **JPA Specifications reutilizables** — `GenericSpecification` construye predicados Criteria `LIKE` insensibles a mayúsculas y comparaciones `EQUAL` validadas por tipo sobre relaciones anidadas mediante `LEFT JOIN` automático.
-- **Reserva temporal de stock en checkout** — `StockReservationService` retiene el inventario del carrito durante 15 minutos (`stock.reservation.timeout.minutes`) para reducir sobreventas durante el pago y descuenta el stock real al confirmar el pedido.
-- **Eliminación lógica orientada a privacidad** — `UserService` preserva la integridad histórica de los pedidos al eliminar cuentas anonimizando datos personales (`username` y `email`, limpiando teléfono y dirección), registrando `deletedAt`, filtrando con `@Where(clause = "deletedAt IS NULL")` e impidiendo eliminar al último administrador.
+
+- **Reserva temporal de stock en checkout** — `StockReservationService` retiene las unidades del carrito durante 15 minutos (`stock.reservation.timeout.minutes`) para reducir sobreventas durante el pago y descuenta el stock real al confirmar el pedido.
+
+- **Eliminación lógica orientada a privacidad** — `UserService` preserva la integridad histórica de los pedidos al eliminar cuentas anonimizando `username` y `email`, limpiando teléfono y dirección, registrando `deletedAt`, filtrando mediante `@Where(clause = "deletedAt IS NULL")` e impidiendo eliminar al último administrador.
+
 - **Auditoría global de errores correlacionados** — `GlobalExceptionHandler` combina un `Filter` de servlet con `@ControllerAdvice` para asociar cada error no controlado a un UUID `errorId` único junto con usuario, IP del cliente (`X-Forwarded-For`), URI, método HTTP y sesión.
 
 ---
 
 ## Funcionalidades Principales
 
-- **Escaparate y Catálogo** — Página principal con productos destacados aleatorios, catálogo farmacéutico organizado (medicamentos, vitaminas y suplementos, cuidado personal, primeros auxilios, belleza y cuidado de la piel, y productos para bebés), búsqueda por palabra clave, filtrado por categoría, paginación y ordenación por columnas.
-- **Carrito y Checkout** — Carrito en sesión HTTP (`SessionCart`) con operaciones de añadir, incrementar, reducir, eliminar y vaciar, validación de stock en tiempo real, datos de envío precargados, múltiples métodos de pago (tarjeta de crédito, PayPal y transferencia bancaria) y seguimiento del estado del pedido en las vistas de cliente y administrador.
-- **Autenticación y Recuperación de Cuenta** — Spring Security 6 con acceso por nombre de usuario o email, cifrado BCrypt, cookies `remember-me` de 7 días, migración ante session fixation, política de una sesión concurrente, recuperación por Gmail SMTP y cambio autenticado de contraseña con validación de complejidad.
+- **Escaparate y Catálogo** — Portada con productos destacados aleatorios, catálogo farmacéutico organizado (medicamentos, vitaminas y suplementos, cuidado personal, primeros auxilios, belleza y cuidado de la piel, y productos para bebés), búsqueda por palabra clave, filtrado por categoría, paginación y ordenación por columnas.
+
+- **Carrito y Checkout** — Carrito en sesión (`SessionCart`) con operaciones de añadir, incrementar, reducir, eliminar y vaciar, validación de stock en tiempo real, datos de envío precargados, múltiples métodos de pago (tarjeta de crédito, PayPal, transferencia bancaria) y seguimiento completo del estado de pedidos en las vistas de cliente y administrador.
+
+- **Autenticación y Recuperación de Cuenta** — Acceso con Spring Security 6 mediante usuario o email, cifrado BCrypt, cookies `remember-me` de 7 días, migración ante session fixation, política de una sesión concurrente, recuperación de contraseña por Gmail SMTP y actualización autenticada con validación de complejidad.
+
 - **Panel de Cliente (`/user/dashboard`)** — Edición de perfil, historial paginado de pedidos con detalle por artículo y reseñas verificadas limitadas a productos comprados.
-- **Panel de Administración (`/admin/dashboard`)** — Gestión paginada, ordenable y filtrable de productos, pedidos y usuarios, incluyendo subida multipart de imágenes y actualización de estados de pedido.
-- **Almacenamiento Agnóstico al Entorno** — Alterna entre AWS S3 (rol IAM) en producción y MinIO en Docker local sin modificar el código de aplicación.
+
+- **Panel de Administración (`/admin/dashboard`)** — Gestión paginada, ordenable y filtrable de productos, pedidos y usuarios, incluyendo subida multipart de imágenes y actualización de estados.
+
+- **Almacenamiento Agnóstico al Entorno** — Alterna entre AWS S3 (rol IAM) en producción y MinIO local sin modificar código.
 
 ---
 
@@ -40,10 +50,10 @@ Plataforma e-commerce de farmacia online renderizada en servidor, construida con
 | Capa | Tecnologías |
 | --- | --- |
 | **Backend** | Java 21, Spring Boot 3.4.1 (Web MVC, Data JPA, Security, Validation, Mail), MapStruct 1.6.3, Lombok |
-| **Frontend** | Thymeleaf, `thymeleaf-extras-springsecurity6`, Alpine.js 3, sistema modular de CSS (`tokens.css`, `components.css`, `layout.css`, `pages.css`) |
-| **Base de Datos y Seed** | MySQL 8.0, Liquibase 4.32.0 (carga de datos post-Hibernate), H2 2.3.232 (perfil local `dev`) |
+| **Frontend** | Thymeleaf, `thymeleaf-extras-springsecurity6`, Alpine.js 3, CSS modular (`tokens.css`, `components.css`, `layout.css`, `pages.css`) |
+| **Base de Datos y Seed** | MySQL 8.0, Liquibase 4.32.0 (seed post-Hibernate), H2 2.3.232 (perfil local `dev`) |
 | **Almacenamiento** | AWS SDK para Java v2 (`s3`), MinIO (servidor local compatible con S3) |
-| **Infraestructura y DevOps** | Dockerfile multietapa (`eclipse-temurin:21`), Docker Compose, proxy inverso Nginx (TLS 1.2/1.3), logs rotativos Logback, GitHub Actions |
+| **Infraestructura y DevOps** | Dockerfile multietapa (`eclipse-temurin:21`), Docker Compose, proxy Nginx TLS, Logback, GitHub Actions |
 
 ---
 
@@ -90,9 +100,9 @@ Inicia **MySQL 8.0**, **Spring Boot** (perfil `prodminio`) y un servidor local *
    ```
 
 3. Accede a los servicios:
-   - Tienda — `http://localhost:8080`
-   - Consola MinIO — `http://localhost:9001` (`minioadmin` / `minioadmin`)
-   - MySQL — `localhost:3306`
+   - **Tienda** — `http://localhost:8080`
+   - **Consola MinIO** — `http://localhost:9001` (`minioadmin` / `minioadmin`)
+   - **MySQL** — `localhost:3306`
 
 Los perfiles, usuarios, productos, pedidos y reseñas de ejemplo se cargan automáticamente mediante Liquibase (`src/main/resources/db/changelog/data/`).
 
@@ -101,10 +111,13 @@ Los perfiles, usuarios, productos, pedidos y reseñas de ejemplo se cargan autom
 Inicia **MySQL 8.0**, **Spring Boot** (perfil `prod`) y **Nginx** con redirección HTTP a HTTPS (puertos `80` y `443`).
 
 1. Copia [`.env.example`](.env.example) a `.env` y completa todas las variables de producción (`SPRING_PROFILES_ACTIVE=prod`, `SECRET_KEY`, `DB_*`, `EMAIL`, `PASSWORD`, `AWS_REGION`, `AWS_BUCKET`).
+
 2. Coloca el certificado TLS y la clave privada en `./ssl/`:
    - `ssl/farmasterrae.crt`
    - `ssl/farmasterrae.key`
-3. Asocia al host un rol IAM con permisos sobre el bucket S3 (`S3Config` resuelve credenciales mediante `DefaultCredentialsProvider` en `prod`, sin claves estáticas).
+
+3. Asocia al host un rol IAM con permisos sobre el bucket S3 (`S3Config` utiliza `DefaultCredentialsProvider` en `prod`, sin claves estáticas).
+
 4. Inicia el despliegue:
 
    ```bash
@@ -137,8 +150,8 @@ Ejecuta Spring Boot directamente contra una base de datos H2 en memoria (modo co
    ```
 
 3. Accesos locales:
-   - Aplicación — `http://localhost:8080`
-   - Consola H2 — `http://localhost:8080/h2-console`
+   - **Aplicación** — `http://localhost:8080`
+   - **Consola H2** — `http://localhost:8080/h2-console`
      - JDBC URL: `jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_UPPER=false;DB_CLOSE_ON_EXIT=FALSE`
      - Usuario: `sa` (sin contraseña)
 
@@ -153,7 +166,7 @@ Plantilla de referencia: [`.env.example`](.env.example).
 | `SPRING_PROFILES_ACTIVE` | `prod` | `prod` (`Dockerfile`) | Perfil activo de Spring (`prod` en AWS; fijado a `prodminio` en `docker-compose.help.yml`). |
 | `SECRET_KEY` | `prod`, `prodminio` | `uniqueAndSecret` | Clave de firma para cookies `remember-me` de 7 días (`app.security`). |
 | `DB_NAME` | `prod`, `prodminio` | `farmasterrae` | Nombre de la base de datos MySQL (también define `spring.application.name`). |
-| `DB_HOST` | `prod`, `prodminio` | `localhost` (`prod`) / `db` (`prodminio`) | Host de MySQL (`db` dentro de Docker Compose). |
+| `DB_HOST` | `prod`, `prodminio` | `localhost` / `db` | Host MySQL (`localhost` en `prod`, `db` en `prodminio` / Compose). |
 | `DB_PORT` | `prod`, `prodminio` | `3306` | Puerto de MySQL. |
 | `DB_USERNAME` | `prod`, `prodminio` | `root` | Usuario de MySQL. |
 | `DB_PASSWORD` | `prod`, `prodminio` | *(vacío)* | Contraseña de MySQL (también usada como `MYSQL_ROOT_PASSWORD` en Compose). |
