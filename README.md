@@ -1,73 +1,37 @@
-<div align="center">
+# ![](./docs/mark.svg) FarmasTerrae
 
-# FarmasTerrae
+Server-rendered online pharmacy e-commerce platform built with Java 21, Spring Boot 3.4, Thymeleaf, Alpine.js, MySQL 8, and S3-compatible object storage.
 
-**Full-stack online pharmacy e-commerce platform built with Java 21, Spring Boot 3, Thymeleaf, Alpine.js, MySQL, and S3-compatible object storage.**
-
-[![Java](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://adoptium.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
 [![Maven Build](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml/badge.svg)](https://github.com/juanyaferox/FarmasTerrae/actions/workflows/maven.yml)
 
 **Languages:** **English** · [Español](README.es.md) · [Português](README.pt.md)
+<br />
+**Contents:** [Highlights](#design--implementation-highlights) · [Features](#key-features) · [Stack](#tech-stack) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Configuration](#environment-variables--profiles) · [Routes](#access-control--main-routes) · [Structure](#project-structure) · [Build & CI](#build-logging--ci)
 
-</div>
-
----
-
-## Overview
-
-**FarmasTerrae** is a server-rendered e-commerce web application designed for an online pharmacy. It provides a responsive storefront, category-based catalog browsing, temporary session-backed stock reservations during checkout, customer order/review management, and a full administrative back office for managing products, orders, users, and media uploads.
-
-> **Note on localization:** The application UI and validation messages are currently in Spanish, while project documentation is available in **English** ([README.md](README.md)), **Spanish** ([README.es.md](README.es.md)), and **Portuguese** ([README.pt.md](README.pt.md)).
-
-## Table of Contents
-
-- [Design & Implementation Highlights](#design--implementation-highlights)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-  - [Option 1: Local Full Stack with Docker & MinIO (Recommended)](#option-1-local-full-stack-with-docker--minio-recommended)
-  - [Option 2: Production / AWS Deployment](#option-2-production--aws-deployment)
-  - [Option 3: Local Maven Dev Mode (H2 In-Memory)](#option-3-local-maven-dev-mode-h2-in-memory)
-- [Environment Variables & Profiles](#environment-variables--profiles)
-- [Access Control & Main Routes](#access-control--main-routes)
-- [Project Structure](#project-structure)
-- [Build, Logging & CI](#build-logging--ci)
+> [!NOTE]
+> The application UI and validation messages are currently in Spanish, while repository documentation is maintained in English ([README.md](README.md)), Spanish ([README.es.md](README.es.md)), and Portuguese ([README.pt.md](README.pt.md)).
 
 ---
 
 ## Design & Implementation Highlights
 
-- **Post-Hibernate Liquibase Data Seeding (`LiquibaseRunnerConfig`)**: Excludes default `LiquibaseAutoConfiguration` in `prod` / `prodminio` and triggers `SpringLiquibase` via a `CommandLineRunner` *after* Hibernate creates/updates the schema (`ddl-auto=update`), cleanly seeding initial datasets from `db/changelog/data-only-changelog.yaml`.
-- **Server-Side Image Optimization & Cloud Media Pipeline (`ImageCompressionService`, `S3StorageService`, `ProductMapper`)**: Validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` using bicubic interpolation, flattens transparency onto a white RGB background, encodes 85% JPEG, stores assets in AWS S3 (via IAM instance roles) or MinIO, and automatically resolves 2-hour presigned URLs in MapStruct `@AfterMapping` hooks.
-- **Reusable Dynamic Query Engine (`GenericSpecification`)**: Builds multi-field case-insensitive `LIKE` and type-validated `EQUAL` JPA Criteria predicates across nested entity relationships using automatic `LEFT JOIN` traversal.
-- **Temporary Checkout Stock Reservations (`StockReservationService`)**: Holds session cart inventory for 15 minutes (`stock.reservation.timeout.minutes`) to guard against overselling during checkout and commits real stock deductions on order confirmation.
-- **Privacy-Aware Soft Deletion (`UserService`)**: Preserves historical order integrity when accounts are removed by anonymizing PII (`username`/`email`, clearing phone/address), recording `deletedAt`, filtering records transparently with `@Where(clause = "deletedAt IS NULL")`, and preventing removal of the last administrator.
-- **Audited Global Error Handling (`GlobalExceptionHandler`)**: Combines a servlet `Filter` and `@ControllerAdvice` to correlate unhandled errors with a unique UUID `errorId` plus user identity, client IP (`X-Forwarded-For`), URI, HTTP method, and session metadata.
+- **Post-Hibernate Liquibase Data Seeding** — `LiquibaseRunnerConfig` excludes default `LiquibaseAutoConfiguration` in `prod` and `prodminio`, triggering `SpringLiquibase` from a `CommandLineRunner` *after* Hibernate completes schema synchronization (`ddl-auto=update`) to seed datasets from `db/changelog/data-only-changelog.yaml`.
+- **Server-Side Image Optimization & Cloud Media Pipeline** — `ImageCompressionService` validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` via bicubic interpolation, flattens alpha channels onto white RGB, and encodes 85% JPEG. `S3StorageService` stores assets in AWS S3 (IAM instance role in `prod`) or MinIO (local Docker), and `ProductMapper` resolves 2-hour presigned URLs automatically in `@AfterMapping` hooks.
+- **Composable JPA Specifications** — `GenericSpecification` constructs multi-field case-insensitive `LIKE` and type-validated `EQUAL` Criteria predicates across nested entity paths using automatic `LEFT JOIN` traversal.
+- **Temporary Checkout Stock Reservations** — `StockReservationService` holds session cart quantities for 15 minutes (`stock.reservation.timeout.minutes`) to reduce overselling during checkout and commits real inventory deductions on order confirmation.
+- **Privacy-Aware Soft Deletion** — `UserService` preserves historical order integrity on account removal by anonymizing PII (`username` and `email`, clearing phone and address), recording `deletedAt`, filtering transparently via `@Where(clause = "deletedAt IS NULL")`, and blocking deletion of the final administrator.
+- **Correlated Global Error Auditing** — `GlobalExceptionHandler` pairs a servlet `Filter` with `@ControllerAdvice` to tag unhandled errors with a unique UUID `errorId` alongside user identity, client IP (`X-Forwarded-For`), request URI, HTTP method, and session metadata.
 
 ---
 
 ## Key Features
 
-- **Storefront & Catalog**
-  - Home page featuring randomized highlighted products and quick category navigation.
-  - Organized pharmacy catalog covering medicines, vitamins & supplements, personal care, first aid, skincare & beauty, and baby care.
-  - Paginated product browsing with keyword search, category filtering, and multi-column sorting.
-- **Shopping Cart & Checkout**
-  - Session-backed shopping cart supporting add, increment, decrement, remove, and clear actions with live stock validation.
-  - Streamlined checkout summary with prefilled shipping details, multiple payment options (credit card, PayPal, and bank transfer), and end-to-end order status tracking across customer and admin views.
-- **Authentication & Account Recovery**
-  - Spring Security 6 authentication supporting login by **username or email**, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, and a single concurrent session policy.
-  - Password recovery via Gmail SMTP and authenticated password changes with complexity validation.
-- **Customer Dashboard (`/user/dashboard`)**
-  - Profile management, paginated order history with line-item order details, and verified product reviews limited to purchased items.
-- **Admin Dashboard (`/admin/dashboard`)**
-  - Searchable, sortable, paginated management panels for **Products**, **Orders**, and **Users**, including multipart product image uploads and order status transitions.
-- **Environment-Agnostic Storage**
-  - Seamless switch between **AWS S3** (production IAM role) and **MinIO** (local Docker) without changing application code.
+- **Storefront & Catalog** — Home page with randomized featured products, curated pharmacy categories (medicines, vitamins & supplements, personal care, first aid, skincare & beauty, and baby care), keyword search, category filtering, pagination, and multi-column sorting.
+- **Shopping Cart & Checkout** — Session-backed cart (`SessionCart`) with add, increment, decrement, remove, and clear operations, live stock validation, prefilled shipping details, multiple payment options (credit card, PayPal, bank transfer), and end-to-end order status tracking across customer and admin views.
+- **Authentication & Account Recovery** — Spring Security 6 authentication supporting login by username or email, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, single concurrent session enforcement, Gmail SMTP password recovery, and authenticated password updates with complexity checks.
+- **Customer Dashboard (`/user/dashboard`)** — Profile editing, paginated order history with line-item details, and verified product reviews limited to purchased items.
+- **Admin Dashboard (`/admin/dashboard`)** — Searchable, sortable, paginated management for products, orders, and users, including multipart image uploads and order status updates.
+- **Environment-Agnostic Storage** — Switches cleanly between AWS S3 (IAM instance role) in production and MinIO in local Docker with no code changes.
 
 ---
 
@@ -107,73 +71,54 @@ flowchart LR
 
 ## Getting Started
 
-### Prerequisites
+**Prerequisites:** Docker & Docker Compose (Options 1 and 2), or JDK 21 for direct Maven execution (Option 3; `./mvnw` is bundled).
 
-- **Docker & Docker Compose** (for Option 1 and Option 2)
-- **JDK 21** (only needed for Option 3; Maven is bundled via `./mvnw`)
+### Option 1 — Local Full Stack with Docker & MinIO (Recommended)
 
----
+Starts **MySQL 8.0**, **Spring Boot** (`prodminio` profile), and a local **MinIO** S3-compatible server with automatic bucket initialization (`farmasterrae`).
 
-### Option 1: Local Full Stack with Docker & MinIO (Recommended)
-
-Runs **MySQL 8.0**, **Spring Boot** (`prodminio` profile), and a local **MinIO** S3-compatible server with automatic bucket creation (`farmasterrae`).
-
-1. **Create your `.env` file from [`.env.example`](.env.example):**
+1. Copy [`.env.example`](.env.example) to `.env` and fill in `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD` (`EMAIL` and `PASSWORD` are optional unless testing password recovery emails):
 
    ```bash
    cp .env.example .env
    ```
 
-   For local MinIO mode, the required variables in `.env` are `DB_NAME`, `DB_USERNAME`, and `DB_PASSWORD`. `EMAIL` and `PASSWORD` are optional (only needed to test password recovery emails).
-
-2. **Build and start the stack:**
+2. Build and start the stack:
 
    ```bash
    docker compose -f docker-compose.help.yml up --build
    ```
 
-3. **Access the services:**
-   - **Storefront**: `http://localhost:8080`
-   - **MinIO Console**: `http://localhost:9001` (`minioadmin` / `minioadmin`)
-   - **MySQL**: `localhost:3306`
+3. Open the running services:
+   - Storefront — `http://localhost:8080`
+   - MinIO Console — `http://localhost:9001` (`minioadmin` / `minioadmin`)
+   - MySQL — `localhost:3306`
 
-> Sample profiles, users, products, orders, and reviews are seeded automatically via Liquibase (`src/main/resources/db/changelog/data/`).
+Sample profiles, users, products, orders, and reviews are seeded automatically via Liquibase (`src/main/resources/db/changelog/data/`).
 
----
+### Option 2 — Production / AWS Deployment
 
-### Option 2: Production / AWS Deployment
+Starts **MySQL 8.0**, **Spring Boot** (`prod` profile), and **Nginx** with HTTP-to-HTTPS redirection (ports `80` and `443`).
 
-Runs **MySQL 8.0**, **Spring Boot** (`prod` profile), and **Nginx** with HTTP→HTTPS redirection (ports `80` and `443`).
-
-1. **Configure `.env` from [`.env.example`](.env.example):**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Populate all variables (`SPRING_PROFILES_ACTIVE=prod`, `SECRET_KEY`, `DB_*`, `EMAIL`, `PASSWORD`, `AWS_REGION`, `AWS_BUCKET`).
-
-2. **Provide TLS certificates** in `./ssl/`:
+1. Copy [`.env.example`](.env.example) to `.env` and populate all production variables (`SPRING_PROFILES_ACTIVE=prod`, `SECRET_KEY`, `DB_*`, `EMAIL`, `PASSWORD`, `AWS_REGION`, `AWS_BUCKET`).
+2. Place your TLS certificate and private key in `./ssl/`:
    - `ssl/farmasterrae.crt`
    - `ssl/farmasterrae.key`
-
-   > Replace any development/self-signed certificates with valid CA-issued certificates (e.g. Let's Encrypt) before deploying publicly.
-
-3. **Ensure AWS S3 permissions**: In `prod`, `S3Config` uses `DefaultCredentialsProvider` (EC2/ECS IAM instance role) rather than static access keys.
-
-4. **Start the production stack:**
+3. Attach an IAM role with S3 bucket access to the host (`S3Config` resolves credentials via `DefaultCredentialsProvider` in `prod`, requiring no static AWS keys).
+4. Launch the stack:
 
    ```bash
    docker compose up --build -d
    ```
 
----
+> [!IMPORTANT]
+> Replace any development or self-signed certificates in `./ssl/` with valid CA-issued certificates (such as Let's Encrypt) before exposing the application publicly.
 
-### Option 3: Local Maven Dev Mode (H2 In-Memory)
+### Option 3 — Local Maven Dev Mode (H2 In-Memory)
 
-Runs Spring Boot directly with an in-memory H2 database (MySQL compatibility mode) seeded from `src/main/resources/data.sql`.
+Runs Spring Boot directly against an in-memory H2 database (MySQL compatibility mode) seeded from `src/main/resources/data.sql`.
 
-1. **Create the gitignored secrets file** `src/main/resources/application-secrets.properties` so Spring can resolve the mail and S3 property placeholders on startup:
+1. Create the gitignored file `src/main/resources/application-secrets.properties` to satisfy mail and S3 property placeholders on startup:
 
    ```properties
    spring.mail.username=dev@example.com
@@ -185,28 +130,28 @@ Runs Spring Boot directly with an in-memory H2 database (MySQL compatibility mod
    aws.s3.endpoint=http://localhost:9000
    ```
 
-2. **Run the application:**
+2. Start the application:
 
    ```bash
    ./mvnw spring-boot:run
    ```
 
-3. **Access local tools:**
-   - **Application**: `http://localhost:8080`
-   - **H2 Console**: `http://localhost:8080/h2-console`
+3. Open the local endpoints:
+   - Application — `http://localhost:8080`
+   - H2 Console — `http://localhost:8080/h2-console`
      - JDBC URL: `jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_UPPER=false;DB_CLOSE_ON_EXIT=FALSE`
-     - User: `sa` (empty password)
+     - Username: `sa` (empty password)
 
 ---
 
 ## Environment Variables & Profiles
 
-See [`.env.example`](.env.example) for a ready-to-copy template.
+Reference template: [`.env.example`](.env.example).
 
 | Variable | Profiles | Default | Description |
 | --- | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | `prod` | `prod` (in `Dockerfile`) | Active Spring profile (`prod` for AWS, hardcoded to `prodminio` in `docker-compose.help.yml`). |
-| `SECRET_KEY` | `prod`, `prodminio` | `uniqueAndSecret` | Signing key for 7-day remember-me cookies (`app.security`). |
+| `SPRING_PROFILES_ACTIVE` | `prod` | `prod` (`Dockerfile`) | Active Spring profile (`prod` for AWS; fixed to `prodminio` in `docker-compose.help.yml`). |
+| `SECRET_KEY` | `prod`, `prodminio` | `uniqueAndSecret` | Signing key for 7-day `remember-me` cookies (`app.security`). |
 | `DB_NAME` | `prod`, `prodminio` | `farmasterrae` | MySQL database name (also sets `spring.application.name`). |
 | `DB_HOST` | `prod`, `prodminio` | `localhost` (`prod`) / `db` (`prodminio`) | MySQL host (`db` inside Docker Compose). |
 | `DB_PORT` | `prod`, `prodminio` | `3306` | MySQL port. |
@@ -217,9 +162,9 @@ See [`.env.example`](.env.example) for a ready-to-copy template.
 | `AWS_REGION` | `prod` | `us-east-1` | AWS S3 region (`aws.region`). |
 | `AWS_BUCKET` | `prod` | `farmasterrae` | AWS S3 bucket name (`aws.s3.bucket-name`). |
 
-### Spring Profiles Summary
+### Spring Profiles
 
-| Profile | Database | Object Storage | Schema / Seed | Intended Use |
+| Profile | Database | Object Storage | Schema & Seed | Intended Use |
 | --- | --- | --- | --- | --- |
 | *(default / `dev`)* | H2 in-memory (MySQL mode) | Static keys + optional endpoint (`application-secrets.properties`) | Hibernate `update` + `data.sql` | Fast local Java development |
 | `prodminio` | MySQL 8.0 (`db:3306`) | MinIO (`http://minio:9000` → `http://localhost:9000`) | Hibernate `update` + Liquibase | Local Docker full-stack testing |
@@ -249,6 +194,7 @@ FarmasTerrae/
 ├── Dockerfile                           # Multi-stage Temurin 21 build & runtime image
 ├── docker-compose.yml                   # Production stack (MySQL + App + Nginx TLS)
 ├── docker-compose.help.yml              # Local Docker stack (MySQL + App + MinIO)
+├── docs/mark.svg                        # Brand mark SVG used in documentation
 ├── nginx.conf                           # Nginx HTTP->HTTPS reverse proxy configuration
 ├── pom.xml                              # Maven dependencies & MapStruct/Lombok compiler config
 ├── ssl/                                 # TLS certificate & key mounted by Nginx
@@ -291,9 +237,9 @@ FarmasTerrae/
 
 ### Logging
 
-Configured via `src/main/resources/logback.xml`:
+Configured in `src/main/resources/logback.xml`:
 
-- **Console (`STDOUT`)**: Formatted `INFO+` logs without full stack traces.
+- **Console (`STDOUT`)** — Formatted `INFO+` entries without full stack traces.
 - **Rolling log files** under `logs/` (gitignored):
   - `logs/info.log` — daily rotation, 30-day retention
   - `logs/warn.log` — daily rotation, 30-day retention
@@ -301,4 +247,4 @@ Configured via `src/main/resources/logback.xml`:
 
 ### Continuous Integration
 
-Every push and pull request targeting `master` triggers [`.github/workflows/maven.yml`](.github/workflows/maven.yml), compiling and packaging the project with Temurin JDK 21 and UTF-8 encoding.
+Every push and pull request targeting `master` runs [`.github/workflows/maven.yml`](.github/workflows/maven.yml), compiling and packaging the artifact with Temurin JDK 21 and UTF-8 encoding.
