@@ -1,10 +1,65 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<footer th:fragment="footer" class="bg-green-100 shadow-md w-full py-4">
-    <div class="container mx-auto px-4 text-center">
-        <p class="text-green-800 text-sm">
-            © 2024 Farmasterrae. Proyecto realizado por Juan Iago Martínez Correia.
-        </p>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<footer th:fragment="footer" class="ft-footer">
+    <div class="ft-container ft-footer__main">
+        <div class="ft-footer__grid">
+            <div>
+                <a th:href="@{/}" class="ft-footer__brand" aria-label="FarmasTerrae — Inicio">
+                    <span class="ft-brand__mark" aria-hidden="true">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 4v16M4 12h16" stroke="#2ecea0" stroke-width="2.8" stroke-linecap="round"/>
+                            <circle cx="18" cy="6" r="2.2" fill="#ffffff"/>
+                        </svg>
+                    </span>
+                    Farmas<span>Terrae</span>
+                </a>
+                <p class="ft-footer__desc">
+                    Tu farmacia online: medicamentos, vitaminas y cuidado personal en un solo lugar.
+                </p>
+            </div>
+
+            <div>
+                <h2 class="ft-footer__heading">Categorías</h2>
+                <ul class="ft-footer__list">
+                    <li><a th:href="@{/products(category='MEDICINE')}" class="ft-footer__link">Medicamentos</a></li>
+                    <li><a th:href="@{/products(category='VITAMIN')}" class="ft-footer__link">Vitaminas y Suplementos</a></li>
+                    <li><a th:href="@{/products(category='CARE')}" class="ft-footer__link">Cuidado Personal</a></li>
+                    <li><a th:href="@{/products(category='FIRST_AID')}" class="ft-footer__link">Primeros Auxilios</a></li>
+                    <li><a th:href="@{/products(category='BEAUTY')}" class="ft-footer__link">Belleza y Cuidado de la Piel</a></li>
+                    <li><a th:href="@{/products(category='BABY')}" class="ft-footer__link">Productos para Bebés</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h2 class="ft-footer__heading">Cuenta y Compras</h2>
+                <ul class="ft-footer__list">
+                    <li><a th:href="@{/auth}" class="ft-footer__link">Iniciar sesión</a></li>
+                    <li><a th:href="@{/auth/register}" class="ft-footer__link">Registrarse</a></li>
+                    <li><a th:href="@{/user/dashboard}" class="ft-footer__link">Panel de control</a></li>
+                    <li><a th:href="@{/user/dashboard/orders}" class="ft-footer__link">Mis pedidos</a></li>
+                    <li><a th:href="@{/cart}" class="ft-footer__link">Carrito</a></li>
+                    <li><a th:href="@{/order}" class="ft-footer__link">Finalizar pedido</a></li>
+                </ul>
+            </div>
+
+            <div>
+                <h2 class="ft-footer__heading">FarmasTerrae</h2>
+                <ul class="ft-footer__list">
+                    <li><a th:href="@{/}" class="ft-footer__link">Inicio</a></li>
+                    <li><a th:href="@{/products/categories}" class="ft-footer__link">Explorar categorías</a></li>
+                    <li><a th:href="@{/products}" class="ft-footer__link">Todos los productos</a></li>
+                    <li sec:authorize="hasRole('ROLE_ADMIN')">
+                        <a th:href="@{/admin/dashboard}" class="ft-footer__link">Panel de administración</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="ft-footer__bottom">
+        <div class="ft-container ft-footer__bottom-inner">
+            <span>© 2024 Farmasterrae. Proyecto realizado por Juan Iago Martínez Correia.</span>
+        </div>
     </div>
 </footer>
 </html>

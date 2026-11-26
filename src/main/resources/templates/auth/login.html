@@ -1,55 +1,64 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Iniciar Sesión', '/dist/output.css')}"></head>
-<body class="bg-white min-h-screen flex flex-col">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('Iniciar sesión — FarmasTerrae', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Contenido Principal -->
-<main class="flex-grow flex items-center justify-center px-4 py-8">
-    <div class="w-full max-w-md bg-white rounded-md shadow-md p-8 space-y-6">
-        <!-- Título -->
-        <h2 class="text-3xl font-bold text-green-800 text-center">
-            Iniciar Sesión
-        </h2>
-
-        <!-- Formulario -->
-        <form th:action="@{/auth}" method="post" class="space-y-6">
-            <div>
-                <label for="username" class="block text-gray-700 font-medium mb-1">Usuario</label>
-                <input
-                        id="username" name="username" type="text"
-                        class="block w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                        placeholder="Usuario o Email">
+<main id="main-content" class="ft-auth-shell">
+    <div class="ft-container">
+        <section class="ft-auth-card" aria-labelledby="login-title">
+            <div class="ft-auth-card__head">
+                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Acceso seguro</span>
+                <h1 id="login-title" class="ft-auth-card__title">Iniciar Sesión</h1>
+                <p class="ft-auth-card__sub">Accede a tu cuenta para consultar tus pedidos, gestionar tu carrito y actualizar tus datos.</p>
             </div>
-            <div>
-                <label for="password" class="block text-gray-700 font-medium mb-1">Contraseña</label>
-                <input
-                        id="password" name="password" type="password"
-                        class="block w-full rounded-md border-0 ring-1 ring-gray-200 px-3 py-2 focus:ring-2 focus:ring-green-500 transition"
-                        placeholder="••••••••">
+
+            <!-- Spring Security formLogin: POST /auth (username, password, remember-me) -->
+            <form th:action="@{/auth}" method="post" class="ft-form-stack">
+                <div th:if="${param.error}" class="ft-alert ft-alert--danger" role="alert">
+                    <span>Usuario o contraseña incorrectos.</span>
+                </div>
+                <div th:if="${param.logout}" class="ft-alert ft-alert--success" role="status">
+                    <span>Has cerrado sesión correctamente.</span>
+                </div>
+                <div th:if="${param.expired}" class="ft-alert ft-alert--warning" role="status">
+                    <span>Tu sesión ha expirado por iniciar sesión en otro dispositivo.</span>
+                </div>
+
+                <div class="ft-alert ft-alert--info">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="4" y="11" width="16" height="10" rx="2"></rect>
+                        <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+                    </svg>
+                    <span>Solo se mantiene una sesión activa por cuenta: al iniciar sesión en otro dispositivo, la sesión anterior se cerrará automáticamente.</span>
+                </div>
+
+                <div class="ft-field">
+                    <label for="username" class="ft-label">Usuario</label>
+                    <input id="username" name="username" type="text" class="ft-input" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Usuario o Email">
+                </div>
+
+                <div class="ft-field">
+                    <label for="password" class="ft-label">Contraseña</label>
+                    <input id="password" name="password" type="password" class="ft-input" autocomplete="current-password" required placeholder="••••••••">
+                </div>
+
+                <label for="remember-me" class="ft-checkbox">
+                    <input type="checkbox" id="remember-me" name="remember-me">
+                    Mantener sesión iniciada durante 7 días
+                </label>
+
+                <button type="submit" class="ft-btn ft-btn--mint ft-btn--full">Entrar</button>
+            </form>
+
+            <div class="ft-auth-card__links">
+                <a th:href="@{/auth/forgotPassword}" class="ft-link">¿Olvidaste tu contraseña?</a>
+                <a th:href="@{/auth/register}" class="ft-link">Crear cuenta</a>
             </div>
-            <button
-                    type="submit"
-                    class="w-full bg-[#a4fcc4] text-gray-800 px-6 py-3 rounded-md uppercase tracking-wide font-semibold hover:bg-[#8ce6a8] transition-colors duration-300">
-                Entrar
-            </button>
-        </form>
-
-        <!-- Enlaces Auxiliares -->
-        <div class="flex justify-between text-sm text-green-700">
-            <a th:href="@{/auth/forgotPassword}" class="hover:text-green-800 hover:underline">¿Olvidaste tu
-                contraseña?</a>
-            <a th:href="@{/auth/register}" class="hover:text-green-800 hover:underline">Crear cuenta</a>
-        </div>
-
-        <!-- Mensajes de Error / Logout -->
-        <p th:if="${param.error}" class="text-red-500 text-center">Usuario o contraseña incorrectos</p>
-        <p th:if="${param.logout}" class="text-green-700 text-center">Sesión cerrada correctamente</p>
+        </section>
     </div>
 </main>
 
-<!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

@@ -1,104 +1,224 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Detalles del Producto', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('FarmasTerrae - Detalles del Producto', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
-<!-- Main Content: Product Details -->
-<main class="flex-grow py-20 bg-green-50">
-    <div class="container mx-auto px-4">
-        <!-- Notification for Added to Cart -->
-        <div th:if="${added}" class="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
-            ¡Producto añadido al carrito con éxito!
-        </div>
-        <div class="mb-6 p-4 bg-red-100 text-red-800 rounded-md text-center" th:if="${param.error}">
-            <p th:text="${param.error}">Error al añadir el producto al carrito.</p>
-        </div>
-        <!-- Product Details Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white rounded-md shadow-md p-8">
-            <!-- Product Image -->
-            <div class="flex justify-center">
-                <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
-                     alt="Imagen del producto"
-                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
-                <img th:unless="${product.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
-                     alt="Imagen del producto"
-                     class="w-full max-w-md h-auto object-cover rounded-md shadow-sm"/>
-            </div>
-            <!-- Product Information -->
-            <div class="space-y-6">
-                <h1 class="text-3xl font-bold text-green-800" th:text="${product.name}"></h1>
-                <p class="text-xl font-semibold text-gray-800" th:text="${product.price + ' €'}"></p>
-                <p class="text-gray-600" th:text="${product.description}"></p>
-                <div class="text-sm font-medium text-gray-700" th:if="${product.stock <= 0}">
-                    <p>Producto agotado</p>
+
+<!-- Degradado compartido para la media estrella de las valoraciones -->
+<svg class="pg-svg-defs" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="pg-star-half">
+            <stop offset="50%" stop-color="currentColor"/>
+            <stop offset="50%" stop-color="transparent"/>
+        </linearGradient>
+    </defs>
+</svg>
+
+<main id="main-content">
+    <!-- Ficha principal: ProductDTO { name, description, imagePath, price, stock, reference, category } -->
+    <section class="ft-section ft-section--bone pg-pdp-top" aria-labelledby="pg-title">
+        <div class="ft-container">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/products/categories}">Categorías</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/products}">Productos</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page" th:text="${product.name}">Producto</span>
+            </nav>
+
+            <div class="ft-pdp-grid">
+                <!-- Columna izquierda: imagen del producto (imagePath o placeholder.svg) -->
+                <div class="ft-pdp-stage">
+                    <div class="ft-prod-card__badges">
+                        <span></span>
+                        <span th:if="${product.stock != null and product.stock > 0}" class="ft-status-pill">
+                            <span class="ft-dot" aria-hidden="true"></span>En stock
+                        </span>
+                        <span th:unless="${product.stock != null and product.stock > 0}"
+                              class="ft-status-pill ft-status-pill--danger">Producto agotado</span>
+                    </div>
+                    <img th:src="@{${product.imagePath != null and !#strings.isEmpty(product.imagePath) ? product.imagePath : '/assets/img/placeholder.svg'}}"
+                         th:alt="${product.name}" alt="Imagen del producto">
                 </div>
-                <p class="text-sm text-gray-500">
-                    Referencia: <span th:text="${product.reference}"></span>
-                </p>
-                <!-- Add to Cart Button -->
-                <div class="mt-6">
-                    <a th:href="@{/cart/add/{reference}(reference=${product.reference})}"
-                       th:classappend="${product.stock == 0} ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-100 hover:bg-green-300'"
-                       class="inline-block text-green-800 px-8 py-4 rounded-md font-semibold transition-colors duration-300"
-                       th:attr="disabled=${product.stock == 0}">
-                        Añadir al Carrito
-                    </a>
-                </div>
-            </div>
-        </div>
-        <!-- Reviews Section -->
-        <div class="mt-12 bg-white rounded-md shadow-md p-8">
-            <h2 class="text-2xl font-bold text-green-800 mb-6">Reseñas del Producto</h2>
-            <div th:if="${reviews.isEmpty()}" class="text-gray-600 text-center">
-                No hay reseñas para este producto todavía.
-            </div>
-            <div th:unless="${reviews.isEmpty()}" class="space-y-6">
-                <div th:each="review : ${reviews}" class="border-t border-gray-200 pt-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-lg font-semibold text-gray-800" th:text="${review.title}"></h3>
-                        <div class="flex items-center">
-                            <!-- Calculamos las estrellas completas y medias estrellas -->
-                            <th:block
-                                    th:with="fullStars=${T(java.lang.Math).floor(review.scoring/2)}, hasHalfStar=${review.scoring % 2 != 0}">
-                                <!-- Estrellas completas -->
-                                <svg th:each="i : ${#numbers.sequence(1, fullStars)}" xmlns="http://www.w3.org/2000/svg"
-                                     class="h-5 w-5 text-yellow-500 fill-current" viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
-                                </svg>
 
-                                <!-- Media estrella si es necesario -->
-                                <svg th:if="${hasHalfStar}" xmlns="http://www.w3.org/2000/svg"
-                                     class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20">
-                                    <defs>
-                                        <linearGradient id="halfStar" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="50%" stop-color="#FBBF24"/>
-                                            <stop offset="50%" stop-color="#E5E7EB"/>
-                                        </linearGradient>
-                                    </defs>
-                                    <path fill="url(#halfStar)"
-                                          d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
-                                </svg>
+                <!-- Columna derecha: datos del producto -->
+                <div class="pg-pdp-info">
+                    <!-- Notificación: producto añadido al carrito (?added=true) -->
+                    <div th:if="${added}" class="ft-alert ft-alert--success" role="status">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>¡Producto añadido al carrito con éxito!</span>
+                    </div>
+                    <!-- Error al añadir (?error=...) -->
+                    <div th:if="${param.error != null}" class="ft-alert ft-alert--danger" role="alert">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <span th:text="${param.error[0]}">Error al añadir el producto al carrito.</span>
+                    </div>
 
-                                <!-- Estrellas vacías -->
-                                <svg th:each="i : ${#numbers.sequence(1, 5 - fullStars - (hasHalfStar ? 1 : 0))}"
-                                     xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300 fill-current"
-                                     viewBox="0 0 20 20">
-                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.799-2.034c-.784-.57-.381-1.81.587-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z"/>
-                                </svg>
+                    <div>
+                        <div class="pg-pdp-codes">
+                            <span class="ft-code-tag" th:text="${'REF ' + product.reference}">REF</span>
+                            <a th:if="${product.category != null}"
+                               th:href="@{/products(category=${product.category.name()})}"
+                               class="ft-eyebrow" th:text="${product.category.value}">Categoría</a>
+                        </div>
+                        <h1 id="pg-title" class="pg-pdp-title" th:text="${product.name}">Producto</h1>
+                    </div>
 
-                                <!-- Puntuación numérica -->
-                                <span class="ml-1 text-sm text-gray-600" th:text="${review.scoring + '/10'}"></span>
+                    <!-- Valoración media (solo si hay reseñas) -->
+                    <div th:if="${!#lists.isEmpty(reviews)}" class="pg-rating-inline">
+                        <span class="ft-stars" aria-hidden="true">
+                            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M12 2.6l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.41l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.6z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+                        </span>
+                        <a href="#resenas" class="ft-link">
+                            <span class="ft-tabular"
+                                  th:text="${#numbers.formatDecimal(#aggregates.avg(reviews.![scoring]), 1, 'POINT', 1, 'COMMA') + '/10'}">0/10</span>
+                            ·
+                            <span class="ft-tabular" th:text="${#lists.size(reviews)}">0</span>
+                            <span th:text="${#lists.size(reviews) == 1 ? 'reseña' : 'reseñas'}">reseñas</span>
+                        </a>
+                    </div>
+
+                    <div class="pg-price-block">
+                        <div class="ft-price-pdp ft-tabular"
+                             th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA') + ' €' : ''}">0,00 €</div>
+                        <p class="pg-price-note">
+                            <th:block th:if="${product.stock != null and product.stock > 0}">
+                                Stock disponible: <strong class="ft-tabular" th:text="${product.stock}">0</strong> unidades ·
                             </th:block>
+                            Envío gratis en pedidos superiores a <span class="ft-tabular">50 €</span>
+                        </p>
+                    </div>
+
+                    <p class="pg-pdp-desc" th:if="${product.description != null and !#strings.isEmpty(product.description)}"
+                       th:text="${product.description}">Descripción del producto.</p>
+
+                    <!-- Acción: GET /cart/add/{reference} (CartController) -->
+                    <div class="pg-buy__actions">
+                        <a th:if="${product.stock != null and product.stock > 0}"
+                           th:href="@{/cart/add/{reference}(reference=${product.reference})}"
+                           class="ft-btn ft-btn--mint">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <circle cx="9" cy="21" r="1"></circle>
+                                <circle cx="20" cy="21" r="1"></circle>
+                                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                            </svg>
+                            Añadir al carrito
+                        </a>
+                        <button th:unless="${product.stock != null and product.stock > 0}"
+                                type="button" class="ft-btn ft-btn--subtle" disabled>Producto agotado</button>
+                        <a th:href="@{/products}" class="ft-btn ft-btn--ghost">Volver al catálogo</a>
+                    </div>
+
+                    <div class="ft-alert ft-alert--info" role="note">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Al añadir un producto al carrito se reserva temporalmente su stock mientras completas tu pedido.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Información del producto (solo campos reales de ProductDTO) -->
+    <section class="ft-section" aria-labelledby="pg-sheet-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow">Detalles</span>
+                    <h2 id="pg-sheet-title" class="ft-section-head__title">Información del producto</h2>
+                </div>
+            </div>
+
+            <div class="ft-feature-rows">
+                <div class="ft-feature-row">
+                    <span class="ft-feature-row__key">Referencia</span>
+                    <span class="ft-feature-row__val ft-mono" th:text="${product.reference}">REF</span>
+                </div>
+                <div class="ft-feature-row" th:if="${product.category != null}">
+                    <span class="ft-feature-row__key">Categoría</span>
+                    <span class="ft-feature-row__val">
+                        <a th:href="@{/products(category=${product.category.name()})}" class="ft-link"
+                           th:text="${product.category.value}">Categoría</a>
+                    </span>
+                </div>
+                <div class="ft-feature-row">
+                    <span class="ft-feature-row__key">Precio</span>
+                    <span class="ft-feature-row__val ft-tabular"
+                          th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA') + ' €' : ''}">0,00 €</span>
+                </div>
+                <div class="ft-feature-row">
+                    <span class="ft-feature-row__key">Disponibilidad</span>
+                    <span class="ft-feature-row__val ft-tabular"
+                          th:text="${product.stock != null and product.stock > 0 ? product.stock + ' unidades' : 'Producto agotado'}">En stock</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reseñas (ReviewDTO: title, content, scoring [1..10]) -->
+    <section id="resenas" class="ft-section ft-section--bone" aria-labelledby="pg-reviews-title">
+        <div class="ft-container">
+            <div class="ft-section-head">
+                <div>
+                    <span class="ft-eyebrow">Opiniones</span>
+                    <h2 id="pg-reviews-title" class="ft-section-head__title">Reseñas del producto</h2>
+                </div>
+                <a th:href="@{/user/dashboard/reviews}" class="ft-section-head__link">Gestionar mis reseñas <span aria-hidden="true">→</span></a>
+            </div>
+
+            <!-- Resumen de valoración media (solo con reseñas: evita división por cero) -->
+            <div th:if="${!#lists.isEmpty(reviews)}" class="pg-rating-box">
+                <div>
+                    <div class="pg-rating-box__score ft-tabular">
+                        <span th:text="${#numbers.formatDecimal(#aggregates.avg(reviews.![scoring]), 1, 'POINT', 1, 'COMMA')}">0</span><small>/10</small>
+                    </div>
+                    <p class="pg-rating-box__meta">
+                        Valoración media basada en <span class="ft-tabular" th:text="${#lists.size(reviews)}">0</span>
+                        <span th:text="${#lists.size(reviews) == 1 ? 'reseña' : 'reseñas'}">reseñas</span>
+                    </p>
+                </div>
+                <a th:href="@{/user/dashboard/reviews}" class="ft-btn ft-btn--ghost ft-btn--sm">Escribir una reseña</a>
+            </div>
+
+            <!-- Estado vacío -->
+            <div th:if="${#lists.isEmpty(reviews)}" class="ft-alert ft-alert--info" role="status">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>No hay reseñas para este producto todavía.</span>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(reviews)}" class="ft-review-list">
+                <article th:each="review : ${reviews}" class="ft-review-card"
+                         th:with="fullStars=${review.scoring / 2}, hasHalfStar=${review.scoring % 2 == 1}">
+                    <div class="pg-review-head">
+                        <h3 class="pg-review-title" th:text="${review.title}">Título</h3>
+                        <div class="pg-review-score">
+                            <!-- 5 estrellas: llenas = scoring/2, media si scoring es impar, resto vacías -->
+                            <span class="ft-stars" role="img"
+                                  th:attr="aria-label=${'Puntuación: ' + review.scoring + ' de 10'}">
+                                <svg th:each="i : ${#numbers.sequence(1, 5)}" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6l2.9 5.88 6.49.94-4.7 4.58 1.11 6.46L12 17.41l-5.8 3.05 1.11-6.46-4.7-4.58 6.49-.94L12 2.6z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" th:attr="fill=${i <= fullStars ? 'currentColor' : (hasHalfStar and i == fullStars + 1 ? 'url(#pg-star-half)' : 'none')}"/></svg>
+                            </span>
+                            <span class="ft-tabular" th:text="${review.scoring + '/10'}">0/10</span>
                         </div>
                     </div>
-                    <p class="text-gray-600" th:text="${review.content}"></p>
-                </div>
+                    <p class="pg-review-body" th:text="${review.content}">Contenido de la reseña.</p>
+                </article>
             </div>
         </div>
-    </div>
+    </section>
 </main>
-<!-- Footer -->
+
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

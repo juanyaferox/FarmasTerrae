@@ -1,80 +1,169 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Detalles de Pedido', '/dist/output.css')}"></head>
-<body class="bg-white">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('FarmasTerrae — Detalles del Pedido', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Sección Principal: Detalles del Pedido -->
-<section class="py-20">
-    <div class="container mx-auto px-4">
-        <!-- Título -->
-        <h1 class="text-4xl font-bold text-green-800 mb-12 text-center">Detalles del Pedido</h1>
-        <div th:if="${success}" class="mb-6 p-4 bg-green-100 text-green-800 rounded-md text-center">
-            ¡Pedido realizado con éxito!
-        </div>
-        <!-- Información General del Pedido -->
-        <div class="bg-green-50 shadow-sm rounded-md p-6 mb-8">
-            <h2 class="text-2xl font-semibold text-green-700 mb-6">Información del Pedido</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <p class="text-gray-600"><span class="font-semibold text-green-700">Precio Total:</span> <span
-                            th:text="${order.totalPrice} + ' €'"></span></p>
-                    <p class="text-gray-600">
-                        <span class="font-semibold text-green-700">Nombre de Envío:</span>
-                        <span th:text="${order.name}"></span>
-                    </p>
-                    <p class="text-gray-600">
-                        <span class="font-semibold text-green-700">Dirección de Envío:</span>
-                        <span th:text="${order.address}"></span>
-                    </p>
-                    <p class="text-gray-600"><span class="font-semibold text-green-700">Estado:</span> <span
-                            th:text="${order.status}"></span></p>
-                    <p class="text-gray-600"><span class="font-semibold text-green-700">Método de Pago:</span> <span
-                            th:text="${order.paymentMethod}"></span></p>
-                </div>
-                <div>
-                    <p class="text-gray-600"><span class="font-semibold text-green-700">Creado el:</span> <span
-                            th:text="${order.createdAt}"></span></p>
-                    <p class="text-gray-600"><span class="font-semibold text-green-700">Actualizado el:</span> <span
-                            th:text="${order.updatedAt}"></span></p>
-                </div>
+<!--
+    Modelo: order (OrderDetailsDTO { products: Map<ProductDTO, Integer>, totalPrice, status (texto), createdAt,
+    updatedAt, paymentMethod (texto), name, address }) y success (boolean). OrderDetailsDTO no expone el id del pedido.
+    status llega ya traducido (SaleStatus.value): Pendiente / Enviado / Completado / Cancelado.
+-->
+<main id="main-content"
+      th:with="statusKey=${order.status == 'Pendiente' ? 'pending' : (order.status == 'Enviado' ? 'shipped' : (order.status == 'Completado' ? 'completed' : (order.status == 'Cancelado' ? 'cancelled' : '')))},
+               hasProducts=${order.products != null and !#maps.isEmpty(order.products)},
+               productCount=${order.products != null ? #maps.size(order.products) : 0},
+               unitCount=${order.products != null and !#maps.isEmpty(order.products) ? #aggregates.sum(order.products.values()) : 0}">
+    <section class="ft-page-band ft-page-band--bone">
+        <div class="ft-container">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/user/dashboard}">Panel de control</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/user/dashboard/orders}">Mis pedidos</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Detalles del pedido</span>
+            </nav>
+            <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Detalle del pedido</span>
+            <div class="ud-title-row">
+                <h1 class="ft-page-band__title">Detalles del Pedido</h1>
+                <span class="ft-status-pill"
+                      th:classappend="${statusKey != '' ? 'ft-status-pill--' + statusKey : ''}"
+                      th:text="${order.status != null ? order.status : 'Sin estado'}">Sin estado</span>
             </div>
+            <p class="ft-page-band__sub">
+                <th:block th:if="${order.createdAt != null}">Realizado el <span class="ft-tabular" th:text="${order.createdAt}"></span> · </th:block>
+                <span class="ft-tabular" th:text="${productCount}">0</span> <th:block th:text="${productCount == 1 ? 'producto' : 'productos'}">productos</th:block>
+                · <span class="ft-tabular" th:text="${unitCount}">0</span> <th:block th:text="${unitCount == 1 ? 'unidad' : 'unidades'}">unidades</th:block>
+            </p>
         </div>
+    </section>
 
-        <!-- Lista de Productos -->
-        <div class="bg-white shadow-sm rounded-md p-6">
-            <h2 class="text-2xl font-semibold text-green-700 mb-6">Productos</h2>
-            <div class="space-y-6">
-                <div th:each="entry : ${order.products}"
-                     class="flex flex-col md:flex-row items-center gap-6 border-b border-gray-200 pb-6 last:border-b-0">
-                    <!-- Imagen del Producto -->
-                    <div class="w-full md:w-32 h-32 flex-shrink-0">
-                        <img th:if="${entry.key.imagePath != null}" th:src="@{${entry.key.imagePath}}"
-                             alt="Imagen del producto"
-                             class="border border-gray-200 h-full flex items-center justify-center rounded-md"/>
-                        <img th:unless="${entry.key.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
-                             alt="Imagen del producto"
-                             class="border border-gray-200 h-full flex items-center justify-center rounded-md"/>
-                    </div>
-                    <!-- Detalles del Producto -->
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-green-700" th:text="${entry.key.name}"></h3>
-                        <p class="text-gray-600 mb-2" th:text="${entry.key.description}"></p>
-                        <p class="text-gray-600"><span class="font-semibold text-green-700">Precio Unitario:</span>
-                            <span th:text="${entry.key.price} + ' €'"></span></p>
-                        <p class="text-gray-600"><span class="font-semibold text-green-700">Cantidad:</span> <span
-                                th:text="${entry.value}"></span></p>
-                        <p class="text-gray-600"><span class="font-semibold text-green-700">Referencia:</span> <span
-                                th:text="${entry.key.reference}"></span></p>
+    <section class="ft-section">
+        <div class="ft-container">
+            <div th:if="${success}" class="ft-alert ft-alert--success" role="status" style="margin-bottom: 20px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+                <span>¡Pedido realizado con éxito!</span>
+            </div>
+
+            <!-- Información general del pedido -->
+            <section class="ft-panel" aria-labelledby="order-info-title">
+                <div class="ft-panel__head">
+                    <div>
+                        <span class="ft-eyebrow">Resumen</span>
+                        <h2 id="order-info-title" class="ft-panel__title">Información del pedido</h2>
                     </div>
                 </div>
+                <div class="ft-kv-grid">
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Precio total</span>
+                        <span class="ft-kv-item__val"><span class="ft-tabular"
+                              th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</span></span>
+                    </div>
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Estado</span>
+                        <span class="ft-kv-item__val">
+                            <span class="ft-status-pill"
+                                  th:classappend="${statusKey != '' ? 'ft-status-pill--' + statusKey : ''}"
+                                  th:text="${order.status != null ? order.status : 'Sin estado'}">Sin estado</span>
+                        </span>
+                    </div>
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Nombre de envío</span>
+                        <span class="ft-kv-item__val" th:text="${order.name != null ? order.name : '—'}">—</span>
+                    </div>
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Método de pago</span>
+                        <span class="ft-kv-item__val" th:text="${order.paymentMethod != null ? order.paymentMethod : '—'}">—</span>
+                    </div>
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Creado el</span>
+                        <span class="ft-kv-item__val ft-tabular" th:text="${order.createdAt != null ? order.createdAt : '—'}">—</span>
+                    </div>
+                    <div class="ft-kv-item">
+                        <span class="ft-kv-item__label">Actualizado el</span>
+                        <span class="ft-kv-item__val ft-tabular" th:text="${order.updatedAt != null ? order.updatedAt : '—'}">—</span>
+                    </div>
+                    <div class="ft-kv-item ud-kv-full">
+                        <span class="ft-kv-item__label">Dirección de envío</span>
+                        <span class="ft-kv-item__val" th:text="${order.address != null ? order.address : '—'}">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Lista de productos -->
+            <section class="ft-panel ud-panel-gap" aria-labelledby="order-products-title">
+                <div class="ft-panel__head">
+                    <div>
+                        <span class="ft-eyebrow">Artículos</span>
+                        <h2 id="order-products-title" class="ft-panel__title">Productos</h2>
+                    </div>
+                    <span class="ft-hint ft-tabular"
+                          th:text="${productCount + (productCount == 1 ? ' producto' : ' productos') + ' · ' + unitCount + (unitCount == 1 ? ' unidad' : ' unidades')}">0 productos · 0 unidades</span>
+                </div>
+
+                <p th:unless="${hasProducts}" class="ud-modal-text">Este pedido no contiene productos.</p>
+
+                <ul th:if="${hasProducts}" class="ud-list-reset">
+                    <li th:each="entry : ${order.products}" class="ft-order-item">
+                        <img th:src="${#strings.isEmpty(entry.key.imagePath)} ? @{/assets/img/placeholder.svg} : @{${entry.key.imagePath}}"
+                             th:alt="${!#strings.isEmpty(entry.key.name) ? entry.key.name : 'Imagen del producto'}"
+                             class="ft-order-item__img" width="76" height="76" loading="lazy">
+                        <div class="ud-order-item__body">
+                            <a th:if="${!#strings.isEmpty(entry.key.reference)}"
+                               th:href="@{/products/{ref}(ref=${entry.key.reference})}"
+                               class="ud-order-item__name" th:text="${entry.key.name}">Producto</a>
+                            <span th:if="${#strings.isEmpty(entry.key.reference)}"
+                                  class="ud-order-item__name" th:text="${entry.key.name}">Producto</span>
+                            <div th:if="${!#strings.isEmpty(entry.key.reference)}">
+                                <span class="ft-code-tag" th:text="${'REF ' + entry.key.reference}">REF</span>
+                            </div>
+                            <p th:if="${!#strings.isEmpty(entry.key.description)}"
+                               class="ud-order-item__desc" th:text="${entry.key.description}"></p>
+                        </div>
+                        <dl class="ud-order-item__nums">
+                            <div>
+                                <dt>Precio unit.</dt>
+                                <dd class="ft-tabular"
+                                    th:text="${entry.key.price != null ? #numbers.formatDecimal(entry.key.price, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
+                            </div>
+                            <div>
+                                <dt>Cantidad</dt>
+                                <dd class="ft-tabular" th:text="${entry.value}">0</dd>
+                            </div>
+                            <div>
+                                <dt>Subtotal</dt>
+                                <dd class="ft-tabular"
+                                    th:text="${entry.key.price != null and entry.value != null ? #numbers.formatDecimal(entry.key.price * entry.value, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
+                            </div>
+                        </dl>
+                    </li>
+                </ul>
+
+                <div class="ud-totals">
+                    <div class="ft-summary-row ft-summary-row--total">
+                        <span>Total</span>
+                        <span class="ft-price-now ft-tabular"
+                              th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="ud-actions-bar">
+                <a th:href="@{/user/dashboard/orders}" class="ft-btn ft-btn--ghost">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+                    Volver a mis pedidos
+                </a>
+                <a th:href="@{/user/dashboard/reviews}" class="ft-btn ft-btn--mint">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+                    Escribir reseña
+                </a>
             </div>
         </div>
-    </div>
-</section>
+    </section>
+</main>
 
-<!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

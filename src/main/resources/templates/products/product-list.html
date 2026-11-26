@@ -1,42 +1,104 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae - Productos', '/dist/output.css')}"></head>
-<body class="bg-gray-50 min-h-screen flex flex-col">
-<!-- Header -->
+<head th:replace="~{fragments/head :: head('FarmasTerrae - Productos', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<!-- Sección Principal: Listado de Productos -->
-<main class="bg-green-50 flex-grow py-20">
-    <div class="container mx-auto px-4">
-        <h1 class="text-4xl font-bold text-green-800 text-center mb-12" th:text="${text}"></h1>
-
-        <div th:replace="~{fragments/search :: search('/products')}"></div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 pt-10">
-            <div th:each="product : ${products.content}"
-                 class="bg-white rounded-md shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
-                <img th:if="${product.imagePath != null}" th:src="@{${product.imagePath}}"
-                     alt="Imagen del producto"
-                     class="w-full h-48 object-cover"/>
-                <img th:unless="${product.imagePath != null}" th:src="@{/assets/img/placeholder.svg}"
-                     alt="Imagen del producto"
-                     class="w-full h-48 object-cover"/>
-                <div class="p-6">
-                    <h2 class="text-xl font-semibold text-green-700 mb-2" th:text="${product.name}"></h2>
-                    <p class="text-gray-600 mb-4" th:text="${product.price + ' €'}"></p>
-                    <a th:href="@{/products/{reference}(reference=${product.reference})}"
-                       class="inline-block bg-green-100 text-green-800 px-4 py-2 rounded-md hover:bg-green-200 transition-colors duration-300">
-                        Ver Detalles
-                    </a>
-                </div>
-            </div>
+<main id="main-content">
+    <!-- Cabecera de página (Bone) — título dinámico desde ProductsController ("text") -->
+    <section class="ft-page-band ft-page-band--bone" aria-labelledby="pg-title">
+        <div class="ft-container">
+            <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
+                <a th:href="@{/}">Inicio</a>
+                <span aria-hidden="true">/</span>
+                <a th:href="@{/products/categories}">Categorías</a>
+                <span aria-hidden="true">/</span>
+                <span aria-current="page">Productos</span>
+            </nav>
+            <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Catálogo</span>
+            <h1 id="pg-title" class="ft-page-band__title" th:text="${text}">Todos los Productos</h1>
+            <p class="ft-page-band__sub">
+                Filtra por categoría o busca por texto. Envío gratis en pedidos superiores a <span class="ft-tabular">50 €</span>.
+            </p>
         </div>
-        <!-- Paginación -->
-        <div th:replace="~{fragments/pagination :: pagination(${products}, '/products', 'productos')}"></div>
-    </div>
+    </section>
+
+    <section class="ft-section" aria-labelledby="pg-results-title">
+        <div class="ft-container">
+            <h2 id="pg-results-title" class="ft-sr-only">Resultados del catálogo</h2>
+
+            <!-- Barra de herramientas: búsqueda + filtro por categoría (GET /products?category=&search=&page=) -->
+            <div class="pg-toolbar">
+                <div th:replace="~{fragments/search :: search('/products')}"></div>
+
+                <nav class="pg-filters" aria-labelledby="pg-filter-label">
+                    <span id="pg-filter-label" class="ft-label">Categoría</span>
+                    <div class="ft-filter-chips"
+                         th:with="activeCategory=${param.category != null ? param.category[0] : ''}">
+                        <a th:href="@{/products}" class="ft-chip"
+                           th:classappend="${#strings.isEmpty(activeCategory)} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${#strings.isEmpty(activeCategory)}">Todos</a>
+                        <a th:href="@{/products(category='MEDICINE')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'MEDICINE'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'MEDICINE'}">Medicamentos</a>
+                        <a th:href="@{/products(category='VITAMIN')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'VITAMIN'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'VITAMIN'}">Vitaminas y Suplementos</a>
+                        <a th:href="@{/products(category='CARE')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'CARE'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'CARE'}">Cuidado Personal</a>
+                        <a th:href="@{/products(category='FIRST_AID')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'FIRST_AID'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'FIRST_AID'}">Primeros Auxilios</a>
+                        <a th:href="@{/products(category='BEAUTY')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'BEAUTY'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'BEAUTY'}">Belleza y Cuidado de la Piel</a>
+                        <a th:href="@{/products(category='BABY')}" class="ft-chip"
+                           th:classappend="${activeCategory == 'BABY'} ? 'ft-chip--active' : ''"
+                           th:attr="aria-pressed=${activeCategory == 'BABY'}">Productos para Bebés</a>
+                    </div>
+                </nav>
+            </div>
+
+            <!-- Estado vacío -->
+            <div th:if="${#lists.isEmpty(products.content)}" class="ft-alert ft-alert--info" role="status">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span>No se han encontrado productos que coincidan con tu búsqueda.
+                    <a th:href="@{/products}" class="ft-link">Ver todos los productos</a></span>
+            </div>
+
+            <!-- Rejilla de productos: ProductPageDTO { name, imagePath, price, reference } -->
+            <div class="ft-grid-4 ft-prod-grid" th:unless="${#lists.isEmpty(products.content)}">
+                <article class="ft-prod-card" th:each="product : ${products.content}">
+                    <div class="ft-prod-card__stage">
+                        <img th:src="@{${product.imagePath != null and !#strings.isEmpty(product.imagePath) ? product.imagePath : '/assets/img/placeholder.svg'}}"
+                             th:alt="${product.name}" alt="Imagen del producto" loading="lazy">
+                    </div>
+                    <div class="ft-prod-card__ref" th:text="${'REF ' + product.reference}">REF</div>
+                    <h3 class="ft-prod-card__name">
+                        <a th:href="@{/products/{reference}(reference=${product.reference})}" class="pg-card-link"
+                           th:text="${product.name}">Producto</a>
+                    </h3>
+                    <div class="ft-prod-card__price-row ft-tabular pg-price-spacer">
+                        <span class="ft-price-now"
+                              th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA') + ' €' : ''}">0,00 €</span>
+                    </div>
+                    <div class="ft-prod-card__actions">
+                        <a th:href="@{/products/{reference}(reference=${product.reference})}"
+                           class="ft-btn ft-btn--sm ft-btn--mint">Ver detalles<span class="ft-sr-only" th:text="${' de ' + product.name}"></span></a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Paginación -->
+            <div th:replace="~{fragments/pagination :: pagination(${products}, '/products', 'productos')}"></div>
+        </div>
+    </section>
 </main>
 
-<!-- Footer -->
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

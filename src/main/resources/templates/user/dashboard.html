@@ -1,58 +1,117 @@
 <!DOCTYPE html>
 <html th:attr="lang=${#locale.language}"
-      xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Farmasterrae', '/dist/output.css')}"></head>
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head('FarmasTerrae — Panel de control', '/css/layout.css')}"></head>
 
-<body class="bg-green-50">
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
-<main class="flex flex-col md:flex-row h-screen">
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white shadow-md h-full p-4 md:p-5">
-        <h1 class="text-2xl font-semibold text-green-700 mb-6">Dashboard</h1>
-        <nav>
-            <ul class="space-y-2">
-                <li>
-                    <a th:href="@{/user/dashboard/info-user}"
-                       th:classappend="${section == 'info-user'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">👤</span> Modificar Información
-                    </a>
-                </li>
-                <li>
-                    <a th:href="@{/user/dashboard/orders}"
-                       th:classappend="${section == 'orders'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">📋</span> Pedidos
-                    </a>
-                </li>
-                <li>
-                    <a th:href="@{/user/dashboard/reviews}"
-                       th:classappend="${section == 'reviews'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">⭐</span> Reseñas
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
 
-    <!-- Main Content -->
-    <section class="w-full md:flex-1 p-4 md:p-10 overflow-auto">
-        <th:block th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
-            <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido a tu panel de control</h2>
-            <p class="text-gray-600">Selecciona una opción del menú lateral para comenzar.</p>
-        </th:block>
-        <th:block th:if="${section == 'info-user'}">
-            <th:block th:replace="~{fragments/dashboard/info-user :: infoUserSection(${userView})}"></th:block>
-        </th:block>
-        <th:block th:if="${section == 'orders'}">
-            <th:block th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></th:block>
-        </th:block>
-        <th:block th:if="${section == 'reviews'}">
-            <th:block th:replace="~{fragments/dashboard/reviews :: reviewsSection(${reviews})}"></th:block>
-        </th:block>
-    </section>
+<main id="main-content" class="ft-dashboard-section" tabindex="-1">
+    <div class="ft-container">
+        <div class="ft-dashboard">
+            <!-- Menú lateral -->
+            <aside class="ft-sidebar" aria-label="Menú de mi cuenta">
+                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Panel de control</span>
+                <p class="ft-sidebar__title">Mi cuenta</p>
+                <div class="ft-sidebar__meta" sec:authorize="isAuthenticated()">
+                    <span class="ft-mono">@<span sec:authentication="name"></span></span>
+                </div>
+                <nav aria-label="Secciones del panel de usuario">
+                    <ul class="ft-sidebar__nav">
+                        <li>
+                            <a th:href="@{/user/dashboard}" class="ft-sidebar__link"
+                               th:attr="aria-current=${section == null ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><rect x="3" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect></svg>
+                                Inicio
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/user/dashboard/info-user}" class="ft-sidebar__link"
+                               th:attr="aria-current=${section == 'info-user' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg>
+                                Modificar información
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/user/dashboard/orders}" class="ft-sidebar__link"
+                               th:attr="aria-current=${section == 'orders' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5V8z"></path><path d="m3 8 9 5 9-5"></path><path d="M12 13v8"></path></svg>
+                                Mis pedidos
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/user/dashboard/reviews}" class="ft-sidebar__link"
+                               th:attr="aria-current=${section == 'reviews' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3z"></path></svg>
+                                Mis reseñas
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/auth/changePassword}" class="ft-sidebar__link">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>
+                                Cambiar contraseña
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Contenido principal -->
+            <section class="ft-dashboard__main">
+                <th:block th:if="${section == null}">
+                    <section class="ft-panel" aria-labelledby="welcome-title">
+                        <div class="ft-panel__head">
+                            <div>
+                                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Mi cuenta</span>
+                                <h1 id="welcome-title" class="ft-panel__title">Bienvenido a tu panel de control</h1>
+                                <p class="ud-sub">Selecciona una opción del menú lateral o elige una sección para gestionar tu cuenta.</p>
+                            </div>
+                            <a th:href="@{/products}" class="ft-btn ft-btn--mint">Seguir comprando</a>
+                        </div>
+
+                        <div class="ft-grid-3">
+                            <a th:href="@{/user/dashboard/info-user}" class="ft-cat-card">
+                                <div class="ft-cat-card__body">
+                                    <span class="ud-icon-tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>
+                                    <h2 class="ft-cat-card__title">Modificar información</h2>
+                                    <p class="ft-cat-card__desc">Actualiza tu nombre, correo electrónico, teléfono y dirección de envío.</p>
+                                    <span class="ud-card-link">Editar datos <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+                                </div>
+                            </a>
+                            <a th:href="@{/user/dashboard/orders}" class="ft-cat-card">
+                                <div class="ft-cat-card__body">
+                                    <span class="ud-icon-tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5V8z"></path><path d="m3 8 9 5 9-5"></path><path d="M12 13v8"></path></svg></span>
+                                    <h2 class="ft-cat-card__title">Mis pedidos</h2>
+                                    <p class="ft-cat-card__desc">Consulta el estado, el importe y el detalle de cada pedido realizado.</p>
+                                    <span class="ud-card-link">Ver pedidos <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+                                </div>
+                            </a>
+                            <a th:href="@{/user/dashboard/reviews}" class="ft-cat-card">
+                                <div class="ft-cat-card__body">
+                                    <span class="ud-icon-tile"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3z"></path></svg></span>
+                                    <h2 class="ft-cat-card__title">Mis reseñas</h2>
+                                    <p class="ft-cat-card__desc">Valora los productos comprados y edita o elimina tus reseñas.</p>
+                                    <span class="ud-card-link">Gestionar reseñas <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></span>
+                                </div>
+                            </a>
+                        </div>
+                    </section>
+                </th:block>
+                <th:block th:if="${section == 'info-user'}">
+                    <th:block th:replace="~{fragments/dashboard/info-user :: infoUserSection(${userView})}"></th:block>
+                </th:block>
+                <th:block th:if="${section == 'orders'}">
+                    <th:block th:replace="~{fragments/dashboard/orders :: ordersSection(${orders})}"></th:block>
+                </th:block>
+                <th:block th:if="${section == 'reviews'}">
+                    <th:block th:replace="~{fragments/dashboard/reviews :: reviewsSection(${reviews})}"></th:block>
+                </th:block>
+            </section>
+        </div>
+    </div>
 </main>
+
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

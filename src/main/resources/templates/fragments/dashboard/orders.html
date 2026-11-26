@@ -1,142 +1,133 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="ordersSection(orders)" class="bg-white shadow-md rounded-md p-6 overflow-x-auto">
-    <h2 class="text-2xl font-bold mb-4 text-green-700">Tus Pedidos</h2>
-    <table class="min-w-full table-auto border border-gray-200">
-        <thead>
-        <tr class="bg-green-100">
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
-                <form method="get" style="display: inline;">
-                    <input th:each="paramEntry : ${param}"
-                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
-                           type="hidden"
-                           th:name="${paramEntry.key}"
-                           th:value="${paramEntry.value[0]}">
-                    <input type="hidden" name="sort" value="id">
-                    <input type="hidden" name="dir"
-                           th:value="${param.sort != null and param.sort[0] == 'id' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
-                    <button type="submit"
-                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
-                        # Pedido
-                        <span th:if="${param.sort != null and param.sort[0] == 'id'}" class="ml-1">
-                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
-                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
-                </span>
-                    </button>
-                </form>
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
-                <form method="get" style="display: inline;">
-                    <input th:each="paramEntry : ${param}"
-                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
-                           type="hidden"
-                           th:name="${paramEntry.key}"
-                           th:value="${paramEntry.value[0]}">
-                    <input type="hidden" name="sort" value="createdAt">
-                    <input type="hidden" name="dir"
-                           th:value="${param.sort != null and param.sort[0] == 'createdAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
-                    <button type="submit"
-                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
-                        Fecha
-                        <span th:if="${param.sort != null and param.sort[0] == 'createdAt'}" class="ml-1">
-                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
-                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
-                </span>
-                    </button>
-                </form>
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
-                <form method="get" style="display: inline;">
-                    <input th:each="paramEntry : ${param}"
-                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
-                           type="hidden"
-                           th:name="${paramEntry.key}"
-                           th:value="${paramEntry.value[0]}">
-                    <input type="hidden" name="sort" value="totalPrice">
-                    <input type="hidden" name="dir"
-                           th:value="${param.sort != null and param.sort[0] == 'totalPrice' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
-                    <button type="submit"
-                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
-                        Total
-                        <span th:if="${param.sort != null and param.sort[0] == 'totalPrice'}" class="ml-1">
-                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
-                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
-                </span>
-                    </button>
-                </form>
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
-                <form method="get" style="display: inline;">
-                    <input th:each="paramEntry : ${param}"
-                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
-                           type="hidden"
-                           th:name="${paramEntry.key}"
-                           th:value="${paramEntry.value[0]}">
-                    <input type="hidden" name="sort" value="updatedAt">
-                    <input type="hidden" name="dir"
-                           th:value="${param.sort != null and param.sort[0] == 'updatedAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
-                    <button type="submit"
-                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
-                        Última actualización
-                        <span th:if="${param.sort != null and param.sort[0] == 'updatedAt'}" class="ml-1">
-                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
-                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
-                </span>
-                    </button>
-                </form>
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">
-                <form method="get" style="display: inline;">
-                    <input th:each="paramEntry : ${param}"
-                           th:unless="${paramEntry.key == 'sort' or paramEntry.key == 'dir'}"
-                           type="hidden"
-                           th:name="${paramEntry.key}"
-                           th:value="${paramEntry.value[0]}">
-                    <input type="hidden" name="sort" value="status">
-                    <input type="hidden" name="dir"
-                           th:value="${param.sort != null and param.sort[0] == 'status' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'}">
-                    <button type="submit"
-                            class="hover:text-green-600 cursor-pointer flex items-center bg-transparent border-none text-sm font-medium text-green-800">
-                        Estado
-                        <span th:if="${param.sort != null and param.sort[0] == 'status'}" class="ml-1">
-                    <span th:if="${param.dir == null or param.dir[0] == 'asc'}">↑</span>
-                    <span th:if="${param.dir != null and param.dir[0] == 'desc'}">↓</span>
-                </span>
-                    </button>
-                </form>
-            </th>
-            <th class="px-4 py-3 text-left text-sm font-medium text-green-800">Acciones</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="order : ${orders}" class="border-t border-gray-200 even:bg-green-50">
-            <td class="px-4 py-2" th:text="${order.id}"></td>
-            <td class="px-4 py-2" th:text="${order.createdAt}"></td>
-            <td class="px-4 py-2" th:text="${order.totalPrice} + ' €'"></td>
-            <td class="px-4 py-2" th:text="${order.updatedAt}"></td>
-            <td class="px-4 py-2" th:text="${order.status == null ? 'Sin estado' : order.status.value}"></td>
-            <td class="px-4 py-2">
-                <a th:href="@{/user/dashboard/orders/{idOrder}(idOrder=${order.id})}"
-                   class="bg-blue-100 text-blue-800 px-4 py-2 rounded-md hover:bg-blue-200 transition-colors duration-300">
-                    Ver Detalles
-                </a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <!-- Paginación -->
-    <div class="mt-4 flex justify-center space-x-2">
-        <a th:if="${orders.hasPrevious()}" th:href="@{/dashboard/orders(page=${orders.number - 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Anterior
-        </a>
-        <span class="px-3 py-1 bg-[#a4fcc4] text-gray-800 rounded-md">[[${orders.number + 1}]]</span>
-        <a th:if="${orders.hasNext()}" th:href="@{/dashboard/orders(page=${orders.number + 1})}"
-           class="px-3 py-1 bg-green-100 text-green-800 rounded-md hover:bg-green-200 transition-colors duration-300">
-            Siguiente
-        </a>
+<div th:fragment="ordersSection(orders)" class="ft-panel">
+    <div class="ft-panel__head">
+        <div>
+            <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Historial</span>
+            <h1 class="ft-panel__title">Tus Pedidos</h1>
+            <p class="ud-sub">Revisa el estado de tus compras y accede al detalle de cada pedido.</p>
+        </div>
+        <span th:if="${orders != null}" class="ft-code-tag ft-tabular"
+              th:text="${orders.totalElements == 1 ? '1 pedido' : orders.totalElements + ' pedidos'}">0 pedidos</span>
     </div>
+
+    <!-- Estado vacío -->
+    <div th:if="${orders == null or #lists.isEmpty(orders.content)}" class="ft-alert ft-alert--info" role="status">
+        <span th:if="${orders == null or orders.totalElements == 0}">
+            Todavía no has realizado ningún pedido.
+            <a th:href="@{/products}" class="ud-card-link">Explorar productos</a>
+        </span>
+        <span th:unless="${orders == null or orders.totalElements == 0}">No hay pedidos en esta página.</span>
+    </div>
+
+    <div th:unless="${orders == null or #lists.isEmpty(orders.content)}" class="ft-table-wrap">
+        <table class="ft-table">
+            <caption class="ft-sr-only">Tus pedidos</caption>
+            <thead>
+                <tr>
+                    <th scope="col"
+                        th:with="active=${param.sort != null and param.sort[0] == 'id'}, isDesc=${param.dir != null and param.dir[0] == 'desc'}"
+                        th:attr="aria-sort=${active ? (isDesc ? 'descending' : 'ascending') : null}">
+                        <a th:href="@{/user/dashboard/orders(sort='id', dir=${param.sort != null and param.sort[0] == 'id' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'})}"
+                           class="ft-table__sort">
+                            # Pedido
+                            <span th:if="${active}" class="ft-sort-arrow" aria-hidden="true" th:text="${isDesc ? '↓' : '↑'}">↑</span>
+                            <svg th:unless="${active}" class="ud-sort-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                        </a>
+                    </th>
+                    <th scope="col"
+                        th:with="active=${param.sort != null and param.sort[0] == 'createdAt'}, isDesc=${param.dir != null and param.dir[0] == 'desc'}"
+                        th:attr="aria-sort=${active ? (isDesc ? 'descending' : 'ascending') : null}">
+                        <a th:href="@{/user/dashboard/orders(sort='createdAt', dir=${param.sort != null and param.sort[0] == 'createdAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'})}"
+                           class="ft-table__sort">
+                            Fecha
+                            <span th:if="${active}" class="ft-sort-arrow" aria-hidden="true" th:text="${isDesc ? '↓' : '↑'}">↑</span>
+                            <svg th:unless="${active}" class="ud-sort-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                        </a>
+                    </th>
+                    <th scope="col"
+                        th:with="active=${param.sort != null and param.sort[0] == 'totalPrice'}, isDesc=${param.dir != null and param.dir[0] == 'desc'}"
+                        th:attr="aria-sort=${active ? (isDesc ? 'descending' : 'ascending') : null}">
+                        <a th:href="@{/user/dashboard/orders(sort='totalPrice', dir=${param.sort != null and param.sort[0] == 'totalPrice' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'})}"
+                           class="ft-table__sort">
+                            Total
+                            <span th:if="${active}" class="ft-sort-arrow" aria-hidden="true" th:text="${isDesc ? '↓' : '↑'}">↑</span>
+                            <svg th:unless="${active}" class="ud-sort-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                        </a>
+                    </th>
+                    <th scope="col"
+                        th:with="active=${param.sort != null and param.sort[0] == 'updatedAt'}, isDesc=${param.dir != null and param.dir[0] == 'desc'}"
+                        th:attr="aria-sort=${active ? (isDesc ? 'descending' : 'ascending') : null}">
+                        <a th:href="@{/user/dashboard/orders(sort='updatedAt', dir=${param.sort != null and param.sort[0] == 'updatedAt' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'})}"
+                           class="ft-table__sort">
+                            Última actualización
+                            <span th:if="${active}" class="ft-sort-arrow" aria-hidden="true" th:text="${isDesc ? '↓' : '↑'}">↑</span>
+                            <svg th:unless="${active}" class="ud-sort-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                        </a>
+                    </th>
+                    <th scope="col"
+                        th:with="active=${param.sort != null and param.sort[0] == 'status'}, isDesc=${param.dir != null and param.dir[0] == 'desc'}"
+                        th:attr="aria-sort=${active ? (isDesc ? 'descending' : 'ascending') : null}">
+                        <a th:href="@{/user/dashboard/orders(sort='status', dir=${param.sort != null and param.sort[0] == 'status' and (param.dir == null or param.dir[0] == 'asc') ? 'desc' : 'asc'})}"
+                           class="ft-table__sort">
+                            Estado
+                            <span th:if="${active}" class="ft-sort-arrow" aria-hidden="true" th:text="${isDesc ? '↓' : '↑'}">↑</span>
+                            <svg th:unless="${active}" class="ud-sort-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"></path><path d="m7 9 5-5 5 5"></path></svg>
+                        </a>
+                    </th>
+                    <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="order : ${orders.content}">
+                    <td><span class="ft-mono" th:text="${'#' + order.id}">#0</span></td>
+                    <td class="ud-nowrap"><span class="ft-tabular" th:text="${order.createdAt}"></span></td>
+                    <td class="ud-total ft-tabular"
+                        th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}"></td>
+                    <td class="ud-nowrap"><span class="ft-tabular" th:text="${order.updatedAt}"></span></td>
+                    <td>
+                        <span class="ft-status-pill"
+                              th:classappend="${order.status != null ? 'ft-status-pill--' + #strings.toLowerCase(order.status.name()) : ''}"
+                              th:text="${order.status != null ? order.status.value : 'Sin estado'}">Sin estado</span>
+                    </td>
+                    <td>
+                        <a th:href="@{/user/dashboard/orders/{id}(id=${order.id})}"
+                           th:attr="aria-label=${'Ver detalles del pedido #' + order.id}"
+                           class="ft-btn ft-btn--sm ft-btn--subtle">Ver detalles</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginación -->
+    <nav th:if="${orders != null and orders.totalPages > 0}" class="ft-pagination" aria-label="Paginación de pedidos">
+        <span class="ft-pagination__info ft-tabular">Página [[${orders.number + 1}]] de [[${orders.totalPages}]] · Mostrando [[${orders.numberOfElements}]] de [[${orders.totalElements}]] pedidos</span>
+        <div class="ft-pagination__controls">
+            <th:block th:if="${orders.hasPrevious()}">
+                <a th:if="${param.sort != null}"
+                   th:href="@{/user/dashboard/orders(page=${orders.number - 1}, sort=${param.sort[0]}, dir=${param.dir != null ? param.dir[0] : 'asc'})}"
+                   class="ft-pagination__btn">Anterior</a>
+                <a th:unless="${param.sort != null}"
+                   th:href="@{/user/dashboard/orders(page=${orders.number - 1})}"
+                   class="ft-pagination__btn">Anterior</a>
+            </th:block>
+            <span th:unless="${orders.hasPrevious()}" class="ft-pagination__btn ft-pagination__btn--disabled" aria-disabled="true">Anterior</span>
+
+            <span class="ft-pagination__btn ft-tabular" aria-current="page">[[${orders.number + 1}]]</span>
+
+            <th:block th:if="${orders.hasNext()}">
+                <a th:if="${param.sort != null}"
+                   th:href="@{/user/dashboard/orders(page=${orders.number + 1}, sort=${param.sort[0]}, dir=${param.dir != null ? param.dir[0] : 'asc'})}"
+                   class="ft-pagination__btn">Siguiente</a>
+                <a th:unless="${param.sort != null}"
+                   th:href="@{/user/dashboard/orders(page=${orders.number + 1})}"
+                   class="ft-pagination__btn">Siguiente</a>
+            </th:block>
+            <span th:unless="${orders.hasNext()}" class="ft-pagination__btn ft-pagination__btn--disabled" aria-disabled="true">Siguiente</span>
+        </div>
+    </nav>
 </div>
 </body>
 </html>

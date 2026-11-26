@@ -1,58 +1,171 @@
 <!DOCTYPE html>
-<html th:attr="lang=${#locale.language}"
-      xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head('Admin Dashboard', '/dist/output.css')}"></head>
-
-<body class="bg-green-50">
+<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head('Admin Dashboard — FarmasTerrae', '/css/layout.css')}"></head>
+<body>
 <header th:replace="~{fragments/header :: header}"></header>
-<main class="flex flex-col md:flex-row h-screen">
-    <!-- Sidebar -->
-    <aside class="w-full md:w-64 bg-white shadow-md h-full p-4 md:p-5">
-        <h1 class="text-2xl font-semibold text-green-700 mb-6">Admin Dashboard</h1>
-        <nav>
-            <ul class="space-y-2">
-                <li>
-                    <a th:href="@{/admin/dashboard/orders}"
-                       th:classappend="${section == 'orders'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">📋</span> Pedidos
-                    </a>
-                </li>
-                <li>
-                    <a th:href="@{/admin/dashboard/products}"
-                       th:classappend="${section == 'products'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">🌿</span> Productos
-                    </a>
-                </li>
-                <li>
-                    <a th:href="@{/admin/dashboard/users}"
-                       th:classappend="${section == 'users'} ? 'bg-green-100 text-green-800' : ''"
-                       class="flex items-center py-2 px-4 rounded-md hover:bg-green-100 text-green-700 transition-colors duration-300">
-                        <span class="mr-2">👥</span> Usuarios
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </aside>
 
-    <!-- Main Content -->
-    <section class="w-full md:flex-1 p-4 overflow-auto">
-        <th:block th:if="${section == 'orders'}">
-            <th:block th:replace="~{fragments/dashboard-admin/orders :: ordersSection(${orders})}"></th:block>
-        </th:block>
-        <th:block th:if="${section == 'products'}">
-            <th:block th:replace="~{fragments/dashboard-admin/products :: productsSection(${products})}"></th:block>
-        </th:block>
-        <th:block th:if="${section == 'users'}">
-            <th:block th:replace="~{fragments/dashboard-admin/users :: usersSection(${users})}"></th:block>
-        </th:block>
-        <th:block th:if="${section == null}" class="bg-white shadow-md rounded-md p-6 text-center">
-            <h2 class="text-2xl font-bold mb-4 text-green-700">Bienvenido al panel de administración</h2>
-            <p class="text-gray-600">Selecciona una opción del menú lateral para comenzar.</p>
-        </th:block>
-    </section>
+<main id="main-content" class="ft-dashboard-section" tabindex="-1">
+    <div class="ft-container">
+        <div class="ft-dashboard">
+            <!-- Sidebar -->
+            <aside class="ft-sidebar" aria-labelledby="admin-sidebar-title">
+                <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Administración</span>
+                <h2 id="admin-sidebar-title" class="ft-sidebar__title">Admin Dashboard</h2>
+                <nav aria-label="Secciones de administración">
+                    <ul class="ft-sidebar__nav">
+                        <li>
+                            <a th:href="@{/admin/dashboard}" class="ft-sidebar__link"
+                               th:aria-current="${section == null ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                                    <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                                    <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                                    <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                                </svg>
+                                Resumen
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/admin/dashboard/orders}" class="ft-sidebar__link"
+                               th:aria-current="${section == 'orders' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+                                    <path d="M9 3.5h6v3H9z"></path>
+                                    <line x1="9" y1="11" x2="15" y2="11"></line>
+                                    <line x1="9" y1="15" x2="13" y2="15"></line>
+                                </svg>
+                                Pedidos
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/admin/dashboard/products}" class="ft-sidebar__link"
+                               th:aria-current="${section == 'products' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M21 8l-9-5-9 5 9 5 9-5z"></path>
+                                    <path d="M3 8v8l9 5 9-5V8"></path>
+                                    <line x1="12" y1="13" x2="12" y2="21"></line>
+                                </svg>
+                                Productos
+                            </a>
+                        </li>
+                        <li>
+                            <a th:href="@{/admin/dashboard/users}" class="ft-sidebar__link"
+                               th:aria-current="${section == 'users' ? 'page' : null}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="9" cy="8" r="3.5"></circle>
+                                    <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path>
+                                    <circle cx="17" cy="9" r="2.5"></circle>
+                                    <path d="M17 14c2.6 0 4.5 1.8 4.5 4.5"></path>
+                                </svg>
+                                Usuarios
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <!-- Contenido principal -->
+            <section class="ft-dashboard__main">
+                <!-- Resumen: bienvenida + accesos a los módulos -->
+                <section th:if="${section == null}" class="ft-panel" aria-labelledby="admin-overview-title">
+                    <header class="ft-panel__head">
+                        <div>
+                            <span class="ft-eyebrow"><span class="ft-dot" aria-hidden="true"></span>Panel de administración</span>
+                            <h1 id="admin-overview-title" class="ft-panel__title">Bienvenido al panel de administración</h1>
+                            <p class="ft-adm-lead">Selecciona una opción del menú lateral o accede directamente a uno de los módulos de gestión.</p>
+                        </div>
+                        <span class="ft-role-badge ft-role-badge--admin">ADMIN</span>
+                    </header>
+
+                    <div class="ft-grid-3">
+                        <a th:href="@{/admin/dashboard/orders}" class="ft-cat-card ft-adm-module">
+                            <div class="ft-cat-card__body">
+                                <span class="ft-adm-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <rect x="5" y="3" width="14" height="18" rx="2"></rect>
+                                        <path d="M9 3.5h6v3H9z"></path>
+                                        <line x1="9" y1="11" x2="15" y2="11"></line>
+                                        <line x1="9" y1="15" x2="13" y2="15"></line>
+                                    </svg>
+                                </span>
+                                <h2 class="ft-cat-card__title">Pedidos</h2>
+                                <p class="ft-cat-card__desc">Consulta pedidos, cambia su estado de venta o elimina registros.</p>
+                                <span class="ft-adm-module__cta">Abrir pedidos
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+
+                        <a th:href="@{/admin/dashboard/products}" class="ft-cat-card ft-adm-module">
+                            <div class="ft-cat-card__body">
+                                <span class="ft-adm-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <path d="M21 8l-9-5-9 5 9 5 9-5z"></path>
+                                        <path d="M3 8v8l9 5 9-5V8"></path>
+                                        <line x1="12" y1="13" x2="12" y2="21"></line>
+                                    </svg>
+                                </span>
+                                <h2 class="ft-cat-card__title">Productos</h2>
+                                <p class="ft-cat-card__desc">Añade productos, edita sus datos, stock e imagen o elimínalos del catálogo.</p>
+                                <span class="ft-adm-module__cta">Abrir productos
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+
+                        <a th:href="@{/admin/dashboard/users}" class="ft-cat-card ft-adm-module">
+                            <div class="ft-cat-card__body">
+                                <span class="ft-adm-icon">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="9" cy="8" r="3.5"></circle>
+                                        <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"></path>
+                                        <circle cx="17" cy="9" r="2.5"></circle>
+                                        <path d="M17 14c2.6 0 4.5 1.8 4.5 4.5"></path>
+                                    </svg>
+                                </span>
+                                <h2 class="ft-cat-card__title">Usuarios</h2>
+                                <p class="ft-cat-card__desc">Consulta cuentas registradas, edita sus perfiles y elimina usuarios.</p>
+                                <span class="ft-adm-module__cta">Abrir usuarios
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <th:block th:if="${section == 'orders'}">
+                    <th:block th:replace="~{fragments/dashboard-admin/orders :: ordersSection(${orders})}"></th:block>
+                </th:block>
+                <th:block th:if="${section == 'products'}">
+                    <th:block th:replace="~{fragments/dashboard-admin/products :: productsSection(${products})}"></th:block>
+                </th:block>
+                <th:block th:if="${section == 'users'}">
+                    <th:block th:replace="~{fragments/dashboard-admin/users :: usersSection(${users})}"></th:block>
+                </th:block>
+            </section>
+        </div>
+    </div>
 </main>
+
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>
