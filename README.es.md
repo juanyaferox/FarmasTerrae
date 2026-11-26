@@ -24,10 +24,10 @@
 
 ## Índice
 
+- [Aspectos Destacados de Diseño e Implementación](#aspectos-destacados-de-diseño-e-implementación)
 - [Funcionalidades Principales](#funcionalidades-principales)
 - [Stack Tecnológico](#stack-tecnológico)
 - [Arquitectura](#arquitectura)
-- [Aspectos Destacados de Diseño e Implementación](#aspectos-destacados-de-diseño-e-implementación)
 - [Primeros Pasos](#primeros-pasos)
   - [Opción 1: Entorno Local Completo con Docker y MinIO (Recomendado)](#opción-1-entorno-local-completo-con-docker-y-minio-recomendado)
   - [Opción 2: Despliegue en Producción / AWS](#opción-2-despliegue-en-producción--aws)
@@ -39,29 +39,35 @@
 
 ---
 
+## Aspectos Destacados de Diseño e Implementación
+
+- **Carga de datos con Liquibase post-Hibernate (`LiquibaseRunnerConfig`)**: Excluye `LiquibaseAutoConfiguration` en `prod` / `prodminio` y ejecuta `SpringLiquibase` desde un `CommandLineRunner` *después* de que Hibernate genere/actualice las tablas (`ddl-auto=update`), cargando los datos iniciales desde `db/changelog/data-only-changelog.yaml`.
+- **Optimización de imágenes en servidor y almacenamiento en la nube (`ImageCompressionService`, `S3StorageService`, `ProductMapper`)**: Valida subidas (hasta 10 MB), redimensiona proporcionalmente a un máximo de `1200×800` con interpolación bicúbica, aplana transparencias sobre fondo blanco RGB, comprime en JPEG al 85%, almacena en AWS S3 (mediante rol IAM) o MinIO y resuelve automáticamente URLs prefirmadas (TTL de 2 h) en `@AfterMapping` de MapStruct.
+- **Motor dinámico de consultas reutilizable (`GenericSpecification`)**: Construye predicados JPA Criteria `LIKE` insensibles a mayúsculas y comparaciones `EQUAL` validadas por tipo sobre relaciones anidadas mediante `LEFT JOIN` automático.
+- **Reserva temporal de stock en checkout (`StockReservationService`)**: Retiene el inventario del carrito durante 15 minutos (`stock.reservation.timeout.minutes`) para reducir sobreventas durante el pago y descuenta el stock real al confirmar el pedido.
+- **Eliminación lógica orientada a privacidad (`UserService`)**: Preserva la integridad histórica de los pedidos anonimizando datos personales (`username`/`email`, borrando teléfono/dirección), registrando `deletedAt`, filtrando con `@Where(clause = "deletedAt IS NULL")` e impidiendo borrar al último administrador.
+- **Gestión global de errores con auditoría (`GlobalExceptionHandler`)**: Combina un `Filter` de servlet y `@ControllerAdvice` para asociar cada error a un UUID `errorId` junto con usuario, IP (`X-Forwarded-For`), URI, método HTTP y sesión.
+
+---
+
 ## Funcionalidades Principales
 
 - **Escaparate y Catálogo**
-  - Página de inicio con productos destacados aleatorios y accesos rápidos a categorías.
-  - Seis categorías farmacéuticas: `MEDICINE` (Medicamentos), `VITAMIN` (Vitaminas y Suplementos), `CARE` (Cuidado Personal), `FIRST_AID` (Primeros Auxilios), `BEAUTY` (Belleza y Cuidado de la Piel) y `BABY` (Productos para Bebés).
-  - Listado paginado con búsqueda dinámica por palabra clave, filtrado por categoría y ordenación mediante JPA Specifications.
-- **Carrito y Reserva de Stock**
-  - Carrito en sesión HTTP (`SessionCart`) con operaciones para añadir, incrementar, reducir, eliminar y vaciar.
-  - Servicio de reserva temporal de inventario (`StockReservationService`) durante 15 minutos (`stock.reservation.timeout.minutes`), descontando el stock real al confirmar el pedido.
-- **Checkout y Ciclo de Vida de Pedidos**
-  - Resumen de compra con datos precargados del usuario y métodos de pago seleccionables (`CREDIT_CARD`, `PAYPAL`, `TRANSFER`).
-  - Seguimiento de estados (`PENDING`, `SHIPPED`, `COMPLETED`, `CANCELLED`) en las vistas de cliente y administrador.
+  - Página de inicio con productos destacados aleatorios y navegación rápida por categorías.
+  - Catálogo farmacéutico organizado en medicamentos, vitaminas y suplementos, cuidado personal, primeros auxilios, belleza y cuidado de la piel, y productos para bebés.
+  - Listado paginado con búsqueda por palabra clave, filtrado por categoría y ordenación por columnas.
+- **Carrito y Checkout**
+  - Carrito en sesión HTTP con soporte para añadir, incrementar, reducir, eliminar y vaciar artículos con validación de stock en tiempo real.
+  - Resumen de compra con datos precargados de envío, múltiples métodos de pago (tarjeta de crédito, PayPal y transferencia bancaria) y seguimiento del ciclo de vida del pedido en las vistas de cliente y administrador.
 - **Autenticación y Recuperación de Cuenta**
   - Spring Security 6 con inicio de sesión por **usuario o email**, cifrado BCrypt, cookies `remember-me` de 7 días, migración ante session fixation y política de 1 sesión concurrente.
   - Recuperación de contraseña mediante Gmail SMTP y cambio autenticado con validación de complejidad.
 - **Panel de Cliente (`/user/dashboard`)**
-  - Edición de perfil, historial paginado de pedidos con detalle de artículos y reseñas limitadas a productos comprados.
+  - Gestión de perfil, historial paginado de pedidos con detalle de artículos y reseñas verificadas limitadas a productos comprados.
 - **Panel de Administración (`/admin/dashboard`)**
-  - Gestión CRUD con búsqueda, ordenación y paginación para **Productos**, **Pedidos** y **Usuarios**.
-  - Subida multipart de imágenes de productos con redimensionado y compresión JPEG en el servidor.
-  - Eliminación de usuarios estilo RGPD mediante anonimización (`deleted_<id>`), impidiendo borrar al último administrador.
-- **Pipeline de Imágenes en la Nube**
-  - Compatible con **AWS S3** (producción mediante rol IAM de instancia) y **MinIO** (Docker local), sirviendo imágenes con URLs prefirmadas de 2 horas de validez.
+  - Paneles con búsqueda, ordenación y paginación para gestionar **Productos**, **Pedidos** y **Usuarios**, incluyendo subida multipart de imágenes y cambio de estado de pedidos.
+- **Almacenamiento Agnóstico al Entorno**
+  - Transición transparente entre **AWS S3** (rol IAM en producción) y **MinIO** (Docker local) sin cambios en el código de aplicación.
 
 ---
 
@@ -96,16 +102,6 @@ flowchart LR
     App -->|"Recuperación de Contraseña"| SMTP
     Browser -.->|"GET Directo a Imagen Prefirmada"| Storage
 ```
-
----
-
-## Aspectos Destacados de Diseño e Implementación
-
-- **Carga de datos con Liquibase post-Hibernate (`LiquibaseRunnerConfig`)**: Se excluye `LiquibaseAutoConfiguration` en `prod` / `prodminio` y se ejecuta `SpringLiquibase` desde un `CommandLineRunner` *después* de que Hibernate genere/actualice las tablas (`ddl-auto=update`), cargando los datos iniciales desde `db/changelog/data-only-changelog.yaml`.
-- **Pipeline automático de imágenes (`ImageCompressionService` + `S3StorageService` + `ProductMapper`)**: Las imágenes subidas (hasta 10 MB) se redimensionan proporcionalmente hasta un máximo de `1200×800` con interpolación bicúbica, fondo blanco RGB y compresión JPEG al 85%, almacenándose en S3/MinIO y resolviéndose a URLs prefirmadas (TTL de 2 h) en `@AfterMapping` de MapStruct.
-- **Filtrado dinámico reutilizable (`GenericSpecification`)**: Permite búsquedas `LIKE` insensibles a mayúsculas y comparaciones `EQUAL` validadas por tipo incluso en atributos anidados usando `LEFT JOIN` automático.
-- **Anonimización de usuarios (`UserService`)**: Al eliminar una cuenta se preservan los pedidos históricos anonimizando `username`/`email`, limpiando teléfono/dirección, registrando `deletedAt` y filtrando mediante `@Where(clause = "deletedAt IS NULL")`.
-- **Auditoría de errores (`GlobalExceptionHandler`)**: Combina un `Filter` y `@ControllerAdvice` para asociar un `errorId` UUID único junto con usuario, IP (`X-Forwarded-For`), URI, método HTTP y sesión en los logs de error.
 
 ---
 
@@ -262,7 +258,7 @@ FarmasTerrae/
     │   │   ├── config/                  # Security, S3, LiquibaseRunner, MVC, Web, GlobalExceptionHandler
     │   │   ├── controller/              # Controladores de tienda, Auth, Cart, Order, User y Admin
     │   │   ├── dto/                     # DTOs de Auth, Order, Payment, Product y User
-    │   │   ├── enums/                   # Category, PaymentMethod, SaleStatus, EntityType, Operation
+    │   │   ├── enums/                   # Enumeraciones de dominio (estados de pedido, métodos de pago, operaciones)
     │   │   ├── mapper/                  # Mappers MapStruct (Product, Order, Review, User)
     │   │   ├── model/                   # Entidades JPA (User, Profile, Product, Order, OrderDetails, Review)
     │   │   ├── repository/              # Repositorios Spring Data JPA

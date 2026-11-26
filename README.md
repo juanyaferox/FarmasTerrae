@@ -24,10 +24,10 @@
 
 ## Table of Contents
 
+- [Design & Implementation Highlights](#design--implementation-highlights)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
-- [Design & Implementation Highlights](#design--implementation-highlights)
 - [Getting Started](#getting-started)
   - [Option 1: Local Full Stack with Docker & MinIO (Recommended)](#option-1-local-full-stack-with-docker--minio-recommended)
   - [Option 2: Production / AWS Deployment](#option-2-production--aws-deployment)
@@ -39,29 +39,35 @@
 
 ---
 
+## Design & Implementation Highlights
+
+- **Post-Hibernate Liquibase Data Seeding (`LiquibaseRunnerConfig`)**: Excludes default `LiquibaseAutoConfiguration` in `prod` / `prodminio` and triggers `SpringLiquibase` via a `CommandLineRunner` *after* Hibernate creates/updates the schema (`ddl-auto=update`), cleanly seeding initial datasets from `db/changelog/data-only-changelog.yaml`.
+- **Server-Side Image Optimization & Cloud Media Pipeline (`ImageCompressionService`, `S3StorageService`, `ProductMapper`)**: Validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` using bicubic interpolation, flattens transparency onto a white RGB background, encodes 85% JPEG, stores assets in AWS S3 (via IAM instance roles) or MinIO, and automatically resolves 2-hour presigned URLs in MapStruct `@AfterMapping` hooks.
+- **Reusable Dynamic Query Engine (`GenericSpecification`)**: Builds multi-field case-insensitive `LIKE` and type-validated `EQUAL` JPA Criteria predicates across nested entity relationships using automatic `LEFT JOIN` traversal.
+- **Temporary Checkout Stock Reservations (`StockReservationService`)**: Holds session cart inventory for 15 minutes (`stock.reservation.timeout.minutes`) to guard against overselling during checkout and commits real stock deductions on order confirmation.
+- **Privacy-Aware Soft Deletion (`UserService`)**: Preserves historical order integrity when accounts are removed by anonymizing PII (`username`/`email`, clearing phone/address), recording `deletedAt`, filtering records transparently with `@Where(clause = "deletedAt IS NULL")`, and preventing removal of the last administrator.
+- **Audited Global Error Handling (`GlobalExceptionHandler`)**: Combines a servlet `Filter` and `@ControllerAdvice` to correlate unhandled errors with a unique UUID `errorId` plus user identity, client IP (`X-Forwarded-For`), URI, HTTP method, and session metadata.
+
+---
+
 ## Key Features
 
 - **Storefront & Catalog**
-  - Home page featuring randomized highlighted products and category shortcuts.
-  - Six pharmacy categories: `MEDICINE`, `VITAMIN`, `CARE`, `FIRST_AID`, `BEAUTY`, and `BABY`.
-  - Paginated product listings with dynamic keyword search, category filtering, and sorting built on JPA Specifications.
-- **Shopping Cart & Stock Reservation**
-  - HTTP session cart (`SessionCart`) supporting add, increment, decrement, remove, and clear actions.
-  - Temporary stock reservation service (`StockReservationService`) holding cart inventory for 15 minutes (`stock.reservation.timeout.minutes`) and deducting real stock upon checkout confirmation.
-- **Checkout & Order Lifecycle**
-  - Order summary with prefilled shipping details and selectable payment methods (`CREDIT_CARD`, `PAYPAL`, `TRANSFER`).
-  - Order statuses (`PENDING`, `SHIPPED`, `COMPLETED`, `CANCELLED`) tracked across customer and admin views.
+  - Home page featuring randomized highlighted products and quick category navigation.
+  - Organized pharmacy catalog covering medicines, vitamins & supplements, personal care, first aid, skincare & beauty, and baby care.
+  - Paginated product browsing with keyword search, category filtering, and multi-column sorting.
+- **Shopping Cart & Checkout**
+  - Session-backed shopping cart supporting add, increment, decrement, remove, and clear actions with live stock validation.
+  - Streamlined checkout summary with prefilled shipping details, multiple payment options (credit card, PayPal, and bank transfer), and end-to-end order status tracking across customer and admin views.
 - **Authentication & Account Recovery**
-  - Spring Security 6 form authentication supporting login by **username or email**, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, and a single concurrent session policy.
+  - Spring Security 6 authentication supporting login by **username or email**, BCrypt password hashing, 7-day `remember-me` cookies, session fixation migration, and a single concurrent session policy.
   - Password recovery via Gmail SMTP and authenticated password changes with complexity validation.
 - **Customer Dashboard (`/user/dashboard`)**
-  - Profile editing, paginated order history with line-item order details, and product reviews restricted to items the user has purchased.
+  - Profile management, paginated order history with line-item order details, and verified product reviews limited to purchased items.
 - **Admin Dashboard (`/admin/dashboard`)**
-  - Searchable, sortable, paginated CRUD for **Products**, **Orders**, and **Users**.
-  - Multipart product image uploads with automatic server-side resizing and JPEG compression.
-  - GDPR-style user deletion via PII anonymization (`deleted_<id>`) with protection against removing the last administrator.
-- **Cloud-Native Media Pipeline**
-  - Works seamlessly with **AWS S3** (production, via IAM instance roles) and **MinIO** (local Docker development), serving product images via time-limited presigned URLs (2-hour TTL).
+  - Searchable, sortable, paginated management panels for **Products**, **Orders**, and **Users**, including multipart product image uploads and order status transitions.
+- **Environment-Agnostic Storage**
+  - Seamless switch between **AWS S3** (production IAM role) and **MinIO** (local Docker) without changing application code.
 
 ---
 
@@ -96,16 +102,6 @@ flowchart LR
     App -->|"Password Recovery"| SMTP
     Browser -.->|"Direct Presigned Image GET"| Storage
 ```
-
----
-
-## Design & Implementation Highlights
-
-- **Post-Hibernate Liquibase Data Seeding (`LiquibaseRunnerConfig`)**: Standard `LiquibaseAutoConfiguration` is excluded in `prod` / `prodminio`; instead, a `CommandLineRunner` triggers `SpringLiquibase` *after* Hibernate creates/updates the schema (`ddl-auto=update`), cleanly seeding profiles, users, products, orders, order details, and reviews from `db/changelog/data-only-changelog.yaml`.
-- **Automatic Image Pipeline (`ImageCompressionService` + `S3StorageService` + `ProductMapper`)**: Uploaded images (up to 10 MB) are downscaled proportionally to at most `1200×800` using bicubic interpolation, flattened onto a white RGB background, compressed to 85% JPEG, stored in S3/MinIO, and automatically resolved to 2-hour presigned URLs in MapStruct `@AfterMapping` hooks.
-- **Reusable Dynamic Filtering (`GenericSpecification`)**: Supports multi-field case-insensitive `LIKE` and type-validated `EQUAL` predicates across nested entity paths using automatic `LEFT JOIN` traversal.
-- **Soft-Delete User Anonymization (`UserService`)**: Rather than breaking historical order integrity, deleting a user anonymizes `username`/`email`, clears phone/address, timestamps `deletedAt`, and filters records transparently with `@Where(clause = "deletedAt IS NULL")`.
-- **Audited Error Handling (`GlobalExceptionHandler`)**: Combines a servlet `Filter` and `@ControllerAdvice` to attach a unique UUID `errorId` plus user, client IP (`X-Forwarded-For`), URI, method, and session metadata to error logs.
 
 ---
 
@@ -262,7 +258,7 @@ FarmasTerrae/
     │   │   ├── config/                  # Security, S3, LiquibaseRunner, MVC, Web, GlobalExceptionHandler
     │   │   ├── controller/              # Storefront, Auth, Cart, Order, User, and Admin controllers
     │   │   ├── dto/                     # Auth, Order, Payment, Product, and User DTOs
-    │   │   ├── enums/                   # Category, PaymentMethod, SaleStatus, EntityType, Operation
+    │   │   ├── enums/                   # Domain enumerations (order statuses, payment methods, operations)
     │   │   ├── mapper/                  # MapStruct mappers (Product, Order, Review, User)
     │   │   ├── model/                   # JPA entities (User, Profile, Product, Order, OrderDetails, Review)
     │   │   ├── repository/              # Spring Data JPA repositories
