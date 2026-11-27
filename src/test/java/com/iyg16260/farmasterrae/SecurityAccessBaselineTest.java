@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.dto.user.SelfProfileUpdateDTO;
 import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
@@ -149,12 +149,11 @@ class SecurityAccessBaselineTest {
         assertThat(setCookie).isNotBlank();
         String cookieVal = setCookie.substring(setCookie.indexOf('=') + 1, setCookie.indexOf(';'));
 
-        // Rename without changing role
-        UserDTO renameDto = new UserDTO();
+        // The user renames their own account (self-service profile update, no role involved)
+        SelfProfileUpdateDTO renameDto = new SelfProfileUpdateDTO();
         renameDto.setUsername("rename_alice_new");
         renameDto.setEmail("rename_alice@example.com");
-        renameDto.setType("USER");
-        userService.updateUserById(original.getId(), renameDto);
+        userService.updateOwnProfile(original.getId(), renameDto, null);
 
         // Another user later claims the old username
         User newcomer = new User();

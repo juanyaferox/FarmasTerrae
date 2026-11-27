@@ -1,18 +1,23 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.user.AdminUserUpdateDTO;
+import com.iyg16260.farmasterrae.dto.user.SelfProfileUpdateDTO;
 import com.iyg16260.farmasterrae.dto.user.UserDTO;
 import com.iyg16260.farmasterrae.mapper.UserMapper;
 import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
+import com.iyg16260.farmasterrae.repository.PasswordResetTokenRepository;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
 import com.iyg16260.farmasterrae.spec.UserSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -22,18 +27,38 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
+
+    static final String ADMIN_PROFILE = "ADMIN";
+
+    /**
+     * Prefijo del nombre de usuario y del email de una cuenta eliminada. {@code #} y {@code -} no caben en el
+     * patrón de registro ({@code ^[a-zA-Z0-9_]{3,20}$}) y el resto es un UUID aleatorio, así que nadie puede
+     * registrar de antemano el valor que recibirá una cuenta al eliminarse y bloquear su borrado.
+     */
+    static final String DELETED_PREFIX = "#del-";
+
+    /** Dominio reservado (RFC 2606): un email anonimizado nunca puede recibir correo. */
+    static final String DELETED_EMAIL_DOMAIN = "@deleted.invalid";
+
+    /** Sustituye al hash de la contraseña al eliminar una cuenta: no es BCrypt, así que ninguna contraseña coincide. */
+    static final String DELETED_PASSWORD_PREFIX = "!deleted!";
+
+    private static final String LAST_ADMIN_MESSAGE = "Tiene que existir al menos un administrador";
 
     @Autowired
     UserRepository userRepository;
 
     @Autowired
     ProfileRepository profileRepository;
+
+    @Autowired
+    PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Autowired
     UserMapper userMapper;
@@ -105,137 +130,153 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Actualiza la información de un usuario por su id
+     * Obtiene los datos que el propio usuario puede editar, para el formulario de su panel
      *
-     * @param id          id del usuario a actualizar
-     * @param userDetails DTO con los datos actualizados del usuario
-     * @return usuario actualizado
+     * @param userId id del usuario autenticado
+     * @return datos editables del usuario
      * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario
      */
-    public User updateUserById(long id, UserDTO userDetails) throws ResponseStatusException {
-        User userDB = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        String oldRole = userDB.getProfile().getType();
-        String oldUsername = userDB.getUsername();
-        if (userDetails.getType() == null)
-            userDetails.setType(userDB.getProfile().getType());
-        User updated = userRepository.save(validateUserDTOAndReturnUserModified(userDB, userDetails));
-        if (!Objects.equals(oldRole, updated.getProfile().getType())
-                || !Objects.equals(oldUsername, updated.getUsername())) {
-            sessionRevocationService.revoke(updated, oldUsername);
+    public SelfProfileUpdateDTO getOwnProfile(long userId) throws ResponseStatusException {
+        return userMapper.userToSelfProfileUpdateDTO(
+                userRepository.findById(userId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"))
+        );
+    }
+
+    /**
+     * Actualiza los datos del propio usuario. Nunca cambia su rol, su contraseña ni su estado de borrado, y un
+     * campo opcional {@code null} conserva el valor guardado. Si cambia el nombre de usuario o el email, cierra
+     * el resto de sesiones y borra los remember-me del nombre anterior y del nuevo, sin cerrar la sesión actual.
+     *
+     * @param userId           id del usuario autenticado (nunca un dato de la petición)
+     * @param profileDetails   nuevos datos, ya validados
+     * @param currentSessionId sesión que hace el cambio y que se mantiene abierta; {@code null} las cierra todas
+     * @return usuario actualizado
+     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario, CONFLICT si el username o el email
+     *                                 ya existen, BAD_REQUEST si el nombre de usuario no es válido
+     */
+    @Transactional
+    public User updateOwnProfile(long userId, SelfProfileUpdateDTO profileDetails, String currentSessionId)
+            throws ResponseStatusException {
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        String previousUsername = user.getUsername();
+        String previousEmail = user.getEmail();
+
+        profileDetails.setUsername(normalizeIdentifier(profileDetails.getUsername(), "El usuario no puede estar vacío"));
+        profileDetails.setEmail(normalizeIdentifier(profileDetails.getEmail(), "El correo no puede estar vacío"));
+        ensureIdentifiersAreFree(user, profileDetails.getUsername(), profileDetails.getEmail());
+        userMapper.updateUserFromSelfProfileDTO(profileDetails, user);
+
+        User updated = saveOrConflict(user);
+        if (!Objects.equals(previousUsername, updated.getUsername())
+                || !Objects.equals(previousEmail, updated.getEmail())) {
+            sessionRevocationService.revokeOthers(updated, previousUsername, currentSessionId);
         }
         return updated;
     }
 
     /**
-     * Actualiza la información de un usuario por su nombre de usuario
+     * Actualiza la información de un usuario por su nombre de usuario (panel de administración)
      *
      * @param userDetails DTO con los datos actualizados del usuario
      * @param oldUsername nombre de usuario actual
      * @return usuario actualizado
-     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario
+     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario, BAD_REQUEST si el tipo no existe o
+     *                                 se degrada al último administrador, CONFLICT si el username o el email ya existen
      */
-    public User updateUserByUsername(UserDTO userDetails, String oldUsername) throws ResponseStatusException {
-        User userDB = userRepository.findByUsername(oldUsername)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        String oldRole = userDB.getProfile().getType();
-        String actualOldUsername = userDB.getUsername();
-        User updated = userRepository.save(validateUserDTOAndReturnUserModified(userDB, userDetails));
-        if (!Objects.equals(oldRole, updated.getProfile().getType())
-                || !Objects.equals(actualOldUsername, updated.getUsername())) {
-            sessionRevocationService.revoke(updated, actualOldUsername);
+    @PreAuthorize ("hasRole('ADMIN')")
+    @Transactional
+    public User updateUserByUsername(AdminUserUpdateDTO userDetails, String oldUsername) throws ResponseStatusException {
+        // Siempre se bloquean primero los administradores y después la cuenta: el mismo orden en todas las
+        // operaciones que pueden quitar un administrador evita interbloqueos entre ellas
+        List<User> lockedAdmins = userRepository.findAllByProfileTypeForUpdate(ADMIN_PROFILE);
+        User userDB = findByUsernameForUpdate(oldUsername);
+        String previousRole = userDB.getProfile().getType();
+        String previousUsername = userDB.getUsername();
+        String previousEmail = userDB.getEmail();
+
+        Profile targetProfile = resolveProfile(userDetails.getType(), userDB.getProfile());
+        if (isAdmin(userDB) && !ADMIN_PROFILE.equals(targetProfile.getType())) {
+            ensureAnotherAdminRemains(userDB, lockedAdmins);
+        }
+
+        userDetails.setUsername(normalizeIdentifier(userDetails.getUsername(), "El usuario no puede estar vacío"));
+        userDetails.setEmail(normalizeIdentifier(userDetails.getEmail(), "El correo no puede estar vacío"));
+        ensureIdentifiersAreFree(userDB, userDetails.getUsername(), userDetails.getEmail());
+        userMapper.updateUserFromAdminDTO(userDetails, userDB);
+        userDB.setProfile(targetProfile);
+
+        User updated = saveOrConflict(userDB);
+        if (!Objects.equals(previousRole, updated.getProfile().getType())
+                || !Objects.equals(previousUsername, updated.getUsername())
+                || !Objects.equals(previousEmail, updated.getEmail())) {
+            sessionRevocationService.revoke(updated, previousUsername);
         }
         return updated;
-    }
-
-    /**
-     * Valida los datos del DTO y actualiza el usuario correspondiente
-     *
-     * @param user        usuario existente a modificar
-     * @param userDetails DTO con los nuevos datos
-     * @return usuario modificado y validado
-     * @throws ResponseStatusException CONFLICT si el username o email ya existen
-     */
-    private User validateUserDTOAndReturnUserModified(User user, UserDTO userDetails) throws ResponseStatusException {
-
-        if (userDetails.getUsername() != null) userDetails.setUsername(userDetails.getUsername().trim().toLowerCase(Locale.ROOT));
-        if (userDetails.getEmail() != null) userDetails.setEmail(userDetails.getEmail().trim().toLowerCase(Locale.ROOT));
-
-        if (!Objects.equals(user.getUsername(), userDetails.getUsername())
-                && userRepository.existsByUsername(userDetails.getUsername())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Nombre de usuario ya existente en la BBDD");
-        }
-        if (!Objects.equals(user.getEmail(), userDetails.getEmail())
-                && userRepository.existsByEmail(userDetails.getEmail())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya existente en la BBDD");
-        }
-        userMapper.updateUserFromUserDTO(userDetails, user);
-        user.setProfile(profileRepository.findByType(userDetails.getType()));
-        return user;
     }
 
     /**
      * Elimina un usuario por su id mediante anonimización
      *
      * @param id id del usuario a eliminar
-     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario
+     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario, BAD_REQUEST si es el último admin
      */
+    @PreAuthorize ("hasRole('ADMIN')")
+    @Transactional
     public void deleteUserById(long id) throws ResponseStatusException {
-        var userOpt = userRepository.findById(id);
-        User user = userOpt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        String oldUsername = user.getUsername();
-        User deleted = validateUserForDelete(userOpt);
-        sessionRevocationService.revoke(deleted, oldUsername);
-        userRepository.save(deleted);
+        List<User> lockedAdmins = userRepository.findAllByProfileTypeForUpdate(ADMIN_PROFILE);
+        User user = userRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        softDelete(user, lockedAdmins);
     }
 
     /**
      * Elimina un usuario por su nombre de usuario mediante anonimización
      *
      * @param username nombre de usuario del usuario a eliminar
-     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario
+     * @throws ResponseStatusException NOT_FOUND si no se encuentra el usuario, BAD_REQUEST si es el último admin
      */
+    @PreAuthorize ("hasRole('ADMIN')")
+    @Transactional
     public void deleteUserByUsername(String username) throws ResponseStatusException {
-        var userOpt = userRepository.findByUsername(username);
-        User user = userOpt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        String oldUsername = user.getUsername();
-        User deleted = validateUserForDelete(userOpt);
-        sessionRevocationService.revoke(deleted, oldUsername);
-        userRepository.save(deleted);
+        List<User> lockedAdmins = userRepository.findAllByProfileTypeForUpdate(ADMIN_PROFILE);
+        softDelete(findByUsernameForUpdate(username), lockedAdmins);
     }
 
     /**
-     * Valida si un usuario puede ser eliminado y lo prepara para anonimización
+     * Anonimiza y desactiva una cuenta ya bloqueada, y revoca todo lo que permitía usarla: sesiones,
+     * remember-me y enlaces de restablecimiento de contraseña
      *
-     * @param userOpt usuario opcional a validar
-     * @return usuario anonimizado
-     * @throws ResponseStatusException BAD_REQUEST si es el último admin, NOT_FOUND si no existe
+     * @param user         usuario a eliminar
+     * @param lockedAdmins administradores activos, leídos con bloqueo en esta transacción
+     * @throws ResponseStatusException BAD_REQUEST si es el último admin
      */
-    private User validateUserForDelete(Optional<User> userOpt) throws ResponseStatusException {
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            String userProfileType = user.getProfile().getType();
-
-            if (Objects.equals(userProfileType, "ADMIN")
-                    && userRepository.findAllByProfileType(userProfileType).size() <= 1)
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tiene que existir al menos un administrador");
-
-            return anonymize(user);
-        } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado");
+    private void softDelete(User user, List<User> lockedAdmins) throws ResponseStatusException {
+        if (isAdmin(user)) {
+            ensureAnotherAdminRemains(user, lockedAdmins);
         }
+        String previousUsername = user.getUsername();
+        passwordResetTokenRepository.deleteAllByUserId(user.getId());
+        User deleted = saveOrConflict(anonymize(user));
+        sessionRevocationService.revoke(deleted, previousUsername);
     }
 
     /**
-     * Anonimiza los datos de un usuario para cumplir con políticas de eliminación
+     * Anonimiza los datos de un usuario para cumplir con políticas de eliminación: sustituye su nombre de
+     * usuario y su email por valores que no se pueden registrar, borra sus datos personales e invalida
+     * su contraseña
      *
      * @param u usuario a anonimizar
      * @return usuario con datos anonimizados
      */
     public User anonymize(User u) {
-        u.setUsername("deleted_" + u.getId());
-        u.setEmail("deleted_" + u.getId() + "@example.com");
+        u.setUsername(DELETED_PREFIX + UUID.randomUUID());
+        u.setEmail(DELETED_PREFIX + UUID.randomUUID() + DELETED_EMAIL_DOMAIN);
+        u.setFullName(null);
         u.setPhone(null);
         u.setAddress(null);
+        u.setPassword(DELETED_PASSWORD_PREFIX + UUID.randomUUID());
         u.setDeletedAt(LocalDateTime.now());
         return u;
     }
@@ -264,6 +305,88 @@ public class UserService implements UserDetailsService {
         return profileRepository.findAll();
     }
 
+    private User findByUsernameForUpdate(String username) throws ResponseStatusException {
+        String normalized = username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
+        return userRepository.findByUsernameForUpdate(normalized)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+    }
+
+    /**
+     * Resuelve el perfil pedido. Sin tipo se conserva el actual; un tipo que no existe nunca deja la cuenta
+     * sin perfil
+     *
+     * @throws ResponseStatusException BAD_REQUEST si el tipo no corresponde a ningún perfil
+     */
+    private Profile resolveProfile(String type, Profile currentProfile) throws ResponseStatusException {
+        if (type == null) {
+            return currentProfile;
+        }
+        String normalizedType = type.trim().toUpperCase(Locale.ROOT);
+        Profile targetProfile = normalizedType.isEmpty() ? null : profileRepository.findByType(normalizedType);
+        if (targetProfile == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tipo de usuario inválido");
+        }
+        return targetProfile;
+    }
+
+    private static boolean isAdmin(User user) {
+        return user.getProfile() != null && ADMIN_PROFILE.equals(user.getProfile().getType());
+    }
+
+    /**
+     * Comprueba que quede otro administrador activo si {@code target} deja de serlo
+     *
+     * @param lockedAdmins administradores activos, leídos con bloqueo en esta transacción (no una lectura previa,
+     *                     que dos borrados simultáneos podrían ver igual)
+     * @throws ResponseStatusException BAD_REQUEST si no queda ningún otro
+     */
+    private static void ensureAnotherAdminRemains(User target, List<User> lockedAdmins) throws ResponseStatusException {
+        boolean anotherAdmin = lockedAdmins.stream()
+                .anyMatch(admin -> !Objects.equals(admin.getId(), target.getId()));
+        if (!anotherAdmin) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, LAST_ADMIN_MESSAGE);
+        }
+    }
+
+    /**
+     * Comprueba que el nuevo username y el nuevo email no pertenezcan a otra cuenta
+     *
+     * @throws ResponseStatusException CONFLICT si el username o el email ya existen
+     */
+    private void ensureIdentifiersAreFree(User user, String username, String email) throws ResponseStatusException {
+        if (username != null && !username.equals(user.getUsername()) && userRepository.existsByUsername(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Nombre de usuario ya existente en la BBDD");
+        }
+        if (email != null && !email.equals(user.getEmail()) && userRepository.existsByEmail(email)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email ya existente en la BBDD");
+        }
+    }
+
+    /**
+     * Guarda y sincroniza con la BBDD dentro de la transacción, para que una restricción única (p. ej. dos
+     * peticiones simultáneas con el mismo email) acabe en CONFLICT y no en un error interno
+     */
+    private User saveOrConflict(User user) throws ResponseStatusException {
+        try {
+            return userRepository.saveAndFlush(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Nombre de usuario o email ya existente en la BBDD");
+        }
+    }
+
+    /**
+     * Normaliza un username o email. {@code null} significa "no cambiar"
+     *
+     * @throws ResponseStatusException BAD_REQUEST si llega en blanco
+     */
+    private static String normalizeIdentifier(String value, String blankMessage) throws ResponseStatusException {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, blankMessage);
+        }
+        return normalized;
+    }
 }
-
-

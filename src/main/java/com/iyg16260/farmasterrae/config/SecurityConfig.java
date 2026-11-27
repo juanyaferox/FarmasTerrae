@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.session.SessionRegistry;
@@ -19,7 +20,10 @@ import org.springframework.security.config.annotation.web.configurers.HeadersCon
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
 
-@Configuration @EnableWebSecurity
+// @EnableMethodSecurity: @PreAuthorize guards the admin-only service methods (e.g. UserService) even if a
+// controller or URL rule ever exposes them by mistake. Denials throw AuthorizationDeniedException, an
+// AccessDeniedException, which GlobalExceptionHandler already turns into a 403.
+@Configuration @EnableWebSecurity @EnableMethodSecurity
 public class SecurityConfig {
     @Value("${spring.h2.console.enabled:false}") private boolean h2ConsoleEnabled;
     @Value("${spring.h2.console.path:/h2-console}") private String h2ConsolePath;

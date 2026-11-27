@@ -3,6 +3,7 @@ package com.iyg16260.farmasterrae.repository;
 import com.iyg16260.farmasterrae.model.PasswordResetToken;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
@@ -18,4 +19,9 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
     void deleteByUser_IdAndUsedAtIsNull(Long userId);
     @Transactional
     void deleteByUser_IdAndUsedAtIsNullAndIdNot(Long userId, Long id);
+    /** Borra todos los tokens (usados o no) de una cuenta, p. ej. al eliminarla. */
+    @Transactional
+    @Modifying
+    @Query("delete from PasswordResetToken t where t.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
 }

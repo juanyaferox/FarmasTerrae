@@ -18,27 +18,32 @@
                 <input type="text" id="username" th:field="*{username}" class="ft-input"
                        autocomplete="username" required aria-describedby="username-hint">
                 <span id="username-hint" class="ft-hint">Lo usas para iniciar sesión.</span>
+                <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="ft-hint"></span>
             </div>
             <div class="ft-field">
                 <label for="fullName" class="ft-label">Nombre completo</label>
                 <input type="text" id="fullName" th:field="*{fullName}" class="ft-input"
                        autocomplete="name">
+                <span th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}" class="ft-hint"></span>
             </div>
             <div class="ft-field">
                 <label for="email" class="ft-label">Correo electrónico <span class="ft-required" aria-hidden="true">*</span></label>
                 <input type="email" id="email" th:field="*{email}" class="ft-input"
                        autocomplete="email" required>
+                <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="ft-hint"></span>
             </div>
             <div class="ft-field">
                 <label for="phone" class="ft-label">Teléfono</label>
                 <input type="tel" id="phone" th:field="*{phone}" class="ft-input ft-tabular"
                        autocomplete="tel" inputmode="tel">
+                <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="ft-hint"></span>
             </div>
             <div class="ft-field ft-form-grid__full">
                 <label for="address" class="ft-label">Dirección de envío</label>
                 <input type="text" id="address" th:field="*{address}" class="ft-input"
                        autocomplete="street-address" aria-describedby="address-hint">
                 <span id="address-hint" class="ft-hint">Calle, número, piso, código postal y localidad.</span>
+                <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="ft-hint"></span>
             </div>
         </div>
 

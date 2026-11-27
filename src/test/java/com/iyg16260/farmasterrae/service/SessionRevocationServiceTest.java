@@ -2,8 +2,9 @@ package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.model.Profile;
 import com.iyg16260.farmasterrae.model.User;
-import com.iyg16260.farmasterrae.dto.user.UserDTO;
+import com.iyg16260.farmasterrae.dto.user.AdminUserUpdateDTO;
 import com.iyg16260.farmasterrae.mapper.UserMapper;
+import com.iyg16260.farmasterrae.repository.PasswordResetTokenRepository;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -25,27 +26,64 @@ class SessionRevocationServiceTest {
         UserRepository users = mock(UserRepository.class);
         ProfileRepository profiles = mock(ProfileRepository.class);
         UserMapper mapper = mock(UserMapper.class);
+        PasswordResetTokenRepository resetTokens = mock(PasswordResetTokenRepository.class);
         UserService service = new UserService(); service.userRepository = users; service.profileRepository = profiles;
         service.userMapper = mapper; service.sessionRevocationService = revocation;
+        service.passwordResetTokenRepository = resetTokens;
         User user = user(9L, "member", "USER");
         registry.registerNewSession("role-session", user);
-        when(users.findById(9L)).thenReturn(java.util.Optional.of(user));
+        when(users.findByUsernameForUpdate("member")).thenReturn(java.util.Optional.of(user));
         when(profiles.findByType("ADMIN")).thenReturn(profile("ADMIN"));
-        when(users.save(user)).thenReturn(user);
-        UserDTO update = new UserDTO(); update.setType("ADMIN"); update.setUsername("member"); update.setEmail("member@example.com");
+        when(users.saveAndFlush(user)).thenReturn(user);
+        AdminUserUpdateDTO update = new AdminUserUpdateDTO(); update.setType("ADMIN"); update.setUsername("member"); update.setEmail("member@example.com");
 
-        service.updateUserById(9L, update);
+        service.updateUserByUsername(update, "member");
         assertThat(registry.getSessionInformation("role-session").isExpired()).isTrue();
         verify(tokens).removeUserTokens("member");
 
         User deletedUser = user(10L, "removed", "USER");
         registry.registerNewSession("delete-session", deletedUser);
-        when(users.findById(10L)).thenReturn(java.util.Optional.of(deletedUser));
-        when(users.save(deletedUser)).thenReturn(deletedUser);
+        when(users.findByIdForUpdate(10L)).thenReturn(java.util.Optional.of(deletedUser));
+        when(users.saveAndFlush(deletedUser)).thenReturn(deletedUser);
         service.deleteUserById(10L);
         assertThat(registry.getSessionInformation("delete-session").isExpired()).isTrue();
         assertThat(deletedUser.getDeletedAt()).isNotNull();
         verify(tokens).removeUserTokens("removed");
+        verify(resetTokens).deleteAllByUserId(10L);
+    }
+
+    @Test
+    void revokingTheNewOwnerOfARenamedUsernameLeavesTheRenamedAccountAlone() {
+        SessionRegistryImpl registry = new SessionRegistryImpl();
+        PersistentTokenRepository tokens = mock(PersistentTokenRepository.class);
+        // Alice (id 3) logged in as "alice" and then renamed herself: her session still holds that name
+        User aliceAtLogin = user(3L, "alice", "USER");
+        registry.registerNewSession("alice-session", aliceAtLogin);
+        // Bob (id 4) later registered the freed "alice" username and logged in
+        User bob = user(4L, "alice", "USER");
+        registry.registerNewSession("bob-session", bob);
+
+        new SessionRevocationService(registry, tokens).revoke(bob);
+
+        assertThat(registry.getSessionInformation("bob-session").isExpired()).isTrue();
+        assertThat(registry.getSessionInformation("alice-session").isExpired()).isFalse();
+    }
+
+    @Test
+    void renameKeepsTheCurrentSessionAndDropsRememberMeTokensOfBothUsernames() {
+        SessionRegistryImpl registry = new SessionRegistryImpl();
+        PersistentTokenRepository tokens = mock(PersistentTokenRepository.class);
+        User atLogin = user(3L, "alice", "USER");
+        registry.registerNewSession("current", atLogin);
+        registry.registerNewSession("other", atLogin);
+        User renamed = user(3L, "alice_new", "USER");
+
+        new SessionRevocationService(registry, tokens).revokeOthers(renamed, "alice", "current");
+
+        assertThat(registry.getSessionInformation("current").isExpired()).isFalse();
+        assertThat(registry.getSessionInformation("other").isExpired()).isTrue();
+        verify(tokens).removeUserTokens("alice");
+        verify(tokens).removeUserTokens("alice_new");
     }
 
     @Test
