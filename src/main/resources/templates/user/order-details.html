@@ -6,7 +6,7 @@
 
 <!--
     Modelo: order (OrderDetailsDTO { products: Map<ProductDTO, Integer>, totalPrice, status (texto), createdAt,
-    updatedAt, paymentMethod (texto), name, address }) y success (boolean). OrderDetailsDTO no expone el id del pedido.
+    updatedAt, paymentMethod (texto), name, address }) y orderSuccess (flash boolean). OrderDetailsDTO no expone el id del pedido.
     status llega ya traducido (SaleStatus.value): Pendiente / Enviado / Completado / Cancelado.
 -->
 <main id="main-content"
@@ -42,7 +42,7 @@
 
     <section class="ft-section">
         <div class="ft-container">
-            <div th:if="${success}" class="ft-alert ft-alert--success" role="status" style="margin-bottom: 20px;">
+            <div th:if="${orderSuccess}" class="ft-alert ft-alert--success" role="status" style="margin-bottom: 20px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                 <span>¡Pedido realizado con éxito!</span>
             </div>
