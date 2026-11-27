@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('FarmasTerrae — Detalles del Pedido', '/css/layout.css')}"></head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
 <!--
     Modelo: order (OrderDetailsDTO { items: List<OrderItemDTO>, totalPrice, status (texto), createdAt,
-    updatedAt, paymentMethod (texto), name, address }) y orderSuccess (flash boolean). OrderDetailsDTO no expone el id del pedido.
+    updatedAt, paymentMethod (texto), name, address }), orderSuccess (flash boolean) e isAdminView (true cuando se
+    abre desde /admin/dashboard/orders/{id}: navegación del panel y sin acciones del comprador).
+    OrderDetailsDTO no expone el id del pedido.
     status llega ya traducido (SaleStatus.value): Pendiente / Enviado / Completado / Cancelado.
 -->
 <main id="main-content"
-      th:with="statusKey=${order.status == 'Pendiente' ? 'pending' : (order.status == 'Enviado' ? 'shipped' : (order.status == 'Completado' ? 'completed' : (order.status == 'Cancelado' ? 'cancelled' : '')))},
+      th:with="adminView=${isAdminView != null and isAdminView},
+               statusKey=${order.status == 'Pendiente' ? 'pending' : (order.status == 'Enviado' ? 'shipped' : (order.status == 'Completado' ? 'completed' : (order.status == 'Cancelado' ? 'cancelled' : '')))},
                hasProducts=${order.items != null and !#lists.isEmpty(order.items)},
                productCount=${order.items != null ? #lists.size(order.items) : 0},
                unitCount=${order.items != null and !#lists.isEmpty(order.items) ? #aggregates.sum(order.items.![amount != null ? amount : 0]) : 0}">
@@ -19,9 +22,16 @@
             <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
                 <a th:href="@{/}">Inicio</a>
                 <span aria-hidden="true">/</span>
-                <a th:href="@{/user/dashboard}">Panel de control</a>
-                <span aria-hidden="true">/</span>
-                <a th:href="@{/user/dashboard/orders}">Mis pedidos</a>
+                <th:block th:if="${adminView}">
+                    <a th:href="@{/admin/dashboard}">Panel de administración</a>
+                    <span aria-hidden="true">/</span>
+                    <a th:href="@{/admin/dashboard/orders}">Pedidos</a>
+                </th:block>
+                <th:block th:unless="${adminView}">
+                    <a th:href="@{/user/dashboard}">Panel de control</a>
+                    <span aria-hidden="true">/</span>
+                    <a th:href="@{/user/dashboard/orders}">Mis pedidos</a>
+                </th:block>
                 <span aria-hidden="true">/</span>
                 <span aria-current="page">Detalles del pedido</span>
             </nav>
@@ -42,7 +52,7 @@
 
     <section class="ft-section">
         <div class="ft-container">
-            <div th:if="${orderSuccess}" class="ft-alert ft-alert--success" role="status" style="margin-bottom: 20px;">
+            <div th:if="${orderSuccess} and ${!adminView}" class="ft-alert ft-alert--success" role="status" style="margin-bottom: 20px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
                 <span>¡Pedido realizado con éxito!</span>
             </div>
@@ -149,11 +159,15 @@
             </section>
 
             <div class="ud-actions-bar">
-                <a th:href="@{/user/dashboard/orders}" class="ft-btn ft-btn--ghost">
+                <a th:if="${adminView}" th:href="@{/admin/dashboard/orders}" class="ft-btn ft-btn--ghost">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
+                    Volver a pedidos
+                </a>
+                <a th:unless="${adminView}" th:href="@{/user/dashboard/orders}" class="ft-btn ft-btn--ghost">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"></path><path d="m11 18-6-6 6-6"></path></svg>
                     Volver a mis pedidos
                 </a>
-                <a th:href="@{/user/dashboard/reviews}" class="ft-btn ft-btn--mint">
+                <a th:unless="${adminView}" th:href="@{/user/dashboard/reviews}" class="ft-btn ft-btn--mint">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
                     Escribir reseña
                 </a>

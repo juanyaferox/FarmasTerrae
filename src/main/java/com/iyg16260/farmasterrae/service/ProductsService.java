@@ -9,13 +9,12 @@ import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import com.iyg16260.farmasterrae.spec.GenericSpecification;
 import com.iyg16260.farmasterrae.spec.ProductSpecification;
+import com.iyg16260.farmasterrae.utils.PageableUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -32,6 +31,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -57,36 +57,47 @@ public class ProductsService {
     private final int PAGE_SIZE_ADMIN = 9;
     private final String PRODUCT_IMAGES_FOLDER = "product-images";
 
+    /** Columnas por las que se puede ordenar el listado del panel de administración */
+    static final Set<String> SORTABLE_FIELDS = Set.of("name", "reference", "category", "price", "stock");
+
     /**
-     * Obtiene una página de productos con opción de tamaño personalizado para admin
+     * Obtiene una página de productos para el panel de administración
      *
-     * @param page número de página
+     * @param page    número de página; fuera de rango se ajusta a la primera o a la última
+     * @param keyword texto de búsqueda; en blanco equivale a no buscar
+     * @param sort    columna de ordenación; si no está en {@link #SORTABLE_FIELDS} se usa el orden por defecto
+     * @param dir     dirección de la ordenación ({@code asc} o {@code desc})
      * @return página de productos DTO
      */
     public Page<ProductDTO> getProductList(int page, String keyword, String sort, String dir) {
-
-        Sort sortOrder = Sort.unsorted();
-        if (sort != null) {
-            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortOrder = Sort.by(direction, sort);
-        }
+        String search = GenericSpecification.normalizeKeyword(keyword);
 
         var specUtils = new ProductSpecification();
-        Specification<Product> spec = specUtils.searchLike(keyword)
-                .or(specUtils.searchLikeCategory(keyword));
+        Specification<Product> spec = search == null
+                ? specUtils.searchLike(null)
+                : specUtils.searchLike(search).or(specUtils.searchLikeCategory(search));
 
-        return productRepository
-                .findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
+        return PageableUtils.findClampedPage(page, PAGE_SIZE_ADMIN, PageableUtils.sortOf(sort, dir, SORTABLE_FIELDS),
+                        pageable -> productRepository.findAll(spec, pageable))
                 .map(productMapper::productToProductDTO);
     }
 
+    /**
+     * Obtiene una página del catálogo público, opcionalmente filtrada por categoría y texto
+     *
+     * @param category categoría a filtrar, o {@code null} para todas
+     * @param keyword  texto de búsqueda; en blanco equivale a no buscar
+     * @param page     número de página; fuera de rango se ajusta a la primera o a la última
+     * @return página de productos del catálogo
+     */
     public Page<ProductPageDTO> getFilteredProducts(Category category, String keyword, int page) {
 
         ProductSpecification specUtil = new ProductSpecification();
         Specification<Product> spec = specUtil.searchByCategory(category)
-                .and(specUtil.searchLike(keyword));
+                .and(specUtil.searchLike(GenericSpecification.normalizeKeyword(keyword)));
 
-        return productRepository.findAll(spec, Pageable.ofSize(PAGE_SIZE).withPage(page))
+        return PageableUtils.findClampedPage(page, PAGE_SIZE, PageableUtils.defaultSort(),
+                        pageable -> productRepository.findAll(spec, pageable))
                 .map(productMapper::productToProductPageDTO);
     }
 

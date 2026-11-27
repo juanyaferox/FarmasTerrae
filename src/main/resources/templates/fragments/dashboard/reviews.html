@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!--
   FarmasTerrae — Sección "Mis reseñas" del panel de usuario.
@@ -16,12 +16,52 @@
             openAddModal: false,
             openEditModal: false,
             openDeleteModal: false,
+            returnFocusTo: null,
             search: '',
             editReview: { id: '', title: '', content: '', scoring: 1, productName: '', productImage: '', productReference: '' },
             deleteReviewId: '',
-            deleteReviewTitle: ''
+            deleteReviewTitle: '',
+            showModal(modal, trigger, focusRef) {
+              this.openAddModal = false;
+              this.openEditModal = false;
+              this.openDeleteModal = false;
+              this.returnFocusTo = trigger;
+              this[modal] = true;
+              this.$nextTick(() => this.$refs[focusRef].focus());
+            },
+            openAdd(trigger) {
+              this.search = '';
+              this.showModal('openAddModal', trigger, 'addSearch');
+            },
+            openEdit(trigger) {
+              const ds = trigger.dataset;
+              this.editReview = {
+                id: ds.id,
+                title: ds.title,
+                content: ds.content,
+                scoring: Number(ds.scoring),
+                productName: ds.productName,
+                productImage: ds.productImage,
+                productReference: ds.productReference
+              };
+              this.showModal('openEditModal', trigger, 'editTitle');
+            },
+            openDelete(trigger) {
+              this.deleteReviewId = trigger.dataset.id;
+              this.deleteReviewTitle = trigger.dataset.title;
+              this.showModal('openDeleteModal', trigger, 'deleteClose');
+            },
+            closeModals() {
+              if (!(this.openAddModal || this.openEditModal || this.openDeleteModal)) { return; }
+              this.openAddModal = false;
+              this.openEditModal = false;
+              this.openDeleteModal = false;
+              const trigger = this.returnFocusTo;
+              this.returnFocusTo = null;
+              this.$nextTick(() => trigger?.focus());
+            }
          }"
-         @keydown.escape.window="openAddModal = false; openEditModal = false; openDeleteModal = false">
+         @keydown.escape.window="closeModals()">
 
     <div class="ft-panel__head">
         <div>
@@ -32,7 +72,7 @@
         <button type="button"
                 th:if="${!#lists.isEmpty(products)}"
                 class="ft-btn ft-btn--mint ft-btn--sm"
-                @click="search = ''; openAddModal = true">
+                @click="openAdd($el)">
             + Añadir nueva reseña
         </button>
     </div>
@@ -140,15 +180,7 @@
                                 th:data-product-name="${review.productName}"
                                 th:data-product-image="${reviewImg}"
                                 th:data-product-reference="${review.productReference}"
-                                @click="editReview = {
-                                    id: $el.dataset.id,
-                                    title: $el.dataset.title,
-                                    content: $el.dataset.content,
-                                    scoring: Number($el.dataset.scoring),
-                                    productName: $el.dataset.productName,
-                                    productImage: $el.dataset.productImage,
-                                    productReference: $el.dataset.productReference
-                                }; openEditModal = true">
+                                @click="openEdit($el)">
                             Editar
                         </button>
                         <button type="button"
@@ -156,7 +188,7 @@
                                 th:aria-label="|Eliminar reseña «${review.title}»|"
                                 th:data-id="${review.id}"
                                 th:data-title="${review.title}"
-                                @click="deleteReviewId = $el.dataset.id; deleteReviewTitle = $el.dataset.title; openDeleteModal = true">
+                                @click="openDelete($el)">
                             Eliminar
                         </button>
                     </div>
@@ -198,14 +230,14 @@
          x-show="openAddModal" x-cloak
          class="ft-modal ft-modal--alpine"
          role="dialog" aria-modal="true" aria-labelledby="modal-nueva-resena-title">
-        <div class="ft-modal__backdrop" aria-hidden="true" @click="openAddModal = false"></div>
+        <div class="ft-modal__backdrop" aria-hidden="true" @click="closeModals()"></div>
         <div class="ft-modal__dialog">
             <div class="ft-modal__head">
                 <div>
                     <span class="ft-eyebrow">Reseña</span>
                     <h3 id="modal-nueva-resena-title" class="ft-modal__title">Añadir nueva reseña</h3>
                 </div>
-                <button type="button" class="ft-modal__close" aria-label="Cerrar" @click="openAddModal = false">
+                <button type="button" class="ft-modal__close" aria-label="Cerrar" @click="closeModals()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M18 6 6 18"></path>
@@ -222,7 +254,7 @@
 
                     <div class="ft-field">
                         <label for="new-product-search" class="ft-sr-only">Buscar producto</label>
-                        <input id="new-product-search" type="search" class="ft-input"
+                        <input id="new-product-search" x-ref="addSearch" type="search" class="ft-input"
                                x-model="search" placeholder="Filtrar productos..." autocomplete="off"/>
                     </div>
 
@@ -269,7 +301,7 @@
                 </div>
 
                 <div class="ft-modal__foot">
-                    <button type="button" class="ft-btn ft-btn--ghost" @click="openAddModal = false">Cancelar</button>
+                    <button type="button" class="ft-btn ft-btn--ghost" @click="closeModals()">Cancelar</button>
                     <button type="submit" class="ft-btn ft-btn--mint">Crear reseña</button>
                 </div>
             </form>
@@ -280,14 +312,14 @@
     <div x-show="openEditModal" x-cloak
          class="ft-modal ft-modal--alpine"
          role="dialog" aria-modal="true" aria-labelledby="modal-editar-resena-title">
-        <div class="ft-modal__backdrop" aria-hidden="true" @click="openEditModal = false"></div>
+        <div class="ft-modal__backdrop" aria-hidden="true" @click="closeModals()"></div>
         <div class="ft-modal__dialog">
             <div class="ft-modal__head">
                 <div>
                     <span class="ft-eyebrow">Reseña</span>
                     <h3 id="modal-editar-resena-title" class="ft-modal__title">Editar reseña</h3>
                 </div>
-                <button type="button" class="ft-modal__close" aria-label="Cerrar" @click="openEditModal = false">
+                <button type="button" class="ft-modal__close" aria-label="Cerrar" @click="closeModals()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M18 6 6 18"></path>
@@ -313,7 +345,7 @@
 
                 <div class="ft-field">
                     <label for="edit-title" class="ft-label">Título <span class="ft-required" aria-hidden="true">*</span></label>
-                    <input id="edit-title" name="title" type="text" class="ft-input" maxlength="50" required
+                    <input id="edit-title" x-ref="editTitle" name="title" type="text" class="ft-input" maxlength="50" required
                            x-model="editReview.title" aria-describedby="edit-title-hint"/>
                     <span id="edit-title-hint" class="ft-hint">Máximo <span class="ft-tabular">50</span> caracteres.</span>
                 </div>
@@ -330,7 +362,7 @@
                 </div>
 
                 <div class="ft-modal__foot">
-                    <button type="button" class="ft-btn ft-btn--ghost" @click="openEditModal = false">Cancelar</button>
+                    <button type="button" class="ft-btn ft-btn--ghost" @click="closeModals()">Cancelar</button>
                     <button type="submit" class="ft-btn ft-btn--mint">Guardar cambios</button>
                 </div>
             </form>
@@ -341,14 +373,14 @@
     <div x-show="openDeleteModal" x-cloak
          class="ft-modal ft-modal--alpine"
          role="dialog" aria-modal="true" aria-labelledby="modal-eliminar-resena-title">
-        <div class="ft-modal__backdrop" aria-hidden="true" @click="openDeleteModal = false"></div>
+        <div class="ft-modal__backdrop" aria-hidden="true" @click="closeModals()"></div>
         <div class="ft-modal__dialog">
             <div class="ft-modal__head">
                 <div>
                     <span class="ft-eyebrow">Confirmación</span>
                     <h3 id="modal-eliminar-resena-title" class="ft-modal__title">Eliminar reseña</h3>
                 </div>
-                <button type="button" class="ft-modal__close" aria-label="Cerrar" @click="openDeleteModal = false">
+                <button type="button" class="ft-modal__close" x-ref="deleteClose" aria-label="Cerrar" @click="closeModals()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                          stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M18 6 6 18"></path>
@@ -375,7 +407,7 @@
                 </div>
 
                 <div class="ft-modal__foot">
-                    <button type="button" class="ft-btn ft-btn--ghost" @click="openDeleteModal = false">Cancelar</button>
+                    <button type="button" class="ft-btn ft-btn--ghost" @click="closeModals()">Cancelar</button>
                     <button type="submit" class="ft-btn ft-btn--danger">Eliminar reseña</button>
                 </div>
             </form>

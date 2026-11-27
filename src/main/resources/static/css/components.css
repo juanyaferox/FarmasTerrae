@@ -366,7 +366,10 @@
   border-color: var(--ft-deep-teal);
 }
 
-.ft-chip[aria-pressed="true"] {
+/* Toggle chips are <button aria-pressed>; filter chips are links marked with aria-current/ft-chip--active */
+.ft-chip[aria-pressed="true"],
+.ft-chip[aria-current="page"],
+.ft-chip--active {
   background: var(--ft-deep-teal);
   border-color: var(--ft-deep-teal);
   color: var(--ft-paper);

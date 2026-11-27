@@ -6,29 +6,54 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
+import java.util.Locale;
 
 public final class GenericSpecification {
+
+    /** Carácter de escape de los patrones {@code LIKE} */
+    static final char LIKE_ESCAPE = '\\';
+
+    private GenericSpecification() {
+    }
+
+    /**
+     * Normaliza el texto de una búsqueda: quita los espacios de los extremos y trata una búsqueda en blanco
+     * igual que no buscar nada.
+     *
+     * @param keyword texto de búsqueda recibido
+     * @return el texto sin espacios en los extremos, o {@code null} si es nulo o está en blanco
+     */
+    public static String normalizeKeyword(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return null;
+        }
+        return keyword.trim();
+    }
 
     /**
      * Construye un predicado de búsqueda {@code LIKE IGNORE CASE}
      * sobre los campos de tipo {@code String} de la entidad.
+     * <p>
+     * Los comodines de {@code LIKE} ({@code %} y {@code _}) y el carácter de escape del texto buscado se
+     * escapan, así que se buscan de forma literal.
      *
      * @param <T>     tipo de entidad de Specification
      * @param fields  colección de los nombres de los atributos {@code String} de la entidad
      * @param keyword cadena de búsqueda
      * @return {@code Specification<T>} que representa el LIKE insensible a mayúsculas/minúsculas,
-     * o {@code null} si {@code attributeName} o {@code keyword} están en blanco o nulos
+     * o una sin restricciones si no hay campos o {@code keyword} es nulo o está en blanco
      */
     public static <T> Specification<T> likeIgnoreCase(String[] fields, String keyword) {
-        if (fields == null || fields.length == 0 || keyword == null || keyword.isBlank()) {
-            return Specification.where(null);
+        String normalized = normalizeKeyword(keyword);
+        if (fields == null || fields.length == 0 || normalized == null) {
+            return Specification.unrestricted();
         }
+        String pattern = "%" + escapeLikeWildcards(normalized.toLowerCase(Locale.ROOT)) + "%";
         return (root, query, builder) -> builder.or(
                 Arrays.stream(fields)
                         .map(field -> builder.like(
-                                builder.lower(getNestedPath(root, field)),
-                                "%" + keyword.toLowerCase() + "%")
-                        ).toList().toArray(new Predicate[0])
+                                builder.lower(getNestedPath(root, query, field)), pattern, LIKE_ESCAPE))
+                        .toArray(Predicate[]::new)
         );
     }
 
@@ -43,55 +68,82 @@ public final class GenericSpecification {
      * @param keyObject     valor contra el cual se compara el atributo
      * @param <T>           tipo de entidad de Specification
      * @return {@code Specification<T>} que representa el EQUAL
-     * o {@code null} si {@code attributeName} o {@code keyword} están en blanco o nulos
+     * o una sin restricciones si {@code attributeName} o {@code keyObject} están en blanco o nulos
      * @throws ResponseStatusException si {@code keyObject} no es instancia del tipo Java
      *                                 que JPA usa para el atributo en {@code path}
      */
     public static <T> Specification<T> equal(String attributeName, Object keyObject) throws ResponseStatusException {
         if (keyObject == null || attributeName == null || attributeName.isBlank()) {
-            return Specification.where(null);
+            return Specification.unrestricted();
         }
         return (root, query, builder) -> {
-            Path<?> path = getNestedPath(root, attributeName);
+            Path<?> path = getNestedPath(root, query, attributeName);
             validatePathIsInstanceOfKeyClass(path, keyObject, attributeName);
             return builder.equal(path, keyObject);
         };
 
     }
 
+    /**
+     * Escapa los comodines de {@code LIKE} ({@code %}, {@code _}) y el propio carácter de escape para que el
+     * texto se compare de forma literal.
+     *
+     * @param value texto a escapar
+     * @return texto escapado con {@link #LIKE_ESCAPE}
+     */
+    static String escapeLikeWildcards(String value) {
+        StringBuilder escaped = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == LIKE_ESCAPE || c == '%' || c == '_') {
+                escaped.append(LIKE_ESCAPE);
+            }
+            escaped.append(c);
+        }
+        return escaped.toString();
+    }
 
     /**
      * Obtiene el {@code Path} de un atributo, manejando tanto atributos simples
      * como atributos anidados (usando notación de punto).
      * <p>
      * Para atributos anidados, realiza los {@code JOIN} necesarios automáticamente
-     * usando {@code LEFT JOIN} para evitar excluir registros con relaciones nulas.
+     * usando {@code LEFT JOIN} para evitar excluir registros con relaciones nulas. Cada {@code JOIN} se reutiliza
+     * entre los campos que comparten ruta (p. ej. {@code orderDetails.product.name} y
+     * {@code orderDetails.product.reference} usan los mismos), y si se une una colección la consulta pasa a ser
+     * {@code DISTINCT}: cada elemento de la colección añade una fila y la entidad raíz saldría repetida.
      *
      * @param <T>           tipo del atributo final
      * @param root          raíz de la consulta JPA
+     * @param query         consulta a la que pertenece {@code root}
      * @param attributeName nombre del atributo
      * @return {@code Path<T>} que representa la ruta al atributo especificado
      */
-    private static <T> Path<T> getNestedPath(Root<?> root, String attributeName) {
-        if (!attributeName.contains(".")) {
-            return root.get(attributeName);
-        }
-
+    private static <T> Path<T> getNestedPath(Root<?> root, CriteriaQuery<?> query, String attributeName) {
         String[] parts = attributeName.split("\\.");
-        Path<?> path = root;
+        From<?, ?> from = root;
 
         for (int i = 0; i < parts.length - 1; i++) {
-            if (path instanceof Root<?> r) {
-                path = r.join(parts[i], JoinType.LEFT);
-                // Necesario en caso de joins anidados
-            } else if (path instanceof Join<?, ?> j) {
-                path = j.join(parts[i], JoinType.LEFT);
-            } else {
-                throw new IllegalStateException("Tipo de path no soportado");
+            Join<?, ?> join = findOrCreateLeftJoin(from, parts[i]);
+            if (join.getAttribute().isCollection() && query != null) {
+                query.distinct(true);
             }
+            from = join;
         }
 
-        return path.get(parts[parts.length - 1]);
+        return from.get(parts[parts.length - 1]);
+    }
+
+    /**
+     * Devuelve el {@code LEFT JOIN} de {@code from} sobre {@code attribute}, creándolo solo si todavía no existe
+     */
+    private static Join<?, ?> findOrCreateLeftJoin(From<?, ?> from, String attribute) {
+        for (Join<?, ?> join : from.getJoins()) {
+            if (join.getJoinType() == JoinType.LEFT && attribute.equals(join.getAttribute().getName())) {
+                return join;
+            }
+        }
+        return from.join(attribute, JoinType.LEFT);
     }
 
     /**

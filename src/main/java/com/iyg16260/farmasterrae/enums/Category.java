@@ -4,6 +4,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @Getter
 public enum Category {
@@ -20,12 +21,17 @@ public enum Category {
         this.value = value;
     }
 
+    /**
+     * Valores cuyo texto contiene {@code keyword} sin distinguir mayúsculas. Una búsqueda nula o en blanco no
+     * coincide con ninguno (si no, un espacio coincidiría con todos los textos de varias palabras).
+     */
     public static List<Category> findByValueContainsIgnoreCase(String keyword) {
-        if (keyword == null)
+        if (keyword == null || keyword.isBlank())
             return List.of();
 
+        String normalized = keyword.trim().toLowerCase(Locale.ROOT);
         return Arrays.stream(Category.values())
-                .filter(category -> category.getValue().toLowerCase().contains(keyword.toLowerCase()))
+                .filter(category -> category.getValue().toLowerCase(Locale.ROOT).contains(normalized))
                 .toList();
     }
 }

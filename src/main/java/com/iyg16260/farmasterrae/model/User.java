@@ -2,8 +2,8 @@ package com.iyg16260.farmasterrae.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.SQLRestriction;
@@ -21,8 +21,9 @@ import java.util.List;
 import java.util.Locale;
 
 @Entity
-@Data
-@EqualsAndHashCode (onlyExplicitlyIncluded = true)
+@Getter
+@Setter
+@ToString
 @Table (name = "users")
 @SQLRestriction("deletedAt IS NULL")
 // Los UPDATE solo incluyen las columnas modificadas: un cambio de contraseña que leyó la cuenta antes de que
@@ -35,7 +36,6 @@ public class User implements UserDetails, Serializable {
 
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     Long id;
 
     @Column (unique = true)
@@ -51,6 +51,7 @@ public class User implements UserDetails, Serializable {
         }
     }
 
+    @ToString.Exclude
     String password;
 
     @Column (unique = true)
@@ -64,6 +65,7 @@ public class User implements UserDetails, Serializable {
 
     @ManyToOne (fetch = FetchType.EAGER)
     @JoinColumn (name = "profileId", nullable = false)
+    @ToString.Exclude
     Profile profile;
 
     @OneToMany (mappedBy = "userModified", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
@@ -102,6 +104,24 @@ public class User implements UserDetails, Serializable {
     @Override
     public boolean isEnabled() {
         return this.deletedAt == null;
+    }
+
+    /**
+     * Dos usuarios son iguales si tienen el mismo id: Spring Security usa el usuario autenticado como clave del
+     * {@code SessionRegistry}, así que la misma cuenta cargada en dos peticiones distintas tiene que ser el mismo
+     * principal. Un usuario sin id (todavía no guardado) solo es igual a sí mismo. Nunca compara asociaciones.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User other)) return false;
+        Long currentId = getId();
+        return currentId != null && currentId.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return User.class.hashCode();
     }
 
     private String normalizeAndValidate(String input) throws ResponseStatusException {

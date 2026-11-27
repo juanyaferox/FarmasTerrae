@@ -1,7 +1,8 @@
 package com.iyg16260.farmasterrae.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -10,7 +11,9 @@ import java.io.Serializable;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
 @Table (name = "profiles")
 public class Profile implements GrantedAuthority, Serializable {
 
@@ -33,5 +36,22 @@ public class Profile implements GrantedAuthority, Serializable {
     @Override
     public String getAuthority() {
         return type;
+    }
+
+    /**
+     * Igualdad por id: un perfil sin id (todavía no guardado) solo es igual a sí mismo. Nunca compara
+     * asociaciones, así que no inicializa relaciones lazy ni entra en ciclos.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Profile other)) return false;
+        Long currentId = getId();
+        return currentId != null && currentId.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Profile.class.hashCode();
     }
 }

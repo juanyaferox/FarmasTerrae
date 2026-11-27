@@ -1,10 +1,47 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <body>
 <!-- FarmasTerrae — Admin · Gestión de usuarios -->
 <div th:fragment="usersSection(users)"
-     x-data="{ openEditModal: false, openDeleteModal: false, editUser: { oldUsername: '', username: '', fullName: '', email: '', phone: '', address: '', type: '' }, deleteUsername: '' }"
-     @keydown.escape.window="openEditModal = false; openDeleteModal = false">
+     x-data="{
+       openEditModal: false,
+       openDeleteModal: false,
+       returnFocusTo: null,
+       editUser: { oldUsername: '', username: '', fullName: '', email: '', phone: '', address: '', type: '' },
+       deleteUsername: '',
+       openEdit(trigger) {
+         const ds = trigger.dataset;
+         this.editUser = {
+           oldUsername: ds.username,
+           username: ds.username,
+           fullName: ds.fullname,
+           email: ds.email,
+           phone: ds.phone,
+           address: ds.address,
+           type: ds.type
+         };
+         this.returnFocusTo = trigger;
+         this.openDeleteModal = false;
+         this.openEditModal = true;
+         this.$nextTick(() => this.$refs.editUsername.focus());
+       },
+       openDelete(trigger) {
+         this.deleteUsername = trigger.dataset.username;
+         this.returnFocusTo = trigger;
+         this.openEditModal = false;
+         this.openDeleteModal = true;
+         this.$nextTick(() => this.$refs.deleteClose.focus());
+       },
+       closeModals() {
+         if (!(this.openEditModal || this.openDeleteModal)) { return; }
+         this.openEditModal = false;
+         this.openDeleteModal = false;
+         const trigger = this.returnFocusTo;
+         this.returnFocusTo = null;
+         this.$nextTick(() => trigger?.focus());
+       }
+     }"
+     @keydown.escape.window="closeModals()">
 
     <section class="ft-panel" aria-labelledby="users-title">
         <header class="ft-panel__head">
@@ -160,21 +197,13 @@
                                     th:data-phone="${user.phone ?: ''}"
                                     th:data-address="${user.address ?: ''}"
                                     th:data-type="${user.type ?: ''}"
-                                    @click="editUser = {
-                                        oldUsername: $el.dataset.username,
-                                        username: $el.dataset.username,
-                                        fullName: $el.dataset.fullname,
-                                        email: $el.dataset.email,
-                                        phone: $el.dataset.phone,
-                                        address: $el.dataset.address,
-                                        type: $el.dataset.type
-                                    }; openEditModal = true">
+                                    @click="openEdit($el)">
                                 Editar<span class="ft-sr-only" th:text="${' a ' + user.username}"></span>
                             </button>
                             <button type="button"
                                     class="ft-btn ft-btn--sm ft-btn--danger"
                                     th:data-username="${user.username}"
-                                    @click="deleteUsername = $el.dataset.username; openDeleteModal = true">
+                                    @click="openDelete($el)">
                                 Eliminar<span class="ft-sr-only" th:text="${' a ' + user.username}"></span>
                             </button>
                         </div>
@@ -195,12 +224,12 @@
     <div x-show="openEditModal" x-cloak
          class="ft-modal ft-modal--alpine"
          role="dialog" aria-modal="true" aria-labelledby="modal-editar-usuario-title">
-        <div class="ft-modal__backdrop" aria-hidden="true" @click="openEditModal = false"></div>
+        <div class="ft-modal__backdrop" aria-hidden="true" @click="closeModals()"></div>
         <div class="ft-modal__dialog" style="max-width: 680px;">
             <div class="ft-modal__head">
                 <h2 id="modal-editar-usuario-title" class="ft-modal__title">Editar usuario</h2>
                 <button type="button" class="ft-modal__close" aria-label="Cerrar diálogo"
-                        @click="openEditModal = false">
+                        @click="closeModals()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -216,7 +245,7 @@
                 <div class="ft-form-grid">
                     <div class="ft-field">
                         <label for="user-username" class="ft-label">Nombre de usuario <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input id="user-username" name="username" type="text" class="ft-input ft-mono"
+                        <input id="user-username" x-ref="editUsername" name="username" type="text" class="ft-input ft-mono"
                                maxlength="50" autocomplete="off" required x-model="editUser.username">
                     </div>
                     <div class="ft-field">
@@ -252,7 +281,7 @@
                 </div>
 
                 <div class="ft-modal__foot">
-                    <button type="button" class="ft-btn ft-btn--ghost" @click="openEditModal = false">Cancelar</button>
+                    <button type="button" class="ft-btn ft-btn--ghost" @click="closeModals()">Cancelar</button>
                     <button type="submit" class="ft-btn ft-btn--mint">Guardar cambios</button>
                 </div>
             </form>
@@ -263,12 +292,12 @@
     <div x-show="openDeleteModal" x-cloak
          class="ft-modal ft-modal--alpine"
          role="dialog" aria-modal="true" aria-labelledby="modal-eliminar-usuario-title">
-        <div class="ft-modal__backdrop" aria-hidden="true" @click="openDeleteModal = false"></div>
+        <div class="ft-modal__backdrop" aria-hidden="true" @click="closeModals()"></div>
         <div class="ft-modal__dialog">
             <div class="ft-modal__head">
                 <h2 id="modal-eliminar-usuario-title" class="ft-modal__title">Eliminar usuario</h2>
-                <button type="button" class="ft-modal__close" aria-label="Cerrar diálogo"
-                        @click="openDeleteModal = false">
+                <button type="button" class="ft-modal__close" x-ref="deleteClose" aria-label="Cerrar diálogo"
+                        @click="closeModals()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -293,7 +322,7 @@
                 </div>
 
                 <div class="ft-modal__foot">
-                    <button type="button" class="ft-btn ft-btn--ghost" @click="openDeleteModal = false">Cancelar</button>
+                    <button type="button" class="ft-btn ft-btn--ghost" @click="closeModals()">Cancelar</button>
                     <button type="submit" class="ft-btn ft-btn--danger">Eliminar usuario</button>
                 </div>
             </form>

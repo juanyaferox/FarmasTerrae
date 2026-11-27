@@ -224,6 +224,7 @@ FarmasTerrae/
 ├── docker-compose.help.yml              # Local Docker stack (MySQL + App + MinIO)
 ├── docs/env-vars-for-prod.md            # Production environment variable reference
 ├── docs/mark.svg                        # Brand mark SVG used in documentation
+├── frontend/                            # Optional Tailwind/PostCSS tooling (never packaged or served)
 ├── nginx.conf                           # Nginx HTTP->HTTPS reverse proxy configuration
 ├── pom.xml                              # Maven dependencies & MapStruct/Lombok compiler config
 ├── ssl/                                 # TLS certificate & key mounted by Nginx (gitignored, provided at deploy time)
@@ -245,7 +246,7 @@ FarmasTerrae/
     │       ├── data.sql                 # H2 local dev seed data
     │       ├── db/changelog/            # Liquibase data-only changelog & SQL seed files
     │       ├── logback.xml              # Console + rolling info/warn/error file appenders
-    │       ├── static/                  # Modular CSS (tokens/components/layout/pages) & assets
+    │       ├── static/                  # Modular CSS, assets, self-hosted fonts & vendored Alpine.js
     │       └── templates/               # Thymeleaf views & reusable fragments
     └── test/                            # Spring Boot test suite
 ```

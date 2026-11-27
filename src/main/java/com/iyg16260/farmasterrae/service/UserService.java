@@ -9,12 +9,12 @@ import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.PasswordResetTokenRepository;
 import com.iyg16260.farmasterrae.repository.ProfileRepository;
 import com.iyg16260.farmasterrae.repository.UserRepository;
+import com.iyg16260.farmasterrae.spec.GenericSpecification;
 import com.iyg16260.farmasterrae.spec.UserSpecification;
+import com.iyg16260.farmasterrae.utils.PageableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -67,6 +68,9 @@ public class UserService implements UserDetailsService {
     SessionRevocationService sessionRevocationService;
 
     private final int PAGE_SIZE_ADMIN = 9;
+
+    /** Columnas por las que se puede ordenar el listado de usuarios del panel (nunca la contraseña ni el rol) */
+    static final Set<String> SORTABLE_FIELDS = Set.of("username", "email", "phone", "address");
 
     /**
      * Obtiene todos los perfiles disponibles en el sistema
@@ -112,21 +116,19 @@ public class UserService implements UserDetailsService {
     /**
      * Obtiene una página de todos los usuarios del sistema
      *
-     * @param page número de página
+     * @param page    número de página; fuera de rango se ajusta a la primera o a la última
+     * @param keyword texto de búsqueda; en blanco equivale a no buscar
+     * @param sort    columna de ordenación; si no está en {@link #SORTABLE_FIELDS} se usa el orden por defecto
+     * @param dir     dirección de la ordenación ({@code asc} o {@code desc})
      * @return página de usuarios DTO
      */
     public Page<UserDTO> getAllUsers(int page, String keyword, String sort, String dir) {
-        Sort sortOrder = Sort.unsorted();
-        if (sort != null) {
-            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortOrder = Sort.by(direction, sort);
-        }
-
         Specification<User> spec = new UserSpecification()
-                .searchLike(keyword);
+                .searchLike(GenericSpecification.normalizeKeyword(keyword));
 
-        return userRepository.findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
-                .map(user -> userMapper.userToUserDTO(user));
+        return PageableUtils.findClampedPage(page, PAGE_SIZE_ADMIN, PageableUtils.sortOf(sort, dir, SORTABLE_FIELDS),
+                        pageable -> userRepository.findAll(spec, pageable))
+                .map(userMapper::userToUserDTO);
     }
 
     /**

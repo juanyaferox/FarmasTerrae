@@ -155,7 +155,8 @@ public class UserController {
     public ModelAndView getOrder(@PathVariable long idOrder, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
         return new ModelAndView("user/order-details")
-                .addObject("order", orderDetails);
+                .addObject("order", orderDetails)
+                .addObject("isAdminView", false);
     }
 
     @PutMapping ("/dashboard/reviews")

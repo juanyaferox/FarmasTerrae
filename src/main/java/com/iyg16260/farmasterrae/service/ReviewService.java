@@ -10,10 +10,9 @@ import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.Review;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ReviewRepository;
+import com.iyg16260.farmasterrae.utils.PageableUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -43,23 +42,22 @@ public class ReviewService {
 
     private static final int PAGE_SIZE_USER = 10;
 
+    /** Columnas por las que se puede ordenar el listado de reseñas del panel de usuario */
+    static final Set<String> SORTABLE_FIELDS = Set.of("title", "content", "scoring");
+
     /**
      * Obtiene una página de reviews del usuario
      *
      * @param user usuario del que obtener las reviews
-     * @param page número de página
+     * @param page número de página; fuera de rango se ajusta a la primera o a la última
+     * @param sort columna de ordenación; si no está en {@link #SORTABLE_FIELDS} se usa el orden por defecto
+     * @param dir  dirección de la ordenación ({@code asc} o {@code desc})
      * @return página de reviews DTO del usuario
      */
     @Transactional (readOnly = true)
     public Page<ReviewDTO> getReviews(User user, int page, String sort, String dir) {
-
-        Sort sortOrder = Sort.unsorted();
-        if (sort != null) {
-            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortOrder = Sort.by(direction, sort);
-        }
-
-        return reviewRepository.findByUser(user, PageRequest.of(page, PAGE_SIZE_USER, sortOrder))
+        return PageableUtils.findClampedPage(page, PAGE_SIZE_USER, PageableUtils.sortOf(sort, dir, SORTABLE_FIELDS),
+                        pageable -> reviewRepository.findByUser(user, pageable))
                 .map(reviewMapper::reviewToReviewDTO);
     }
 

@@ -1,3 +1,3 @@
 @import "tailwindcss";
-@source "../../templates/**";
+@source "../../src/main/resources/templates/**";
 @plugin "@tailwindcss/forms";

@@ -138,7 +138,15 @@ class SecurityAccessBaselineTest {
     void securityHeadersArePresentOnApplicationResponses() throws Exception {
         mockMvc.perform(get("/auth"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Content-Security-Policy", org.hamcrest.Matchers.containsString("frame-ancestors 'self'")))
+                .andExpect(header().string("Content-Security-Policy", org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("frame-ancestors 'self'"),
+                        // Alpine.js and the fonts are self-hosted: no third-party origin for scripts, styles or fonts
+                        org.hamcrest.Matchers.containsString("script-src 'self' 'unsafe-eval';"),
+                        org.hamcrest.Matchers.containsString("style-src 'self' 'unsafe-inline';"),
+                        org.hamcrest.Matchers.containsString("font-src 'self';"),
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("cdn.jsdelivr.net")),
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("fonts.googleapis.com")),
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("fonts.gstatic.com")))))
                 .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
                 .andExpect(header().string("Permissions-Policy", "geolocation=(), microphone=(), camera=()"));
     }
