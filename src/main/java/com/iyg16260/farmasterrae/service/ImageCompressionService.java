@@ -1,6 +1,6 @@
 package com.iyg16260.farmasterrae.service;
 
-import org.springframework.mock.web.MockMultipartFile;
+import com.iyg16260.farmasterrae.utils.ByteArrayMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,8 +44,7 @@ public class ImageCompressionService {
         byte[] compressedData = compressToJPEG(processedImage);
         String compressedName = generateCompressedFileName(originalFile.getOriginalFilename());
 
-        // Usar MockMultipartFile que es más simple y funcional
-        return new MockMultipartFile(
+        return new ByteArrayMultipartFile(
                 "imageFile",
                 compressedName,
                 "image/jpeg",
