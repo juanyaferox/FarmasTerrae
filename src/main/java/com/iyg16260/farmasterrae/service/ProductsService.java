@@ -22,15 +22,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Service
@@ -54,7 +56,6 @@ public class ProductsService {
     private final int PAGE_SIZE = 20;
     private final int PAGE_SIZE_ADMIN = 9;
     private final String PRODUCT_IMAGES_FOLDER = "product-images";
-    private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
 
     /**
      * Obtiene una página de productos con opción de tamaño personalizado para admin
@@ -96,8 +97,7 @@ public class ProductsService {
      * @return producto DTO
      */
     public ProductDTO getProductDTOByReference(String reference) {
-        Product product = productRepository.findByReference(reference)
-                .orElseThrow(() -> new RuntimeException("Producto no encontrado"));
+        Product product = getProductByReference(reference);
 
         return productMapper.productToProductDTO(product);
     }
@@ -110,7 +110,7 @@ public class ProductsService {
      * @throws ResponseStatusException NOT_FOUND si no se encuentra el producto
      */
     public Product getProductByReference(String reference) throws ResponseStatusException {
-        return productRepository.findByReference(reference)
+        return productRepository.findByReferenceAndDeletedAtIsNull(reference)
                 .orElseThrow(() -> new ResponseStatusException
                         (HttpStatus.NOT_FOUND, "Producto no encontrado"));
     }
@@ -123,7 +123,8 @@ public class ProductsService {
      */
     public void deleteProduct(String reference) throws ResponseStatusException {
         Product product = getProductByReference(reference);
-        productRepository.delete(product);
+        product.setDeletedAt(LocalDateTime.now());
+        productRepository.save(product);
     }
 
     /**
@@ -136,26 +137,26 @@ public class ProductsService {
      */
     @Transactional
     public ProductDTO updateProduct(ProductDTO productDTO, String oldReference, MultipartFile image) throws ResponseStatusException {
-        Product existing = productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
+        Product existing = productRepository.findByReferenceAndDeletedAtIsNull(oldReference).orElseThrow(() -> new ResponseStatusException
                 (HttpStatus.NOT_FOUND, "Producto no encontrado"));
 
-        if (!Objects.equals(productDTO.getReference(), oldReference)
-                && productRepository.existsByReference(productDTO.getReference())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
+        if (productDTO.getReference() != null
+                && !productDTO.getReference().isBlank()
+                && !productDTO.getReference().equals(oldReference)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La referencia del producto no se puede modificar");
         }
 
         existing.setName(productDTO.getName());
         existing.setDescription(productDTO.getDescription());
         if (productDTO.getPrice() != null) {
             existing.setPrice(productDTO.getPrice()
-                    .multiply(BigDecimal.valueOf(100))
-                    .setScale(0, RoundingMode.HALF_UP)
-                    .intValue());
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .movePointRight(2)
+                    .intValueExact());
         }
         if (productDTO.getStock() != null) {
             existing.setStock(productDTO.getStock());
         }
-        existing.setReference(productDTO.getReference());
         existing.setCategory(productDTO.getCategory());
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -163,26 +164,45 @@ public class ProductsService {
             existing.setUserModified(currentUser);
         }
 
-        if (image != null && !image.isEmpty()) {
-            // Si ya había una imagen, eliminarla de S3
-            if (existing.getImagePath() != null && !existing.getImagePath().isEmpty()) {
-                s3StorageService.deleteFile(existing.getImagePath());
-            }
-            MultipartFile imageToUpload;
-            try {
-                imageToUpload = compressionService.compressImage(image);
-            } catch (IOException e) {
-                imageToUpload = image;
-            }
+        String oldImagePath = existing.getImagePath();
+        AtomicReference<String> uploadedPath = new AtomicReference<>();
+        boolean syncRegistered = false;
+        try {
+            if (image != null && !image.isEmpty()) {
+                MultipartFile imageToUpload = compressionService.compressImage(image);
+                String newPath = s3StorageService.uploadFile(imageToUpload, PRODUCT_IMAGES_FOLDER);
+                uploadedPath.set(newPath);
+                existing.setImagePath(newPath);
+                if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override public void afterCommit() {
+                            if (oldImagePath != null) {
+                                deleteImageQuietly(oldImagePath);
+                            }
+                        }
 
-            // Subir la nueva imagen
-            String imageUrl = s3StorageService.uploadFile(imageToUpload, PRODUCT_IMAGES_FOLDER);
-            existing.setImagePath(imageUrl);
+                        @Override public void afterCompletion(int status) {
+                            if (status == STATUS_ROLLED_BACK) {
+                                deleteImageQuietly(newPath);
+                            }
+                        }
+                    });
+                    syncRegistered = true;
+                }
+            }
+            Product saved = productRepository.saveAndFlush(existing);
+            if (!syncRegistered && uploadedPath.get() != null && oldImagePath != null) {
+                deleteImageQuietly(oldImagePath);
+            }
+            return productMapper.productToProductDTO(saved);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen no es válida", e);
+        } catch (RuntimeException e) {
+            if (uploadedPath.get() != null && !syncRegistered) {
+                deleteImageQuietly(uploadedPath.get());
+            }
+            throw e;
         }
-
-        return productMapper.productToProductDTO(
-                productRepository.saveAndFlush(existing)
-        );
     }
 
     /**
@@ -192,6 +212,7 @@ public class ProductsService {
      * @return producto guardado
      * @throws ResponseStatusException BAD_REQUEST si ya existe un producto con esa referencia
      */
+    @Transactional
     public Product saveProduct(ProductDTO productDTO, MultipartFile image) {
         Product product = productMapper.productDTOToProduct(productDTO);
 
@@ -200,27 +221,64 @@ public class ProductsService {
                     (HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
         }
 
-        if (image != null && !image.isEmpty()) {
-            String imageUrl = s3StorageService.uploadFile(image, PRODUCT_IMAGES_FOLDER);
-            product.setImagePath(imageUrl);
+        AtomicReference<String> uploadedPath = new AtomicReference<>();
+        boolean syncRegistered = false;
+        try {
+            if (image != null && !image.isEmpty()) {
+                MultipartFile compressed = compressionService.compressImage(image);
+                String key = s3StorageService.uploadFile(compressed, PRODUCT_IMAGES_FOLDER);
+                uploadedPath.set(key);
+                product.setImagePath(key);
+                syncRegistered = registerUploadRollbackCleanup(key);
+            }
+            return productRepository.saveAndFlush(product);
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen no es válida", e);
+        } catch (RuntimeException e) {
+            if (uploadedPath.get() != null && !syncRegistered) {
+                deleteImageQuietly(uploadedPath.get());
+            }
+            throw e;
         }
-
-        return productRepository.save(product);
     }
 
+    @Transactional
     public Product saveProduct(ProductDTO productDTO) {
         return saveProduct(productDTO, null);
     }
 
+    private boolean registerUploadRollbackCleanup(String uploadedKey) {
+        if (uploadedKey != null && TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        deleteImageQuietly(uploadedKey);
+                    }
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    private void deleteImageQuietly(String key) {
+        try { s3StorageService.deleteFile(key); }
+        catch (RuntimeException e) { log.warn("Could not clean up product image {}", key, e); }
+    }
+
     /**
-     * Obtiene una cantidad específica de productos aleatorios de la base de datos
+     * Obtiene una cantidad específica de productos aleatorios activos de la base de datos
      *
      * @param count número de productos a obtener
      * @return lista de productos aleatorios
      */
     public List<ProductDTO> getRandomProducts(int count) {
-        return productRepository.findRandomProducts(count)
-                .stream().map(productMapper::productToProductDTO).toList();
+        if (count <= 0) {
+            return List.of();
+        }
+        return productRepository.findRandomProducts(count).stream()
+                .map(productMapper::productToProductDTO)
+                .toList();
     }
 
     /**
