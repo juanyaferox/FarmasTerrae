@@ -3,6 +3,8 @@ package com.iyg16260.farmasterrae.controller;
 import com.iyg16260.farmasterrae.dto.order.OrderDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.OrderDetailsDTO;
+import com.iyg16260.farmasterrae.dto.user.CreateReviewDTO;
+import com.iyg16260.farmasterrae.dto.user.UpdateReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.dto.user.SelfProfileUpdateDTO;
 import com.iyg16260.farmasterrae.enums.EntityType;
@@ -158,7 +160,7 @@ public class UserController {
 
     @PutMapping ("/dashboard/reviews")
     public String updateReview(@AuthenticationPrincipal User user,
-                               @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+                               @Valid @ModelAttribute UpdateReviewDTO reviewDTO, RedirectAttributes ra) {
         reviewService.updateReview(reviewDTO, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.PUT);
         return "redirect:/user/dashboard/reviews";
@@ -166,7 +168,7 @@ public class UserController {
 
     @PostMapping ("/dashboard/reviews")
     public String addReview(@AuthenticationPrincipal User user,
-                            @Valid @ModelAttribute ReviewDTO reviewDTO, RedirectAttributes ra) {
+                            @Valid @ModelAttribute CreateReviewDTO reviewDTO, RedirectAttributes ra) {
         reviewService.setReview(reviewDTO, user);
         buildSuccessMessage(ra, EntityType.REVIEWS, Operation.POST);
         return "redirect:/user/dashboard/reviews";

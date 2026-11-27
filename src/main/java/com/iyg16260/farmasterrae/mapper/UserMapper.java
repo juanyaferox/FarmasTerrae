@@ -19,16 +19,6 @@ public interface UserMapper {
 
     SelfProfileUpdateDTO userToSelfProfileUpdateDTO(User user);
 
-    @Mapping (target = "id", ignore = true)
-    @Mapping (target = "authorities", ignore = true)
-    @Mapping (target = "password", ignore = true)
-    @Mapping (target = "deletedAt", ignore = true)
-    @Mapping (target = "profile", ignore = true)
-    @Mapping (target = "productList", ignore = true)
-    @Mapping (target = "orderList", ignore = true)
-    @Mapping (target = "reviewList", ignore = true)
-    User userDTOToUser(UserDTO userDTO);
-
     /**
      * Copia en {@code user} los datos que el propio usuario puede cambiar. Un campo {@code null} (no enviado)
      * conserva el valor guardado; un campo opcional enviado en blanco se borra.

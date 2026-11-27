@@ -5,8 +5,8 @@
   FarmasTerrae — Sección "Mis reseñas" del panel de usuario.
   Backend (UserController):
     GET    /user/dashboard/reviews?page=&sort=&dir=   → Page<ReviewDTO> reviews + List<ProductDTO> products
-    POST   /user/dashboard/reviews                    → ReviewDTO { productReference, title, content, scoring }
-    PUT    /user/dashboard/reviews  (_method=put)     → ReviewDTO { id, title, content, scoring }
+    POST   /user/dashboard/reviews                    → CreateReviewDTO { productReference, title, content, scoring }
+    PUT    /user/dashboard/reviews  (_method=put)     → UpdateReviewDTO { id, title, content, scoring }
     DELETE /user/dashboard/reviews  (_method=delete)  → idReview
 -->
 <section th:fragment="reviewsSection(reviews)"
