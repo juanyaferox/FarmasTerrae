@@ -2,8 +2,8 @@ package com.iyg16260.farmasterrae.model;
 
 import com.iyg16260.farmasterrae.enums.Category;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
@@ -12,15 +12,15 @@ import java.util.List;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
+@ToString
 @DynamicUpdate
-@EqualsAndHashCode (onlyExplicitlyIncluded = true)
 @Table (name = "products", indexes = {@Index (name = "idxProductCategory", columnList = "category"),
         @Index (name = "idxProductReference", columnList = "reference")})
 public class Product {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)
-    @EqualsAndHashCode.Include
     Long id;
 
     @Version
@@ -45,6 +45,7 @@ public class Product {
 
     @ManyToOne (fetch = FetchType.LAZY)
     @JoinColumn (name = "userModifiedId")
+    @ToString.Exclude
     User userModified;
 
     @OneToMany (mappedBy = "product", fetch = FetchType.LAZY)
@@ -58,4 +59,21 @@ public class Product {
     @Enumerated (EnumType.STRING)
     @Column (nullable = false)
     Category category;
+
+    /**
+     * Igualdad por id: un producto sin id (todavía no guardado) solo es igual a sí mismo. Nunca compara
+     * asociaciones, así que no inicializa relaciones lazy ni entra en ciclos.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Product other)) return false;
+        Long currentId = getId();
+        return currentId != null && currentId.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Product.class.hashCode();
+    }
 }
