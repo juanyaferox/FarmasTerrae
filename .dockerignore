@@ -1,0 +1,34 @@
+# Build context for the Dockerfile: only mvnw, .mvn/, pom.xml and src/ are needed.
+# Anything listed here never reaches the image, so local secrets cannot leak into it.
+
+# VCS & CI metadata
+.git
+.gitignore
+.gitattributes
+.github
+
+# Local secrets and TLS material
+.env
+.env.*
+ssl/
+*.key
+*.pem
+*.crt
+**/application-secrets.properties
+
+# Build output, logs and local tooling
+target/
+logs/
+**/node_modules/
+.idea/
+.vscode/
+*.iml
+
+# Docs and deployment files that are not part of the build
+docs/
+README*.md
+HELP.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+nginx.conf

@@ -4,8 +4,16 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 .env
+.env.*
+!.env.example
 logs/
 /src/main/resources/application-secrets.properties
+
+### Secrets & TLS material (supply certificates at runtime via ./ssl) ###
+ssl/
+*.key
+*.pem
+*.crt
 
 ### STS ###
 .apt_generated
