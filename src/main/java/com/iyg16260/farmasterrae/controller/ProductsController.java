@@ -5,6 +5,7 @@ import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.service.ProductsService;
+import com.iyg16260.farmasterrae.spec.GenericSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
@@ -32,12 +33,14 @@ public class ProductsController {
     public ModelAndView getProducts(@RequestParam (required = false) Category category,
                                     @RequestParam (defaultValue = "0", required = false) int page,
                                     @RequestParam (required = false) String search) {
-        Page<ProductPageDTO> products = productsService.getFilteredProducts(category, search, page);
+        // La página fuera de rango la ajusta el servicio; un texto en blanco equivale a no buscar
+        String keyword = GenericSpecification.normalizeKeyword(search);
+        Page<ProductPageDTO> products = productsService.getFilteredProducts(category, keyword, page);
         String titlePage;
         if (category != null)
             titlePage = category.getValue();
-        else if (search != null && !search.isBlank())
-            titlePage = "Resultados para: " + search;
+        else if (keyword != null)
+            titlePage = "Resultados para: " + keyword;
         else
             titlePage = "Todos los Productos";
 

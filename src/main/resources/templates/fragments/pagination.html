@@ -1,55 +1,63 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <!-- FarmasTerrae — Fragmento de paginación reutilizable -->
 <div th:fragment="pagination(pageData, baseUrl, entityName)">
-    <!-- Contenedor de paginación -->
+    <!--
+        Los servicios ya devuelven la página ajustada al rango existente, pero el fragmento vuelve a acotarla:
+        la lista de páginas solo se genera con 0 <= startPage <= endPage < totalPages, así que un número de
+        página fuera de rango nunca produce una secuencia enorme.
+    -->
     <nav class="ft-pagination" aria-label="Paginación"
-         th:if="${pageData != null and pageData.totalPages > 1}">
-        <!-- Texto de página actual y total -->
-        <span class="ft-pagination__info ft-tabular">Página [[${pageData.number + 1}]] de [[${pageData.totalPages}]]</span>
+         th:if="${pageData != null and pageData.totalPages > 1}"
+         th:with="totalPages=${pageData.totalPages},
+                  currentPage=${pageData.number < 0 ? 0 : (pageData.number >= pageData.totalPages ? pageData.totalPages - 1 : pageData.number)}">
+        <th:block th:with="startPage=${currentPage > 1 ? currentPage - 1 : 0},
+                           endPage=${currentPage + 2 < totalPages ? currentPage + 2 : totalPages - 1}">
+            <!-- Texto de página actual y total -->
+            <span class="ft-pagination__info ft-tabular">Página [[${currentPage + 1}]] de [[${totalPages}]]</span>
 
-        <div class="ft-pagination__controls">
-            <!-- Enlace Anterior -->
-            <form th:if="${pageData.hasPrevious()}" method="get" class="ft-inline-form">
-                <input type="hidden" name="page" th:value="${pageData.number - 1}">
-                <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
-                       type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
-                <button type="submit" class="ft-pagination__btn">Anterior</button>
-            </form>
+            <div class="ft-pagination__controls">
+                <!-- Enlace Anterior -->
+                <form th:if="${currentPage > 0}" method="get" class="ft-inline-form">
+                    <input type="hidden" name="page" th:value="${currentPage - 1}">
+                    <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                           type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+                    <button type="submit" class="ft-pagination__btn">Anterior</button>
+                </form>
 
-            <!-- Páginas -->
-            <th:block th:with="startPage=${pageData.number > 1 ? pageData.number - 1 : 0},
-                               endPage=${pageData.number + 2 < pageData.totalPages ? pageData.number + 2 : pageData.totalPages - 1}">
-                <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
-                    <span th:if="${i == pageData.number}"
-                          class="ft-pagination__btn ft-tabular" aria-current="page">[[${i + 1}]]</span>
+                <!-- Páginas -->
+                <th:block th:if="${startPage <= endPage and endPage < totalPages}">
+                    <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                        <span th:if="${i == currentPage}"
+                              class="ft-pagination__btn ft-tabular" aria-current="page">[[${i + 1}]]</span>
 
-                    <form th:unless="${i == pageData.number}" method="get" class="ft-inline-form">
-                        <input type="hidden" name="page" th:value="${i}">
-                        <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
-                               type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
-                        <button type="submit" class="ft-pagination__btn ft-tabular">[[${i + 1}]]</button>
-                    </form>
+                        <form th:unless="${i == currentPage}" method="get" class="ft-inline-form">
+                            <input type="hidden" name="page" th:value="${i}">
+                            <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                                   type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+                            <button type="submit" class="ft-pagination__btn ft-tabular">[[${i + 1}]]</button>
+                        </form>
+                    </th:block>
                 </th:block>
-            </th:block>
 
-            <!-- Indicador "..." si hay más páginas -->
-            <span th:if="${pageData.number + 2 < pageData.totalPages - 1}"
-                  class="ft-pagination__info" aria-hidden="true">…</span>
+                <!-- Indicador "..." si hay más páginas -->
+                <span th:if="${endPage < totalPages - 1}"
+                      class="ft-pagination__info" aria-hidden="true">…</span>
 
-            <!-- Enlace Siguiente -->
-            <form th:if="${pageData.hasNext()}" method="get" class="ft-inline-form">
-                <input type="hidden" name="page" th:value="${pageData.number + 1}">
-                <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
-                       type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
-                <button type="submit" class="ft-pagination__btn">Siguiente</button>
-            </form>
-        </div>
+                <!-- Enlace Siguiente -->
+                <form th:if="${currentPage + 1 < totalPages}" method="get" class="ft-inline-form">
+                    <input type="hidden" name="page" th:value="${currentPage + 1}">
+                    <input th:each="paramEntry : ${param}" th:unless="${paramEntry.key == 'page'}"
+                           type="hidden" th:name="${paramEntry.key}" th:value="${paramEntry.value[0]}">
+                    <button type="submit" class="ft-pagination__btn">Siguiente</button>
+                </form>
+            </div>
+        </th:block>
     </nav>
 
-    <!-- Mensaje cuando no hay páginas -->
-    <div th:unless="${pageData != null and pageData.totalPages > 1}" class="ft-pagination__empty">
-        <span th:text="${'No hay más ' + entityName + ' disponibles para mostrar.'}"></span>
+    <!-- Mensaje solo cuando no hay ningún resultado; con una sola página de resultados no se muestra nada -->
+    <div th:if="${pageData == null or pageData.totalElements == 0}" class="ft-pagination__empty">
+        <span th:text="${'No hay ' + entityName + ' disponibles para mostrar.'}"></span>
     </div>
 </div>
 </html>

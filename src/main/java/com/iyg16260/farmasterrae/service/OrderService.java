@@ -11,13 +11,13 @@ import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.OrderRepository;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
+import com.iyg16260.farmasterrae.spec.GenericSpecification;
 import com.iyg16260.farmasterrae.spec.OrderSpecification;
+import com.iyg16260.farmasterrae.utils.PageableUtils;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -65,46 +65,45 @@ public class OrderService {
     @Autowired
     StockReservationService stockReservationService;
 
+    /** Columnas por las que se pueden ordenar los listados de pedidos (panel de usuario y de administración) */
+    static final Set<String> SORTABLE_FIELDS = Set.of("id", "createdAt", "totalPrice", "updatedAt", "status");
+
     /**
      * Página con los pedidos del usuario
      *
      * @param user usuario a obtener pedidos
-     * @param page página actual
+     * @param page página actual; fuera de rango se ajusta a la primera o a la última
+     * @param sort columna de ordenación; si no está en {@link #SORTABLE_FIELDS} se usa el orden por defecto
+     * @param dir  dirección de la ordenación ({@code asc} o {@code desc})
      * @return página con los pedidos actual
      */
     public Page<OrderDTO> getOrders(User user, int page, String sort, String dir) {
-
-        Sort sortOrder = Sort.unsorted();
-        if (sort != null) {
-            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortOrder = Sort.by(direction, sort);
-        }
-
-        return orderRepository.findByUser(user, PageRequest.of(page, PAGE_SIZE_USER, sortOrder))
+        return PageableUtils.findClampedPage(page, PAGE_SIZE_USER, PageableUtils.sortOf(sort, dir, SORTABLE_FIELDS),
+                        pageable -> orderRepository.findByUser(user, pageable))
                 .map(orderMapper::orderToOrderDTO);
     }
 
     /**
      * Página con todos los pedidos
      *
-     * @param page    página actual
-     * @param keyword palabra a buscar
+     * @param page    página actual; fuera de rango se ajusta a la primera o a la última
+     * @param keyword palabra a buscar; en blanco equivale a no buscar
+     * @param sort    columna de ordenación; si no está en {@link #SORTABLE_FIELDS} se usa el orden por defecto
+     * @param dir     dirección de la ordenación ({@code asc} o {@code desc})
      * @return página de los pedidos actual
      */
     public Page<OrderDTO> getAllOrders(int page, String keyword, String sort, String dir) {
-
-        Sort sortOrder = Sort.unsorted();
-        if (sort != null) {
-            Sort.Direction direction = "desc".equals(dir) ? Sort.Direction.DESC : Sort.Direction.ASC;
-            sortOrder = Sort.by(direction, sort);
-        }
+        String search = GenericSpecification.normalizeKeyword(keyword);
 
         OrderSpecification specUtil = new OrderSpecification();
-        Specification<Order> spec = specUtil.searchLike(keyword)
-                .or(specUtil.searchLikeSaleStatus(keyword))
-                .or(specUtil.searchLikePaymentMethod(keyword));
+        Specification<Order> spec = search == null
+                ? Specification.unrestricted()
+                : specUtil.searchLike(search)
+                        .or(specUtil.searchLikeSaleStatus(search))
+                        .or(specUtil.searchLikePaymentMethod(search));
 
-        return orderRepository.findAll(spec, PageRequest.of(page, PAGE_SIZE_ADMIN, sortOrder))
+        return PageableUtils.findClampedPage(page, PAGE_SIZE_ADMIN, PageableUtils.sortOf(sort, dir, SORTABLE_FIELDS),
+                        pageable -> orderRepository.findAll(spec, pageable))
                 .map(orderMapper::orderToOrderDTO);
     }
 
