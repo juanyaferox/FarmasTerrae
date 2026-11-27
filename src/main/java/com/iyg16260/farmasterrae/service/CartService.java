@@ -4,6 +4,7 @@ import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.WebUtils;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 @Service
 public class CartService {
+    public static final String REMOVED_PRODUCT_NOTICE = "removedProductNotice";
 
     @Autowired
     ProductsService productsService;
@@ -55,8 +57,8 @@ public class CartService {
             SessionCart cart = getCart(session);
             cart.addProduct(refProduct);
 
-            boolean reserved = stockReservationService.reserveStockForCart(session, cart);
-            if (!reserved) {
+            var result = stockReservationService.reserveStockForCartWithResult(session, cart);
+            if (result == StockReservationService.ReservationResult.INSUFFICIENT_STOCK) {
                 cart.deleteOneProduct(refProduct);
                 return false;
             }
@@ -78,7 +80,8 @@ public class CartService {
                 return false;
             }
             cart.deleteOneProduct(refProduct);
-            return stockReservationService.reserveStockForCart(session, cart);
+            return stockReservationService.reserveStockForCartWithResult(session, cart)
+                    != StockReservationService.ReservationResult.INSUFFICIENT_STOCK;
         }
     }
 
@@ -96,7 +99,8 @@ public class CartService {
                 return false;
             }
             cart.deleteAllSameProduct(refProduct);
-            return stockReservationService.reserveStockForCart(session, cart);
+            return stockReservationService.reserveStockForCartWithResult(session, cart)
+                    != StockReservationService.ReservationResult.INSUFFICIENT_STOCK;
         }
     }
 
@@ -140,10 +144,7 @@ public class CartService {
             if (cart.getProducts().isEmpty()) {
                 return false;
             }
-            if (!stockReservationService.isReservationValid(session, cart)) {
-                return stockReservationService.reserveStockForCart(session, cart);
-            }
-            return true;
+            return stockReservationService.reserveStockForCart(session, cart);
         }
     }
 
@@ -154,11 +155,26 @@ public class CartService {
      * @return map de producto y cantidad en orden determinista
      */
     public Map<ProductDTO, Integer> getDetailedProducts(HttpSession session) {
-        SessionCart cart = getCart(session);
-        Map<ProductDTO, Integer> detailed = new LinkedHashMap<>();
-        for (Map.Entry<String, Integer> entry : cart.getProducts().entrySet()) {
-            detailed.put(productsService.getProductDTOByReference(entry.getKey()), entry.getValue());
+        synchronized (WebUtils.getSessionMutex(session)) {
+            SessionCart cart = getCart(session);
+            Map<ProductDTO, Integer> detailed = new LinkedHashMap<>();
+            boolean removed = false;
+            for (Map.Entry<String, Integer> entry : cart.getProducts().entrySet()) {
+                try {
+                    detailed.put(productsService.getProductDTOByReference(entry.getKey()), entry.getValue());
+                } catch (ResponseStatusException ex) {
+                    if (ex.getStatusCode() != HttpStatus.NOT_FOUND) {
+                        throw ex;
+                    }
+                    cart.deleteAllSameProduct(entry.getKey());
+                    session.setAttribute(REMOVED_PRODUCT_NOTICE, true);
+                    removed = true;
+                }
+            }
+            if (removed) {
+                stockReservationService.reserveStockForCartWithResult(session, cart);
+            }
+            return detailed;
         }
-        return detailed;
     }
 }

@@ -9,6 +9,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Entity
 @Data
@@ -37,6 +38,8 @@ public class Product {
 
     Integer stock;
 
+    LocalDateTime deletedAt;
+
     @Column (unique = true)
     String reference;
 
@@ -44,11 +47,11 @@ public class Product {
     @JoinColumn (name = "userModifiedId")
     User userModified;
 
-    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY)
     @ToString.Exclude
     List<OrderDetails> orderDetails;
 
-    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @OneToMany (mappedBy = "product", fetch = FetchType.LAZY)
     @ToString.Exclude
     List<Review> reviewList;
 

@@ -35,9 +35,14 @@ public class CartController {
 
         var totalAmount = GenericUtils.priceAmountCalc(cart);
 
-        return new ModelAndView("cart/cart-view")
+        ModelAndView model = new ModelAndView("cart/cart-view")
                 .addObject("products", cart)
                 .addObject("totalAmount", totalAmount);
+        if (session.getAttribute(CartService.REMOVED_PRODUCT_NOTICE) != null) {
+            model.addObject("errorMessage", "Algunos productos ya no están disponibles y se han eliminado del carrito.");
+            session.removeAttribute(CartService.REMOVED_PRODUCT_NOTICE);
+        }
+        return model;
     }
 
     /**
