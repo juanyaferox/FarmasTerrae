@@ -15,6 +15,7 @@ import java.util.List;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -44,7 +45,7 @@ class CartProductFlashTest {
     void outOfStockAddShowsErrorFlashAndNeverSuccessFlash() throws Exception {
         when(cartService.addProductToCart(org.mockito.ArgumentMatchers.eq("sample"), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(false);
-        var result = cartMvc.perform(get("/cart/add/sample"))
+        var result = cartMvc.perform(post("/cart/add/sample"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/products/sample"))
                 .andExpect(flash().attribute("errorMessage", "No hay stock disponible para añadir este producto."))
@@ -72,7 +73,7 @@ class CartProductFlashTest {
     void inStockAddSetsAddedFlashOnlyAndUrlEncodesReference() throws Exception {
         when(cartService.addProductToCart(org.mockito.ArgumentMatchers.eq("ref with space"), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(true);
-        var result = cartMvc.perform(get("/cart/add/ref with space"))
+        var result = cartMvc.perform(post("/cart/add/ref with space"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/products/ref%20with%20space"))
                 .andExpect(flash().attribute("added", true))
