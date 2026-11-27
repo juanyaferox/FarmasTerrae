@@ -19,7 +19,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StringUtils;
 
 // @EnableMethodSecurity: @PreAuthorize guards the admin-only service methods (e.g. UserService) even if a
@@ -68,10 +67,9 @@ public class SecurityConfig {
                 .permissionsPolicy(policy -> policy.policy("geolocation=(), microphone=(), camera=()")));
         http.formLogin(form -> form.loginPage("/auth").defaultSuccessUrl("/", false).permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/auth?logout")
-                        .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "remember-me").permitAll())
                 .rememberMe(remember -> remember.rememberMeServices(rememberMeServices))
-                .sessionManagement(session -> session.sessionFixation().migrateSession()
+                .sessionManagement(session -> session.sessionFixation().changeSessionId()
                         .maximumSessions(1).sessionRegistry(sessionRegistry).expiredUrl("/auth?expired"));
         http.exceptionHandling(ex -> ex
                 .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth"))

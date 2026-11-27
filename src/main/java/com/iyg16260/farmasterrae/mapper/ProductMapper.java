@@ -33,6 +33,7 @@ public abstract class ProductMapper {
 
     @Mapping (target = "price", source = "price", qualifiedByName = "formatPriceToCents")
     @Mapping (target = "id", ignore = true)
+    @Mapping (target = "version", ignore = true)
     @Mapping (target = "userModified", ignore = true)
     @Mapping (target = "orderDetails", ignore = true)
     @Mapping (target = "reviewList", ignore = true)
@@ -46,6 +47,10 @@ public abstract class ProductMapper {
     @AfterMapping
     protected void addSignedUrl(Product product, @MappingTarget ProductPageDTO dto) {
         dto.setImagePath(generateSignedUrl(dto.getImagePath(), product.getReference()));
+    }
+
+    String resolveImageUrl(String imagePath) {
+        return generateSignedUrl(imagePath, null);
     }
 
     private String generateSignedUrl(String imagePath, String reference) {

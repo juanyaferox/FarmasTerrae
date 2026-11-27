@@ -6,12 +6,19 @@ import com.iyg16260.farmasterrae.utils.SessionCart;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,122 +26,171 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class StockReservationService {
 
-    private static final String RESERVATION_ID_KEY = "stockReservationId";
-    private static final String RESERVATION_TIME_KEY = "reservationTime";
+    public static final String RESERVATION_ID_KEY = "stockReservationId";
+    public static final String RESERVATION_TIME_KEY = "reservationTime";
 
     @Value ("${stock.reservation.timeout.minutes:15}")
     private int reservationTimeoutMinutes;
 
+    @Value ("${stock.reservation.max-per-product:20}")
+    private int maxReservedPerProduct;
+
     @Autowired
     private ProductRepository productRepository;
+
+    private Clock clock = Clock.systemUTC();
+
+    private final Object reservationLock = new Object();
 
     // Mapa para almacenar reservas: reservationId -> Map<productReference, cantidadReservada>
     private final ConcurrentHashMap<String, Map<String, Integer>> stockReservations = new ConcurrentHashMap<>();
     // Mapa para seguir los tiempos de reserva: reservationId -> marca de tiempo
     private final ConcurrentHashMap<String, LocalDateTime> reservationTimes = new ConcurrentHashMap<>();
 
-    /**
-     * Crea o actualiza una reserva de stock para los productos en el carrito
-     *
-     * @param session La sesión HTTP que contiene el carrito
-     * @param cart    El carrito con los productos
-     * @return true si la reserva fue exitosa, false si algún producto no tiene suficiente stock
-     */
-    @Transactional
-    public boolean reserveStockForCart(HttpSession session, SessionCart cart) {
-        // Obtener o crear ID de reserva para esta sesión
-        String reservationId = getOrCreateReservationId(session);
-
-        // Liberar reservas previas para esta sesión
-        releaseReservation(reservationId);
-
-        // Crear nueva reserva
-        Map<String, Integer> reservedProducts = new HashMap<>();
-
-        // Comprobar si hay suficiente stock para todos los productos en el carrito
-        for (Map.Entry<String, Integer> entry : cart.getProducts().entrySet()) {
-            String productRef = entry.getKey();
-            int requestedAmount = entry.getValue();
-
-            Product product = productRepository.findByReference(productRef)
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productRef));
-
-            // Obtener stock disponible actual (stock real menos lo ya reservado)
-            int availableStock = getAvailableStock(product, reservationId);
-
-            if (availableStock < requestedAmount) {
-                return false; // No hay suficiente stock
-            }
-
-            reservedProducts.put(productRef, requestedAmount);
-        }
-
-        // Si llegamos aquí, tenemos suficiente stock para todos los productos, así que guardamos la reserva
-        stockReservations.put(reservationId, reservedProducts);
-        reservationTimes.put(reservationId, LocalDateTime.now());
-        session.setAttribute(RESERVATION_TIME_KEY, LocalDateTime.now());
-
-        return true;
+    void setClock(Clock clock) {
+        this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
     /**
-     * Obtiene el stock disponible para un producto considerando las reservas actuales
+     * Crea o actualiza una reserva de stock para los productos en el carrito.
+     * Si algún producto no cabe o excede el límite por sesión, conserva intacta cualquier reserva previa.
+     *
+     * @param session La sesión HTTP que contiene el carrito
+     * @param cart    El carrito con los productos
+     * @return true si la reserva fue exitosa, false si algún producto no tiene suficiente stock o excede el límite
+     */
+    @Transactional (readOnly = true)
+    public boolean reserveStockForCart(HttpSession session, SessionCart cart) {
+        Map<String, Integer> cartProducts = cart != null ? cart.getProducts() : Map.of();
+
+        synchronized (reservationLock) {
+            String existingReservationId = getReservationId(session);
+            if (cartProducts.isEmpty()) {
+                if (existingReservationId != null) {
+                    stockReservations.remove(existingReservationId);
+                    reservationTimes.remove(existingReservationId);
+                }
+                session.removeAttribute(RESERVATION_TIME_KEY);
+                return true;
+            }
+
+            String reservationId = existingReservationId != null ? existingReservationId : UUID.randomUUID().toString();
+            LocalDateTime now = LocalDateTime.now(clock);
+            Map<String, Integer> candidateReservation = new HashMap<>();
+
+            for (Map.Entry<String, Integer> entry : cartProducts.entrySet()) {
+                String productRef = entry.getKey();
+                Integer requestedObj = entry.getValue();
+                if (requestedObj == null || requestedObj <= 0 || requestedObj > maxReservedPerProduct) {
+                    return false;
+                }
+                int requestedAmount = requestedObj;
+
+                Product product = productRepository.findByReference(productRef)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+
+                int availableStock = getAvailableStockLocked(product, reservationId, now);
+                if (availableStock < requestedAmount) {
+                    return false;
+                }
+
+                candidateReservation.put(productRef, requestedAmount);
+            }
+
+            if (existingReservationId == null) {
+                session.setAttribute(RESERVATION_ID_KEY, reservationId);
+            }
+            stockReservations.put(reservationId, Map.copyOf(candidateReservation));
+            reservationTimes.put(reservationId, now);
+            session.setAttribute(RESERVATION_TIME_KEY, now);
+            return true;
+        }
+    }
+
+    /**
+     * Obtiene el stock disponible para un producto considerando únicamente las reservas vigentes (no expiradas)
      *
      * @param product              producto a consultar
      * @param excludeReservationId id de reserva a excluir del cálculo
      * @return stock disponible actual
      */
     public int getAvailableStock(Product product, String excludeReservationId) {
+        synchronized (reservationLock) {
+            return getAvailableStockLocked(product, excludeReservationId, LocalDateTime.now(clock));
+        }
+    }
+
+    private int getAvailableStockLocked(Product product, String excludeReservationId, LocalDateTime now) {
+        int currentStock = product.getStock() != null ? product.getStock() : 0;
         int reservedStock = 0;
 
-        // Calcular el stock total reservado para este producto en todas las reservas
-        // excepto la reserva de la sesión actual
         for (Map.Entry<String, Map<String, Integer>> reservation : stockReservations.entrySet()) {
             String reservationId = reservation.getKey();
-            if (!reservationId.equals(excludeReservationId)) {
-                Map<String, Integer> products = reservation.getValue();
-                reservedStock += products.getOrDefault(product.getReference(), 0);
+            if (reservationId.equals(excludeReservationId)) {
+                continue;
             }
+            if (isExpiredLocked(reservationId, now)) {
+                continue;
+            }
+            Map<String, Integer> products = reservation.getValue();
+            reservedStock += products.getOrDefault(product.getReference(), 0);
         }
 
-        return product.getStock() - reservedStock;
+        return Math.max(0, currentStock - reservedStock);
     }
 
     /**
-     * Confirma una reserva y actualiza el stock real del producto
+     * Comprueba si la reserva de la sesión está vigente, existe en memoria y coincide exactamente con el carrito
      *
-     * @param reservationId id de la reserva a confirmar
-     * @return true si la confirmación fue exitosa, false si no se encontró la reserva
+     * @param session sesión HTTP
+     * @param cart    carrito actual de la sesión
+     * @return true si la reserva es válida y coincide con el carrito
      */
-    @Transactional
-    public boolean confirmReservation(String reservationId) {
-        Map<String, Integer> reservation = stockReservations.get(reservationId);
-        if (reservation == null) {
+    public boolean isReservationValid(HttpSession session, SessionCart cart) {
+        if (session == null || cart == null) {
             return false;
         }
-
-        // Actualizar el stock real del producto en la base de datos
-        for (Map.Entry<String, Integer> entry : reservation.entrySet()) {
-            String productRef = entry.getKey();
-            int reservedAmount = entry.getValue();
-
-            Product product = productRepository.findByReference(productRef)
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado: " + productRef));
-
-            // Verificar nuevamente que tenemos suficiente stock
-            if (product.getStock() < reservedAmount) {
-                throw new RuntimeException("No hay suficiente stock para el producto: " + productRef);
-            }
-
-            product.setStock(product.getStock() - reservedAmount);
-            productRepository.save(product);
+        Map<String, Integer> cartProducts = cart.getProducts();
+        if (cartProducts.isEmpty()) {
+            return false;
         }
+        synchronized (reservationLock) {
+            String reservationId = getReservationId(session);
+            if (reservationId == null) {
+                return false;
+            }
+            LocalDateTime now = LocalDateTime.now(clock);
+            LocalDateTime sessionTime = (LocalDateTime) session.getAttribute(RESERVATION_TIME_KEY);
+            if (sessionTime == null || !sessionTime.plusMinutes(reservationTimeoutMinutes).isAfter(now)) {
+                return false;
+            }
+            if (isExpiredLocked(reservationId, now)) {
+                return false;
+            }
+            Map<String, Integer> reserved = stockReservations.get(reservationId);
+            return reserved != null && reserved.equals(cartProducts);
+        }
+    }
 
-        // Eliminar la reserva
-        stockReservations.remove(reservationId);
-        reservationTimes.remove(reservationId);
-
-        return true;
+    /**
+     * Libera una reserva tras el commit de la transacción actual (o inmediatamente si no hay transacción activa)
+     *
+     * @param reservationId id de la reserva a liberar
+     */
+    public void releaseReservationAfterCommit(String reservationId) {
+        if (reservationId == null) {
+            return;
+        }
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    releaseReservation(reservationId);
+                }
+            });
+        } else {
+            releaseReservation(reservationId);
+        }
     }
 
     /**
@@ -143,23 +199,26 @@ public class StockReservationService {
      * @param reservationId id de la reserva a liberar
      */
     public void releaseReservation(String reservationId) {
-        stockReservations.remove(reservationId);
-        reservationTimes.remove(reservationId);
+        if (reservationId == null) {
+            return;
+        }
+        synchronized (reservationLock) {
+            stockReservations.remove(reservationId);
+            reservationTimes.remove(reservationId);
+        }
     }
 
     /**
-     * Obtiene o crea un id de reserva para la sesión
+     * Limpia los atributos de reserva almacenados en la sesión HTTP
      *
      * @param session sesión HTTP
-     * @return id de reserva único para la sesión
      */
-    private String getOrCreateReservationId(HttpSession session) {
-        String reservationId = (String) session.getAttribute(RESERVATION_ID_KEY);
-        if (reservationId == null) {
-            reservationId = UUID.randomUUID().toString();
-            session.setAttribute(RESERVATION_ID_KEY, reservationId);
+    public void clearSessionReservationAttributes(HttpSession session) {
+        if (session == null) {
+            return;
         }
-        return reservationId;
+        session.removeAttribute(RESERVATION_ID_KEY);
+        session.removeAttribute(RESERVATION_TIME_KEY);
     }
 
     /**
@@ -169,7 +228,7 @@ public class StockReservationService {
      * @return id de reserva o null si no existe
      */
     public String getReservationId(HttpSession session) {
-        return (String) session.getAttribute(RESERVATION_ID_KEY);
+        return session != null ? (String) session.getAttribute(RESERVATION_ID_KEY) : null;
     }
 
     /**
@@ -178,28 +237,57 @@ public class StockReservationService {
      */
     @Scheduled (fixedRate = 60000)
     public void cleanupExpiredReservations() {
-        LocalDateTime now = LocalDateTime.now();
-
-        reservationTimes.forEach((reservationId, timestamp) -> {
-            if (timestamp.plusMinutes(reservationTimeoutMinutes).isBefore(now)) {
-                // Esta reserva ha expirado
-                releaseReservation(reservationId);
+        synchronized (reservationLock) {
+            LocalDateTime now = LocalDateTime.now(clock);
+            List<String> expiredIds = new ArrayList<>();
+            for (Map.Entry<String, LocalDateTime> entry : reservationTimes.entrySet()) {
+                if (entry.getValue() == null || !entry.getValue().plusMinutes(reservationTimeoutMinutes).isAfter(now)) {
+                    expiredIds.add(entry.getKey());
+                }
             }
-        });
+            for (String expiredId : expiredIds) {
+                stockReservations.remove(expiredId);
+                reservationTimes.remove(expiredId);
+            }
+        }
     }
 
     /**
-     * Comprueba si la reserva de una sesión ha expirado
+     * Comprueba si la reserva de una sesión ha expirado o no existe en memoria
      *
      * @param session sesión HTTP a verificar
      * @return true si la reserva ha expirado o no existe, false si está vigente
      */
     public boolean isReservationExpired(HttpSession session) {
-        LocalDateTime reservationTime = (LocalDateTime) session.getAttribute(RESERVATION_TIME_KEY);
-        if (reservationTime == null) {
+        if (session == null) {
             return true;
         }
+        synchronized (reservationLock) {
+            String reservationId = getReservationId(session);
+            if (reservationId == null) {
+                return true;
+            }
+            LocalDateTime now = LocalDateTime.now(clock);
+            LocalDateTime reservationTime = (LocalDateTime) session.getAttribute(RESERVATION_TIME_KEY);
+            if (reservationTime == null || !reservationTime.plusMinutes(reservationTimeoutMinutes).isAfter(now)) {
+                return true;
+            }
+            return isExpiredLocked(reservationId, now) || !stockReservations.containsKey(reservationId);
+        }
+    }
 
-        return reservationTime.plusMinutes(reservationTimeoutMinutes).isBefore(LocalDateTime.now());
+    Map<String, Integer> getReservationSnapshot(String reservationId) {
+        if (reservationId == null) {
+            return null;
+        }
+        synchronized (reservationLock) {
+            Map<String, Integer> reserved = stockReservations.get(reservationId);
+            return reserved != null ? Map.copyOf(reserved) : null;
+        }
+    }
+
+    private boolean isExpiredLocked(String reservationId, LocalDateTime now) {
+        LocalDateTime timestamp = reservationTimes.get(reservationId);
+        return timestamp == null || !timestamp.plusMinutes(reservationTimeoutMinutes).isAfter(now);
     }
 }

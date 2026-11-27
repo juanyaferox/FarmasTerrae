@@ -7,6 +7,7 @@ import com.iyg16260.farmasterrae.enums.Category;
 import com.iyg16260.farmasterrae.mapper.ProductMapper;
 import com.iyg16260.farmasterrae.mapper.ReviewMapper;
 import com.iyg16260.farmasterrae.model.Product;
+import com.iyg16260.farmasterrae.model.User;
 import com.iyg16260.farmasterrae.repository.ProductRepository;
 import com.iyg16260.farmasterrae.spec.ProductSpecification;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +18,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -129,20 +134,39 @@ public class ProductsService {
      * @return producto DTO actualizado
      * @throws ResponseStatusException BAD_REQUEST si la nueva referencia ya existe, NOT_FOUND si no se encuentra el producto
      */
+    @Transactional
     public ProductDTO updateProduct(ProductDTO productDTO, String oldReference, MultipartFile image) throws ResponseStatusException {
-        Product product = productMapper.productDTOToProduct(productDTO);
-        Product oldProduct = productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
+        Product existing = productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
                 (HttpStatus.NOT_FOUND, "Producto no encontrado"));
 
-        if (!Objects.equals(product.getReference(), oldReference) && productRepository.existsByReference(product.getReference()))
+        if (!Objects.equals(productDTO.getReference(), oldReference)
+                && productRepository.existsByReference(productDTO.getReference())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
+        }
 
-        product.setId(oldProduct.getId());
+        existing.setName(productDTO.getName());
+        existing.setDescription(productDTO.getDescription());
+        if (productDTO.getPrice() != null) {
+            existing.setPrice(productDTO.getPrice()
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValue());
+        }
+        if (productDTO.getStock() != null) {
+            existing.setStock(productDTO.getStock());
+        }
+        existing.setReference(productDTO.getReference());
+        existing.setCategory(productDTO.getCategory());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof User currentUser && currentUser.getId() != null) {
+            existing.setUserModified(currentUser);
+        }
 
         if (image != null && !image.isEmpty()) {
             // Si ya había una imagen, eliminarla de S3
-            if (oldProduct.getImagePath() != null && !oldProduct.getImagePath().isEmpty()) {
-                s3StorageService.deleteFile(oldProduct.getImagePath());
+            if (existing.getImagePath() != null && !existing.getImagePath().isEmpty()) {
+                s3StorageService.deleteFile(existing.getImagePath());
             }
             MultipartFile imageToUpload;
             try {
@@ -153,14 +177,11 @@ public class ProductsService {
 
             // Subir la nueva imagen
             String imageUrl = s3StorageService.uploadFile(imageToUpload, PRODUCT_IMAGES_FOLDER);
-            product.setImagePath(imageUrl);
-        } else {
-            // Mantener la imagen anterior
-            product.setImagePath(oldProduct.getImagePath());
+            existing.setImagePath(imageUrl);
         }
 
         return productMapper.productToProductDTO(
-                productRepository.save(product)
+                productRepository.saveAndFlush(existing)
         );
     }
 
