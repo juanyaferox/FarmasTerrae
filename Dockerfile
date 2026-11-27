@@ -1,29 +1,40 @@
-# ========== ETAPA 1: construcción ==========
-FROM eclipse-temurin:21-jdk AS builder
+# ========== Stage 1: build ==========
+FROM eclipse-temurin:21-jdk-noble AS builder
 
 WORKDIR /app
 
-# Copiar todo el proyecto (incluyendo pom.xml, src/, mvnw, .mvn/, etc.)
-COPY . .
+# Maven wrapper and POM first, so the dependency layer is cached until pom.xml changes
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
 
-RUN chmod +x mvnw
+# Sources (local secrets, certificates and build output are excluded by .dockerignore)
+COPY src src
+RUN ./mvnw -B -q clean package -DskipTests
 
-# Ejecutar la compilación usando Maven Wrapper (./mvnw).
-# Si tu proyecto no trae mvnw/.mvn, habría que cambiar esta línea para usar mvn directamente.
-RUN ./mvnw clean package -DskipTests
+# ========== Stage 2: runtime ==========
+FROM eclipse-temurin:21-jre-noble
 
-# ========== ETAPA 2: imagen de ejecución ==========
-FROM eclipse-temurin:21-jre
+# Unprivileged system user that owns the application directory
+RUN groupadd --system app \
+    && useradd --system --gid app --home-dir /app --no-create-home --shell /usr/sbin/nologin app
 
 WORKDIR /app
 
-# Copiar el JAR empaquetado en la etapa anterior
-COPY --from=builder /app/target/*.jar app.jar
+COPY --from=builder --chown=app:app /app/target/*.jar app.jar
 
-# Exponer el puerto 8080
+# Logback writes its rolling files to ./logs
+RUN mkdir -p /app/logs && chown -R app:app /app
+
+USER app
+
 EXPOSE 8080
 
 # Por defecto arranca en perfil "prod"
 ENV SPRING_PROFILES_ACTIVE=prod
+
+# Lightweight liveness probe: a static resource served by Spring MVC (no session, no database)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD curl -fsS -o /dev/null http://127.0.0.1:8080/favicon.ico || exit 1
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -40,8 +41,9 @@ public class S3StorageService {
     @Value ("${aws.s3.endpoint:}")
     private String s3Endpoint;
 
-    @Value ("${app.env:dev}")
-    private String appEnv;
+    /** Browser-facing address of a custom endpoint (e.g. http://localhost:9000 for Docker MinIO). */
+    @Value ("${aws.s3.public-endpoint:}")
+    private String s3PublicEndpoint;
 
     /**
      * Sube un archivo al bucket de S3 y devuelve la URL
@@ -77,20 +79,26 @@ public class S3StorageService {
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
             // Construir y devolver la URL
-            if ("dev".equalsIgnoreCase(appEnv) && s3Endpoint != null && !s3Endpoint.isBlank()) {
-                // En caso de usar docker compose
-                String fixedEndpoint = s3Endpoint.replace("http://minio:9000", "http://localhost:9000");
-                return fixedEndpoint + "/" + bucketName + "/" + key;
-            } else {
-                // URL pública de AWS S3 (si el bucket es público o tiene políticas adecuadas)
-                return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
-            }
+            return buildObjectUrl(key);
 
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al procesar el archivo", e);
         } catch (S3Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir a S3: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * URL stored for an uploaded object: path-style on the public address of a custom endpoint
+     * (MinIO), otherwise the virtual-hosted AWS S3 URL. Images are always served through presigned
+     * URLs, so the bucket can stay private.
+     */
+    private String buildObjectUrl(String key) {
+        if (StringUtils.hasText(s3Endpoint)) {
+            String base = StringUtils.hasText(s3PublicEndpoint) ? s3PublicEndpoint : s3Endpoint;
+            return StringUtils.trimTrailingCharacter(base.trim(), '/') + "/" + bucketName + "/" + key;
+        }
+        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
     }
 
     /**
@@ -156,13 +164,6 @@ public class S3StorageService {
         // Si ya es solo la clave
         if (!fileUrl.startsWith("http")) {
             return fileUrl;
-        }
-
-        if ("dev".equalsIgnoreCase(appEnv)) {
-            // Busca "bucketName/" en la URL y devuelve lo que venga después
-            if (!fileUrl.contains(bucketName + "/")) {
-                return fileUrl.substring(fileUrl.indexOf(bucketName + "/") + bucketName.length() + 1);
-            }
         }
 
         try {
