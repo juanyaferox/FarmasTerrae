@@ -6,10 +6,18 @@ Server-rendered online pharmacy e-commerce platform built with Java 21, Spring B
 
 **Languages:** **English** · [Español](README.es.md) · [Português](README.pt.md)
 
-**Contents:** [Highlights](#design--implementation-highlights) · [Features](#key-features) · [Stack](#tech-stack) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Configuration](#environment-variables--profiles) · [Routes](#access-control--main-routes) · [Structure](#project-structure) · [Build & CI](#build-logging--ci)
+**Contents:** [Demo](#demo) · [Highlights](#design--implementation-highlights) · [Features](#key-features) · [Stack](#tech-stack) · [Architecture](#architecture) · [Getting Started](#getting-started) · [Configuration](#environment-variables--profiles) · [Routes](#access-control--main-routes) · [Structure](#project-structure) · [Build & CI](#build-logging--ci)
 
 > [!NOTE]
 > The application UI and validation messages are currently in Spanish. Documentation is maintained in English ([README.md](README.md)), Spanish ([README.es.md](README.es.md)), and Portuguese ([README.pt.md](README.pt.md)).
+
+---
+
+## Demo
+
+[![FarmasTerrae demo: storefront, product search, product detail, cart and admin dashboard](./docs/farmasterrae-demo.gif)](./docs/farmasterrae-demo.mp4)
+
+<sub>Click the preview to open the full-quality video (MP4, 27 s).</sub>
 
 ---
 
