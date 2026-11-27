@@ -7,6 +7,8 @@ import com.iyg16260.farmasterrae.service.S3StorageService;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,6 +23,7 @@ public abstract class ProductMapper {
     protected S3StorageService s3StorageService;
 
     private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
+    private static final Logger log = LoggerFactory.getLogger(ProductMapper.class);
 
     @Mapping (target = "price", source = "price", qualifiedByName = "formatPrice")
     public abstract ProductDTO productToProductDTO(Product product);
@@ -53,7 +56,8 @@ public abstract class ProductMapper {
                     return s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
                 }
             } catch (Exception e) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error generando URL firmada para producto " + reference + ": " + e.getMessage());
+                log.error("Error generando URL firmada para producto", e);
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar URL firmada");
             }
         }
         return imagePath; // fallback

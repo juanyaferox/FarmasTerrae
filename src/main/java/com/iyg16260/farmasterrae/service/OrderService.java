@@ -245,7 +245,7 @@ public class OrderService {
                     orderRepository.save(order)
             );
         } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado inválido: " + status);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado de pedido inválido");
         }
     }
 

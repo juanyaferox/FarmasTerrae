@@ -1,11 +1,10 @@
 package com.iyg16260.farmasterrae.config;
 
-import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
@@ -17,45 +16,28 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import java.net.URI;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
+import java.util.List;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-@Slf4j
 @ControllerAdvice
 @Order (1)
-public class GlobalExceptionHandler implements Filter {
-
-    /**
-     * Captura errores de parse de la vista. Si es BAD_REQUEST o BindException no genera archivo de log
-     *
-     * @param req   The request to process
-     * @param res   The response associated with the request
-     * @param chain Provides access to the next filter in the chain for this filter to pass the request and response
-     *              to for further processing
-     * @throws IOException
-     * @throws ServletException
-     */
-    @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-            throws IOException, ServletException {
-        HttpServletRequest request = (HttpServletRequest) req;
-
-        try {
-            chain.doFilter(req, res);
-        } catch (Exception ex) {
-            String errorId = UUID.randomUUID().toString();
-            request.setAttribute("errorId", errorId);
-            logException(errorId, ex, collectAuditInfo(request));
-            throw ex;
-        }
-    }
+public class GlobalExceptionHandler {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * Captura cualquier tipo de excepción
@@ -68,12 +50,13 @@ public class GlobalExceptionHandler implements Filter {
                                             HttpServletRequest request) {
 
 
-        // Construcción mensaje del error
+        if (ex instanceof AccessDeniedException denied) throw denied;
+        if (ex instanceof AuthenticationException authentication) throw authentication;
         ErrorInfo errorInfo = getErrorInfo(ex);
 
         String messageError;
-        // Log con la información excepto si es un error de validación o un 400
-        if (shouldLogException(ex)) {
+        // Solo logear errores 5xx del servidor
+        if (shouldLogException(errorInfo)) {
             String errorId = Optional.ofNullable((String) request.getAttribute("errorId"))
                     .orElse(UUID.randomUUID().toString());
             messageError = errorInfo.message() + " " + errorId;
@@ -87,16 +70,16 @@ public class GlobalExceptionHandler implements Filter {
         if (determineIfShouldRedirect(ex, request)) {
             String referer = request.getHeader("Referer");
             if (ex instanceof BindException) {
-                String errors = processBindingErrors((BindException) ex);
-                String message = "Errores de validación: " + errors;
-                return handleRedirect(redirectAttributes, referer, message);
+                List<String> errors = processBindingErrors((BindException) ex);
+                redirectAttributes.addFlashAttribute("errorMessages", errors);
+                return handleRedirect(redirectAttributes, referer, "Errores de validación:", request);
             }
 
-            return handleRedirect(redirectAttributes, referer, messageError);
+            return handleRedirect(redirectAttributes, referer, messageError, request);
         }
 
         // Caso no tenga dirección, se devuelve una pantalla genérica
-        return createErrorModelAndView(errorInfo.status(), errorInfo.message());
+        return createErrorModelAndView(errorInfo.status(), errorInfo.message(), request);
     }
 
     /**
@@ -115,8 +98,16 @@ public class GlobalExceptionHandler implements Filter {
         return switch (ex) {
             case ResponseStatusException rse -> new ErrorInfo(rse.getStatusCode(), rse.getReason());
 
+            case BindException ignored -> new ErrorInfo(HttpStatus.BAD_REQUEST, "Errores de validación en los datos enviados.");
+            case MaxUploadSizeExceededException ignored ->
+                    new ErrorInfo(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño máximo permitido.");
+            case MultipartException ignored ->
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Solicitud multipart inválida.");
+            case MethodArgumentTypeMismatchException ignored -> new ErrorInfo(HttpStatus.BAD_REQUEST, "Parámetro de solicitud inválido.");
+            case MissingServletRequestParameterException ignored -> new ErrorInfo(HttpStatus.BAD_REQUEST, "Falta un parámetro obligatorio.");
+            case HttpMediaTypeNotSupportedException ignored -> new ErrorInfo(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de contenido no soportado.");
             case TransactionSystemException ignored ->
-                    new ErrorInfo(HttpStatus.BAD_GATEWAY, "Error en la transacción. Verifique los datos.");
+                    new ErrorInfo(HttpStatus.BAD_REQUEST, "Error en la transacción. Verifique los datos.");
 
             case HttpRequestMethodNotSupportedException methodEx ->
                     new ErrorInfo(HttpStatus.METHOD_NOT_ALLOWED, "Método no permitido: " + methodEx.getMethod());
@@ -125,38 +116,24 @@ public class GlobalExceptionHandler implements Filter {
 
             case NoResourceFoundException ignored -> new ErrorInfo(HttpStatus.NOT_FOUND, "Recurso no encontrado");
 
-            case AccessDeniedException ignored ->
-                    new ErrorInfo(HttpStatus.FORBIDDEN, "No tienes permisos para acceder a este recurso");
-
             case null, default -> new ErrorInfo(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
         };
     }
 
-    private String processBindingErrors(BindException be) {
+    private List<String> processBindingErrors(BindException be) {
         return be.getBindingResult().getFieldErrors().stream()
-                .map(fe -> "<li>"
-                        + fe.getDefaultMessage()
-                        + "</li>")
-                .collect(Collectors.joining("", "<ul class=\"ml-4 list-disc\">", "</ul>"));
+                .map(fe -> fe.isBindingFailure()
+                        ? "Valor inválido para el campo " + fe.getField()
+                        : fe.getDefaultMessage())
+                .toList();
     }
 
-    /**
-     * Solo genera un log si no se trata de un error de validación un 400
-     *
-     * @param ex excepción
-     * @return si se deberia logear o no
-     */
-    private boolean shouldLogException(Exception ex) {
+    private boolean shouldLogException(ErrorInfo errorInfo) {
+        return errorInfo.status().is5xxServerError();
+    }
 
-        if (ex instanceof BindException) {
-            return false;
-        }
-
-        if (ex instanceof ResponseStatusException rse) {
-            return !HttpStatus.BAD_REQUEST.equals(rse.getStatusCode()) || !HttpStatus.FORBIDDEN.equals(rse.getStatusCode());
-        }
-
-        return true;
+    boolean shouldLogException(Exception ex) {
+        return shouldLogException(getErrorInfo(ex));
     }
 
     /**
@@ -176,20 +153,49 @@ public class GlobalExceptionHandler implements Filter {
      * Se redirige añadiendo el error en el redirect
      */
     private ModelAndView handleRedirect(RedirectAttributes redirectAttributes,
-                                        String referer, String message) {
+                                        String referer, String message, HttpServletRequest requestForRedirect) {
 
         redirectAttributes.addFlashAttribute("errorMessage", message);
-        return new ModelAndView("redirect:" + referer);
+        return new ModelAndView("redirect:" + safeRefererPath(referer, requestForRedirect));
+    }
+
+    private String safeRefererPath(String referer, HttpServletRequest request) {
+        if (referer == null || referer.indexOf('\r') >= 0 || referer.indexOf('\n') >= 0 || referer.indexOf('\\') >= 0) return "/";
+        try {
+            URI uri = URI.create(referer);
+            if (uri.getRawUserInfo() != null) return "/";
+            String path = uri.getRawPath();
+            if (uri.getHost() == null) {
+                if (uri.isAbsolute() || uri.getRawAuthority() != null) return "/";
+            } else {
+                String scheme = uri.getScheme();
+                String expectedScheme = request.getScheme();
+                if (scheme == null
+                        || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))
+                        || (expectedScheme != null && !scheme.equalsIgnoreCase(expectedScheme))
+                        || !uri.getHost().equalsIgnoreCase(request.getServerName())) return "/";
+                int port = uri.getPort() >= 0 ? uri.getPort() : ("https".equalsIgnoreCase(scheme) ? 443 : 80);
+                int requestPort = request.getServerPort();
+                if (requestPort < 0) requestPort = request.isSecure() ? 443 : 80;
+                if (port != requestPort) return "/";
+            }
+            if (path == null || path.isEmpty()) path = "/";
+            if (!path.startsWith("/") || path.startsWith("//")) return "/";
+            return path + (uri.getRawQuery() != null ? "?" + uri.getRawQuery() : "");
+        } catch (IllegalArgumentException e) {
+            return "/";
+        }
     }
 
     /**
      * Se devuelve una pantalla genérica con el error
      */
-    private ModelAndView createErrorModelAndView(HttpStatusCode status, String message) {
+    private ModelAndView createErrorModelAndView(HttpStatusCode status, String message, HttpServletRequest request) {
         ModelAndView mav = new ModelAndView("common/error");
         mav.setStatus(status);
         mav.addObject("errorCode", status.value());
         mav.addObject("errorMessageLabel", message);
+        mav.addObject("errorId", request.getAttribute("errorId"));
         return mav;
     }
 
@@ -212,14 +218,26 @@ public class GlobalExceptionHandler implements Filter {
     AuditInfo collectAuditInfo(HttpServletRequest request) {
         String username = getCurrentUsername();
         String remoteAddress = getClientIp(request);
-        String userAgent = request.getHeader("User-Agent");
-        String requestUri = request.getRequestURI();
-        String method = request.getMethod();
+        String userAgent = sanitize(request.getHeader("User-Agent"));
+        String requestUri = sanitize(request.getRequestURI());
+        String method = sanitize(request.getMethod());
         String sessionId = request.getSession(false) != null ?
-                request.getSession().getId() : "No session";
+                hashSessionId(request.getSession(false).getId()) : "none";
 
         return new AuditInfo(username, remoteAddress, userAgent, requestUri, method, sessionId);
+    }
 
+    private String sanitize(String value) {
+        return value == null ? "" : value.replace("\r", "").replace("\n", "");
+    }
+
+    private String hashSessionId(String sessionId) {
+        try {
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(sessionId.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash).substring(0, 8);
+        } catch (Exception ignored) {
+            return "unknown";
+        }
     }
 
     private String getCurrentUsername() {
@@ -229,10 +247,6 @@ public class GlobalExceptionHandler implements Filter {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
         return request.getRemoteAddr();
     }
 
@@ -250,11 +264,6 @@ public class GlobalExceptionHandler implements Filter {
                 auditInfo.sessionId(),
                 ex.getClass().getSimpleName());
 
-        // En consola
-        log.trace(baseMsg);
-
-        // En el achivo
-        Logger fileLogger = LoggerFactory.getLogger("errorLogger");
-        fileLogger.error(baseMsg, ex);
+        log.error(baseMsg, ex);
     }
 }
