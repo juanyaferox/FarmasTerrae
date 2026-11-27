@@ -27,6 +27,14 @@ public class SessionRevocationService {
         revoke(user, user.getUsername(), currentSessionId);
     }
 
+    /**
+     * Like {@link #revokeOthers(User, String)} after a rename: also drops the remember-me tokens issued for
+     * {@code previousUsername}, so whoever registers that name later cannot inherit them.
+     */
+    public void revokeOthers(User user, String previousUsername, String currentSessionId) {
+        revoke(user, previousUsername, currentSessionId);
+    }
+
     private void revoke(User user, String previousUsername, String currentSessionId) {
         for (Object principal : sessionRegistry.getAllPrincipals()) {
             if (sameUser(principal, user, previousUsername)) {
@@ -42,8 +50,12 @@ public class SessionRevocationService {
 
     private boolean sameUser(Object principal, User user, String previousUsername) {
         if (principal instanceof User sessionUser) {
-            return Objects.equals(sessionUser.getId(), user.getId())
-                    || Objects.equals(sessionUser.getUsername(), previousUsername)
+            // Ids never change, while a session can keep the username its account had at login time, and
+            // that username may now belong to someone else: never match another account by name.
+            if (sessionUser.getId() != null && user.getId() != null) {
+                return sessionUser.getId().equals(user.getId());
+            }
+            return Objects.equals(sessionUser.getUsername(), previousUsername)
                     || Objects.equals(sessionUser.getUsername(), user.getUsername());
         }
         return principal instanceof String name && (Objects.equals(name, previousUsername) || Objects.equals(name, user.getUsername()));

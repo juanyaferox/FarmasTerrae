@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Where;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,6 +25,9 @@ import java.util.Locale;
 @EqualsAndHashCode (onlyExplicitlyIncluded = true)
 @Table (name = "users")
 @Where (clause = "deletedAt IS NULL") // Deprecated, pero más sencillo
+// Los UPDATE solo incluyen las columnas modificadas: un cambio de contraseña que leyó la cuenta antes de que
+// se eliminara no puede reescribir deletedAt, username ni email con los valores antiguos y "resucitarla"
+@DynamicUpdate
 public class User implements UserDetails, Serializable {
 
     @Serial
