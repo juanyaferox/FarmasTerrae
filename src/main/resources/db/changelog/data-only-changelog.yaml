@@ -1,3 +1,9 @@
+# Data-only changelog, applied by LiquibaseRunnerConfig after Hibernate has created the schema.
+#
+# 001-profiles has no context, so it runs everywhere (prod included).
+# The demo fixtures use the mandatory context "@dev": they only run when `dev` is passed explicitly
+# (prodminio sets spring.liquibase.contexts=dev) and are skipped when contexts are empty or unset,
+# so production never seeds the demo accounts (password `123`).
 databaseChangeLog:
   - changeSet:
       id: 001-profiles
@@ -8,29 +14,34 @@ databaseChangeLog:
   - changeSet:
       id: 002-users
       author: juanya
+      context: "@dev"
       sqlFile:
         path: classpath:db/changelog/data/users.sql
 
   - changeSet:
       id: 003-products
       author: juanya
+      context: "@dev"
       sqlFile:
         path: classpath:db/changelog/data/products.sql
 
   - changeSet:
       id: 004-orders
       author: juanya
+      context: "@dev"
       sqlFile:
         path: classpath:db/changelog/data/orders.sql
 
   - changeSet:
       id: 005-order-details
       author: juanya
+      context: "@dev"
       sqlFile:
         path: classpath:db/changelog/data/order_details.sql
 
   - changeSet:
       id: 006-reviews
       author: juanya
+      context: "@dev"
       sqlFile:
         path: classpath:db/changelog/data/reviews.sql
