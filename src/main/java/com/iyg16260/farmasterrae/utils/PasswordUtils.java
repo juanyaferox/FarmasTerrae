@@ -1,28 +1,22 @@
 package com.iyg16260.farmasterrae.utils;
 
-public class PasswordUtils {
+import java.nio.charset.StandardCharsets;
 
-    /**
-     * Valida que la contraseña cumpla:
-     * - Al menos una mayúscula
-     * - Al menos un dígito
-     * - Longitud entre 6 y 20 caracteres
-     * - Solo letras (mayúsculas o minúsculas) y dígitos
-     *
-     * @param password la contraseña a validar
-     * @return true si cumple el patrón, false en caso contrario
-     */
+/** Shared password rules for registration, recovery, changes and bootstrap credentials. */
+public final class PasswordUtils {
+    private PasswordUtils() { }
+
     public static boolean isValidPassword(String password) {
-        if (password == null) {
-            return false;
+        if (password == null || password.length() < 12 || password.length() > 64
+                || password.getBytes(StandardCharsets.UTF_8).length > 72) return false;
+        boolean upper = false, lower = false, digit = false;
+        for (int i = 0; i < password.length(); i++) {
+            char c = password.charAt(i);
+            if (Character.isISOControl(c)) return false;
+            upper |= Character.isUpperCase(c);
+            lower |= Character.isLowerCase(c);
+            digit |= Character.isDigit(c);
         }
-        // Regex:
-        // (?=.*[A-Z])   → al menos una mayúscula
-        // (?=.*\d)      → al menos un dígito
-        // [A-Za-z\d]    → solo letras y dígitos
-        // {6,20}        → entre 6 y 20 caracteres de longitud
-        String pattern = "^(?=.*[A-Z])(?=.*\\d)[A-Za-z\\d]{6,20}$";
-        return password.matches(pattern);
+        return upper && lower && digit;
     }
 }
-

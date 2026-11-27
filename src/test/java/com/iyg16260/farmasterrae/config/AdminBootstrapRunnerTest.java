@@ -31,7 +31,7 @@ class AdminBootstrapRunnerTest {
 
     private static final String USERNAME = "Root_Admin";
     private static final String EMAIL = "root.admin@example.com";
-    private static final String PASSWORD = "Sup3rSecret";
+    private static final String PASSWORD = "Sup3rSecret!12";
 
     @Mock
     private UserRepository userRepository;
@@ -129,8 +129,8 @@ class AdminBootstrapRunnerTest {
             "root_admin, not-an-email, Sup3rSecret",
             "root_admin, root.admin@example.com, 123",
             "root_admin, root.admin@example.com, nouppercase1",
-            "root_admin, root.admin@example.com, Has spaces 1",
-            "root_admin, root.admin@example.com, ThisPasswordIsWayTooLong1"
+            "root_admin, root.admin@example.com, ThisPasswordNoDigit!",
+            "root_admin, root.admin@example.com, ThisPasswordIsMoreThanSixtyFourCharactersLongWithUppercaseAnd1234567890"
     })
     void rejectsInvalidSettingsWithoutLoggingThem(String username, String email, String password,
                                                  CapturedOutput output) {

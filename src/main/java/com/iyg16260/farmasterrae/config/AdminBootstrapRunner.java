@@ -89,7 +89,7 @@ public class AdminBootstrapRunner implements ApplicationRunner {
         }
 
         String normalizedUsername = username.trim().toLowerCase(Locale.ROOT);
-        String normalizedEmail = email.trim();
+        String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
         if (!USERNAME_PATTERN.matcher(normalizedUsername).matches()) {
             log.warn("Admin bootstrap skipped: ADMIN_BOOTSTRAP_USERNAME must have 3-20 letters, digits or underscores.");
             return false;
@@ -100,7 +100,7 @@ public class AdminBootstrapRunner implements ApplicationRunner {
         }
         if (!PasswordUtils.isValidPassword(password)) {
             log.warn("Admin bootstrap skipped: ADMIN_BOOTSTRAP_PASSWORD must follow the user password rules "
-                    + "(currently 6-20 letters or digits, with at least one uppercase letter and one digit).");
+                    + "(12-64 characters, with uppercase, lowercase and a digit).");
             return false;
         }
 

@@ -19,7 +19,7 @@
                 <p class="ft-auth-card__sub">Regístrate para realizar pedidos, consultar tu historial de compras y valorar productos.</p>
             </div>
 
-            <!-- POST /auth/register → RegisterFormDTO (@Valid). Los errores flash llegan como toast en header.html. -->
+            <!-- POST /auth/register → RegisterFormDTO (@Valid). -->
             <form th:action="@{/auth/register}" th:object="${registerForm}" method="post" class="ft-form-stack" aria-describedby="register-legend">
                 <div th:if="${error != null}" class="ft-alert ft-alert--danger" role="alert">
                     <span th:text="${error}">Error en el registro.</span>
@@ -30,8 +30,9 @@
                 <div class="ft-form-grid">
                     <div class="ft-field">
                         <label for="username" class="ft-label">Nombre de Usuario <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input th:field="*{username}" id="username" type="text" class="ft-input" maxlength="50" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="username-hint" placeholder="Tu nombre de usuario">
-                        <span id="username-hint" class="ft-hint">Máximo 50 caracteres.</span>
+                        <input th:field="*{username}" id="username" type="text" class="ft-input" minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]{3,20}" autocomplete="username" autocapitalize="none" spellcheck="false" required aria-describedby="username-hint" placeholder="Tu nombre de usuario">
+                        <span id="username-hint" class="ft-hint">Entre 3 y 20 letras, números o guiones bajos.</span>
+                        <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}" class="ft-hint"></span>
                     </div>
 
                     <div class="ft-field">
@@ -42,6 +43,7 @@
                     <div class="ft-field">
                         <label for="email" class="ft-label">Correo Electrónico <span class="ft-required" aria-hidden="true">*</span></label>
                         <input th:field="*{email}" id="email" type="email" class="ft-input" autocomplete="email" autocapitalize="none" spellcheck="false" required placeholder="tuemail@ejemplo.com">
+                        <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="ft-hint"></span>
                     </div>
 
                     <div class="ft-field">
@@ -51,22 +53,25 @@
 
                     <div class="ft-field">
                         <label for="password" class="ft-label">Contraseña <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input th:field="*{password}" id="password" type="password" class="ft-input" minlength="6" maxlength="20" pattern="(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{6,20}" autocomplete="new-password" required aria-describedby="password-rules" title="Entre 6 y 20 caracteres, con al menos una mayúscula, una minúscula y un número." placeholder="••••••••">
+                        <input th:field="*{password}" id="password" type="password" class="ft-input" minlength="12" maxlength="64" pattern="(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{12,64}" autocomplete="new-password" required aria-describedby="password-rules" title="Entre 12 y 64 caracteres, con al menos una mayúscula, una minúscula y un número." placeholder="••••••••">
                     </div>
 
                     <div class="ft-field">
                         <label for="confirmPassword" class="ft-label">Confirmar Contraseña <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input th:field="*{confirmPassword}" id="confirmPassword" type="password" class="ft-input" minlength="6" maxlength="20" autocomplete="new-password" required aria-describedby="confirm-hint" placeholder="••••••••">
+                        <input th:field="*{confirmPassword}" id="confirmPassword" type="password" class="ft-input" minlength="12" maxlength="64" autocomplete="new-password" required aria-describedby="confirm-hint" placeholder="••••••••">
                         <span id="confirm-hint" class="ft-hint">Repite la contraseña exactamente.</span>
+                        <span th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" class="ft-hint"></span>
+                        <span th:if="${#fields.hasErrors('confirmationValid')}" th:errors="*{confirmationValid}" class="ft-hint"></span>
                     </div>
 
-                    <!-- Reglas exactas de @Size(min = 6, max = 20) y @Pattern("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$") en RegisterFormDTO -->
+                    <!-- Reglas compartidas de PasswordUtils -->
                     <ul id="password-rules" class="ft-password-rules ft-form-grid__full" aria-label="Requisitos de la contraseña">
-                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Entre 6 y 20 caracteres</li>
+                        <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Entre 12 y 64 caracteres</li>
                         <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos una letra mayúscula</li>
                         <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos una letra minúscula</li>
                         <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>Al menos un número</li>
                     </ul>
+                    <span th:if="${#fields.hasErrors('passwordPolicyValid')}" th:errors="*{passwordPolicyValid}" class="ft-hint ft-form-grid__full"></span>
                 </div>
 
                 <button type="submit" class="ft-btn ft-btn--mint ft-btn--full">Registrarse</button>

@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 @Entity
 @Data
@@ -96,7 +97,7 @@ public class User implements UserDetails, Serializable {
 
     @Override
     public boolean isEnabled() {
-        return UserDetails.super.isEnabled();
+        return this.deletedAt == null;
     }
 
     private String normalizeAndValidate(String input) throws ResponseStatusException {
@@ -108,6 +109,6 @@ public class User implements UserDetails, Serializable {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "El nombre de usuario debe tener entre 3 y 20 caracteres alfanuméricos sin espacios.");
         }
-        return input.toLowerCase();
+        return input.toLowerCase(Locale.ROOT);
     }
 }

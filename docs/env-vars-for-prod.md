@@ -8,8 +8,11 @@ Never commit real values. `.env` is gitignored and excluded from the Docker buil
 # Spring profile
 export SPRING_PROFILES_ACTIVE="prod"
 
-# Remember-me cookie signing key (required, no default): openssl rand -base64 48
-export SECRET_KEY="a-long-random-secret"
+# Remember-me cookie signing key (required, >= 32 characters, no default): openssl rand -base64 48
+export SECRET_KEY="replace-with-at-least-32-random-characters-from-openssl"
+
+# Public origin used in password reset links (include scheme, omit trailing slash)
+export APP_BASE_URL="https://farmasterrae.example"
 
 # MySQL (DB_USERNAME and DB_PASSWORD are required; there is no root/empty fallback)
 export DB_NAME="farmasterrae"
@@ -22,7 +25,7 @@ export DB_SSL_MODE="PREFERRED"               # optional: PREFERRED (default), RE
 export HIBERNATE_DDL_AUTO="update"           # optional: default update; use validate once the schema exists
 
 # First ADMIN account (optional). Created on startup only if all three are set and no ADMIN exists.
-# Password rules: currently 6-20 letters/digits with at least one uppercase letter and one digit.
+# Password rules: 12-64 characters, with uppercase, lowercase and a digit; symbols and spaces are allowed.
 # Remove these values after the first successful start.
 export ADMIN_BOOTSTRAP_USERNAME="admin"
 export ADMIN_BOOTSTRAP_EMAIL="admin@example.com"
