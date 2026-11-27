@@ -6,10 +6,18 @@ Plataforma de e-commerce para farmácia online renderizada no servidor, desenvol
 
 **Idiomas:** [English](README.md) · [Español](README.es.md) · **Português**
 
-**Conteúdo:** [Design](#destaques-de-design-e-implementação) · [Funcionalidades](#funcionalidades-principais) · [Stack](#stack-tecnológica) · [Arquitetura](#arquitetura) · [Primeiros Passos](#primeiros-passos) · [Configuração](#variáveis-de-ambiente-e-perfis) · [Rotas](#controlo-de-acesso-e-rotas-principais) · [Estrutura](#estrutura-do-projeto) · [Build e CI](#compilação-logs-e-ci)
+**Conteúdo:** [Demo](#demo) · [Design](#destaques-de-design-e-implementação) · [Funcionalidades](#funcionalidades-principais) · [Stack](#stack-tecnológica) · [Arquitetura](#arquitetura) · [Primeiros Passos](#primeiros-passos) · [Configuração](#variáveis-de-ambiente-e-perfis) · [Rotas](#controlo-de-acesso-e-rotas-principais) · [Estrutura](#estrutura-do-projeto) · [Build e CI](#compilação-logs-e-ci)
 
 > [!NOTE]
 > A interface da aplicação e as mensagens de validação encontram-se atualmente em espanhol. A documentação é mantida em inglês ([README.md](README.md)), espanhol ([README.es.md](README.es.md)) e português ([README.pt.md](README.pt.md)).
+
+---
+
+## Demo
+
+[![Demo do FarmasTerrae: página inicial, pesquisa de produtos, página de produto, carrinho e painel de administração](./docs/farmasterrae-demo.gif)](./docs/farmasterrae-demo.mp4)
+
+<sub>Clique na pré-visualização para abrir o vídeo em qualidade completa (MP4, 27 s).</sub>
 
 ---
 
