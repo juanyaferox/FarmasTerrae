@@ -132,8 +132,9 @@
                               th:text="${product.price != null ? #numbers.formatDecimal(product.price, 1, 'POINT', 2, 'COMMA') + ' €' : 'Precio no disponible'}">0,00 €</span>
                     </div>
                     <div class="ft-prod-card__actions">
-                        <a th:if="${inStock}" th:href="@{/cart/add/{ref}(ref=${product.reference})}"
-                           class="ft-btn ft-btn--sm ft-btn--mint">Añadir<span class="ft-sr-only" th:text="${' ' + product.name + ' al carrito'}"> al carrito</span></a>
+                        <form th:if="${inStock}" th:action="@{/cart/add/{ref}(ref=${product.reference})}" method="post" class="ft-inline-form">
+                            <button type="submit" class="ft-btn ft-btn--sm ft-btn--mint">Añadir<span class="ft-sr-only" th:text="${' ' + product.name + ' al carrito'}"> al carrito</span></button>
+                        </form>
                         <button th:unless="${inStock}" type="button" class="ft-btn ft-btn--sm ft-btn--ghost" disabled>Agotado</button>
                         <a th:href="@{/products/{ref}(ref=${product.reference})}"
                            class="ft-btn ft-btn--sm ft-btn--ghost">Detalles<span class="ft-sr-only" th:text="${' de ' + product.name}"> del producto</span></a>

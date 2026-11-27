@@ -8,13 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.util.Map;
-import java.nio.charset.StandardCharsets;
 import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Controller
 @RequestMapping ("/cart")
@@ -42,7 +43,7 @@ public class CartController {
     /**
      * Añadir producto al carrito
      */
-    @GetMapping ("/add/{reference}")
+    @PostMapping ("/add/{reference}")
     public String addToCart(@PathVariable String reference, HttpSession session, RedirectAttributes ra) {
         boolean added = cartService.addProductToCart(reference, session);
         String encodedReference = UriUtils.encodePathSegment(reference, StandardCharsets.UTF_8);
@@ -56,10 +57,8 @@ public class CartController {
 
     /**
      * Borrar todos los mismos de un producto del carrito
-     *
-     * @return
      */
-    @GetMapping ("/remove/{reference}")
+    @PostMapping ("/remove/{reference}")
     public String deleteFromCart(@PathVariable String reference, HttpSession session) {
         cartService.deleteAllSameProductFromCart(reference, session);
         return CART_URL;
@@ -68,7 +67,7 @@ public class CartController {
     /**
      * Limpiar el carrito
      */
-    @GetMapping ("/clear")
+    @PostMapping ("/clear")
     public String clearCart(HttpSession session) {
         cartService.clearCart(session);
         return CART_URL;
@@ -77,17 +76,19 @@ public class CartController {
     /**
      * Añadir un producto del mismo al carrito
      */
-    @GetMapping ("/increase/{reference}")
+    @PostMapping ("/increase/{reference}")
     public String increaseCart(@PathVariable String reference, HttpSession session,
                                RedirectAttributes ra) {
-        cartService.addProductToCart(reference, session);
+        if (!cartService.addProductToCart(reference, session)) {
+            ra.addFlashAttribute("errorMessage", "No hay stock disponible para añadir más unidades de este producto.");
+        }
         return CART_URL;
     }
 
     /**
      * Borrar un producto del mismo del carrito
      */
-    @GetMapping ("/decrease/{reference}")
+    @PostMapping ("/decrease/{reference}")
     public String decreaseCart(@PathVariable String reference, HttpSession session) {
         cartService.deleteProductFromCart(reference, session);
         return CART_URL;

@@ -2,8 +2,10 @@ package com.iyg16260.farmasterrae.utils;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SessionCart implements Serializable {
 
@@ -11,7 +13,7 @@ public class SessionCart implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // Usando MAP puedo evitar tener que recorrer la lista contando los productos para conocer la cantidad
-    private final Map<String, Integer> products = new HashMap<>();
+    private final Map<String, Integer> products = new ConcurrentHashMap<>();
 
     /**
      * Añade producto a la cesta, aumentando en uno la cantidad si está repetido
@@ -19,19 +21,22 @@ public class SessionCart implements Serializable {
      * @param productReference referencia del producto
      */
     public void addProduct(String productReference) {
+        if (productReference == null) {
+            return;
+        }
         products.merge(productReference, 1, Integer::sum);
     }
 
     /**
-     * Borra una unidad del producto del Map
+     * Borra una unidad del producto del Map solo si está presente
      *
      * @param productReference referencia del producto
      */
     public void deleteOneProduct(String productReference) {
-        products.merge(productReference, 1, (oldQuantity, value) -> {
-            int newQuantity = oldQuantity - 1;
-            return newQuantity > 0 ? newQuantity : null;
-        });
+        if (productReference == null) {
+            return;
+        }
+        products.computeIfPresent(productReference, (k, qty) -> qty > 1 ? qty - 1 : null);
     }
 
     /**
@@ -40,23 +45,36 @@ public class SessionCart implements Serializable {
      * @param productReference referencia del producto
      */
     public void deleteAllSameProduct(String productReference) {
+        if (productReference == null) {
+            return;
+        }
         products.remove(productReference);
     }
 
     /**
-     * Borra todo_ el contendido del carrito
+     * Comprueba si el producto está en el carrito
+     *
+     * @param productReference referencia del producto
+     * @return true si el producto está presente
+     */
+    public boolean containsProduct(String productReference) {
+        return productReference != null && products.containsKey(productReference);
+    }
+
+    /**
+     * Borra todo el contenido del carrito
      */
     public void clear() {
         products.clear();
     }
 
     /**
-     * Obtiene todos los productos del carrito
+     * Obtiene una copia defensiva inmutable de todos los productos del carrito
      *
      * @return productos por referencia y cantidad
      */
     public Map<String, Integer> getProducts() {
-        return products;
+        return Collections.unmodifiableMap(new TreeMap<>(products));
     }
 
     /**

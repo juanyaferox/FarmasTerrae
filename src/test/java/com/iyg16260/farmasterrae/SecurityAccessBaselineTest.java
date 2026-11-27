@@ -125,7 +125,8 @@ class SecurityAccessBaselineTest {
 
     @Test
     void reflectedImagePayloadIsNotIncludedInErrorFlash() throws Exception {
-        mockMvc.perform(get(URI.create("http://localhost/cart/add/%3Cimg%20src=x%20onerror=alert(1)%3E"))
+        mockMvc.perform(post(URI.create("http://localhost/cart/add/%3Cimg%20src=x%20onerror=alert(1)%3E"))
+                        .with(csrf())
                         .header("Referer", "http://localhost/cart"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", "/cart"))

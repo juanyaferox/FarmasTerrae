@@ -1,9 +1,11 @@
 package com.iyg16260.farmasterrae.config;
 
+import jakarta.persistence.OptimisticLockException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -108,6 +110,10 @@ public class GlobalExceptionHandler {
             case HttpMediaTypeNotSupportedException ignored -> new ErrorInfo(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Tipo de contenido no soportado.");
             case TransactionSystemException ignored ->
                     new ErrorInfo(HttpStatus.BAD_REQUEST, "Error en la transacción. Verifique los datos.");
+            case OptimisticLockingFailureException ignored ->
+                    new ErrorInfo(HttpStatus.CONFLICT, "El recurso fue modificado por otro usuario. Recarga e inténtalo de nuevo.");
+            case OptimisticLockException ignored ->
+                    new ErrorInfo(HttpStatus.CONFLICT, "El recurso fue modificado por otro usuario. Recarga e inténtalo de nuevo.");
 
             case HttpRequestMethodNotSupportedException methodEx ->
                     new ErrorInfo(HttpStatus.METHOD_NOT_ALLOWED, "Método no permitido: " + methodEx.getMethod());
@@ -144,6 +150,8 @@ public class GlobalExceptionHandler {
         return switch (ex) {
             case ResponseStatusException ignore -> haveReferer;
             case TransactionSystemException ignore -> haveReferer;
+            case OptimisticLockingFailureException ignore -> haveReferer;
+            case OptimisticLockException ignore -> haveReferer;
             case BindException ignore -> haveReferer;
             default -> false;
         };

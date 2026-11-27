@@ -5,11 +5,14 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.List;
 
 @Entity
 @Data
+@DynamicUpdate
 @EqualsAndHashCode (onlyExplicitlyIncluded = true)
 @Table (name = "products", indexes = {@Index (name = "idxProductCategory", columnList = "category"),
         @Index (name = "idxProductReference", columnList = "reference")})
@@ -18,6 +21,10 @@ public class Product {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     @EqualsAndHashCode.Include
     Long id;
+
+    @Version
+    @ColumnDefault ("0")
+    private Long version;
 
     String name;
 

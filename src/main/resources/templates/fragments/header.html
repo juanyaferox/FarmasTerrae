@@ -60,9 +60,9 @@
                 <a sec:authorize="isAnonymous()" th:href="@{/auth/register}" class="ft-btn ft-btn--sm ft-btn--ghost">
                     Registrarse
                 </a>
-                <a sec:authorize="isAuthenticated()" th:href="@{/logout}" class="ft-btn ft-btn--sm ft-btn--ghost">
-                    Cerrar sesión
-                </a>
+                <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="ft-inline-form">
+                    <button type="submit" class="ft-btn ft-btn--sm ft-btn--ghost">Cerrar sesión</button>
+                </form>
 
                 <!-- Carrito con contador de la sesión (SessionCart#getSize) -->
                 <a th:href="@{/cart}" class="ft-btn ft-btn--sm ft-btn--teal" aria-label="Carrito de compra">
@@ -101,7 +101,9 @@
                         </a>
                         <a sec:authorize="isAnonymous()" th:href="@{/auth}" class="ft-nav__link">Iniciar sesión</a>
                         <a sec:authorize="isAnonymous()" th:href="@{/auth/register}" class="ft-nav__link">Registrarse</a>
-                        <a sec:authorize="isAuthenticated()" th:href="@{/logout}" class="ft-nav__link">Cerrar sesión</a>
+                        <form sec:authorize="isAuthenticated()" th:action="@{/logout}" method="post" class="ft-inline-form">
+                            <button type="submit" class="ft-nav__link">Cerrar sesión</button>
+                        </form>
                     </nav>
                 </details>
             </div>
