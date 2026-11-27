@@ -5,15 +5,15 @@
 <header th:replace="~{fragments/header :: header}"></header>
 
 <!--
-    Modelo: order (OrderDetailsDTO { products: Map<ProductDTO, Integer>, totalPrice, status (texto), createdAt,
+    Modelo: order (OrderDetailsDTO { items: List<OrderItemDTO>, totalPrice, status (texto), createdAt,
     updatedAt, paymentMethod (texto), name, address }) y orderSuccess (flash boolean). OrderDetailsDTO no expone el id del pedido.
     status llega ya traducido (SaleStatus.value): Pendiente / Enviado / Completado / Cancelado.
 -->
 <main id="main-content"
       th:with="statusKey=${order.status == 'Pendiente' ? 'pending' : (order.status == 'Enviado' ? 'shipped' : (order.status == 'Completado' ? 'completed' : (order.status == 'Cancelado' ? 'cancelled' : '')))},
-               hasProducts=${order.products != null and !#maps.isEmpty(order.products)},
-               productCount=${order.products != null ? #maps.size(order.products) : 0},
-               unitCount=${order.products != null and !#maps.isEmpty(order.products) ? #aggregates.sum(order.products.values()) : 0}">
+               hasProducts=${order.items != null and !#lists.isEmpty(order.items)},
+               productCount=${order.items != null ? #lists.size(order.items) : 0},
+               unitCount=${order.items != null and !#lists.isEmpty(order.items) ? #aggregates.sum(order.items.![amount != null ? amount : 0]) : 0}">
     <section class="ft-page-band ft-page-band--bone">
         <div class="ft-container">
             <nav class="ft-breadcrumb" aria-label="Ruta de navegación">
@@ -106,36 +106,34 @@
                 <p th:unless="${hasProducts}" class="ud-modal-text">Este pedido no contiene productos.</p>
 
                 <ul th:if="${hasProducts}" class="ud-list-reset">
-                    <li th:each="entry : ${order.products}" class="ft-order-item">
-                        <img th:src="${#strings.isEmpty(entry.key.imagePath)} ? @{/assets/img/placeholder.svg} : @{${entry.key.imagePath}}"
-                             th:alt="${!#strings.isEmpty(entry.key.name) ? entry.key.name : 'Imagen del producto'}"
+                    <li th:each="item : ${order.items}" class="ft-order-item">
+                        <img th:src="${#strings.isEmpty(item.imagePath)} ? @{/assets/img/placeholder.svg} : @{${item.imagePath}}"
+                             th:alt="${!#strings.isEmpty(item.productName) ? item.productName : 'Imagen del producto'}"
                              class="ft-order-item__img" width="76" height="76" loading="lazy">
                         <div class="ud-order-item__body">
-                            <a th:if="${!#strings.isEmpty(entry.key.reference)}"
-                               th:href="@{/products/{ref}(ref=${entry.key.reference})}"
-                               class="ud-order-item__name" th:text="${entry.key.name}">Producto</a>
-                            <span th:if="${#strings.isEmpty(entry.key.reference)}"
-                                  class="ud-order-item__name" th:text="${entry.key.name}">Producto</span>
-                            <div th:if="${!#strings.isEmpty(entry.key.reference)}">
-                                <span class="ft-code-tag" th:text="${'REF ' + entry.key.reference}">REF</span>
+                            <a th:if="${!#strings.isEmpty(item.productReference)}"
+                               th:href="@{/products/{ref}(ref=${item.productReference})}"
+                               class="ud-order-item__name" th:text="${item.productName}">Producto</a>
+                            <span th:if="${#strings.isEmpty(item.productReference)}"
+                                  class="ud-order-item__name" th:text="${item.productName}">Producto</span>
+                            <div th:if="${!#strings.isEmpty(item.productReference)}">
+                                <span class="ft-code-tag" th:text="${'REF ' + item.productReference}">REF</span>
                             </div>
-                            <p th:if="${!#strings.isEmpty(entry.key.description)}"
-                               class="ud-order-item__desc" th:text="${entry.key.description}"></p>
                         </div>
                         <dl class="ud-order-item__nums">
                             <div>
                                 <dt>Precio unit.</dt>
                                 <dd class="ft-tabular"
-                                    th:text="${entry.key.price != null ? #numbers.formatDecimal(entry.key.price, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
+                                    th:text="${item.unitPrice != null ? #numbers.formatDecimal(item.unitPrice, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
                             </div>
                             <div>
                                 <dt>Cantidad</dt>
-                                <dd class="ft-tabular" th:text="${entry.value}">0</dd>
+                                <dd class="ft-tabular" th:text="${item.amount}">0</dd>
                             </div>
                             <div>
                                 <dt>Subtotal</dt>
                                 <dd class="ft-tabular"
-                                    th:text="${entry.key.price != null and entry.value != null ? #numbers.formatDecimal(entry.key.price * entry.value, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
+                                    th:text="${item.subtotal != null ? #numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA') + ' €' : '—'}">—</dd>
                             </div>
                         </dl>
                     </li>

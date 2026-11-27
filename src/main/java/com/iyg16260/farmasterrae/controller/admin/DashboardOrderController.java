@@ -23,7 +23,7 @@ public class DashboardOrderController {
     private final String ORDER_PATH = "redirect:/admin/dashboard/orders";
 
     @GetMapping ("/{idOrder}")
-    public ModelAndView getOrder(@PathVariable int idOrder, @AuthenticationPrincipal User user) {
+    public ModelAndView getOrder(@PathVariable long idOrder, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
         return new ModelAndView("user/order-details")
                 .addObject("order", orderDetails);

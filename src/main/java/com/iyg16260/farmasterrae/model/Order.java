@@ -23,9 +23,11 @@ public class Order {
     BigDecimal totalPrice;
 
     @Enumerated (EnumType.STRING)
+    @Column (nullable = false)
     SaleStatus status;
 
     @Enumerated (EnumType.STRING)
+    @Column (nullable = false)
     PaymentMethod paymentMethod;
 
     String name;

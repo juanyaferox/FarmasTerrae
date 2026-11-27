@@ -16,6 +16,12 @@ public class OrderDetails {
 
     Integer amount;
 
+    @Column (nullable = true)
+    Integer unitPriceCents;
+
+    @Column (nullable = true)
+    String productName;
+
     @PrePersist
     void prePersist() {
         if (amount == null) {

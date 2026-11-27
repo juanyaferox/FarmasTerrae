@@ -18,6 +18,17 @@ public enum SaleStatus {
         this.value = value;
     }
 
+    public boolean canTransitionTo(SaleStatus target) {
+        if (target == null) {
+            return false;
+        }
+        return switch (this) {
+            case PENDING -> target == SHIPPED || target == COMPLETED || target == CANCELLED;
+            case SHIPPED -> target == COMPLETED || target == CANCELLED;
+            case COMPLETED, CANCELLED -> false;
+        };
+    }
+
     public static List<SaleStatus> findByValueContainsIgnoreCase(String keyword) {
         if (keyword == null)
             return List.of();
