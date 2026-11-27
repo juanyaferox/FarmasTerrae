@@ -15,6 +15,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Locale;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -36,6 +38,9 @@ public class UserService implements UserDetailsService {
     @Autowired
     UserMapper userMapper;
 
+    @Autowired
+    SessionRevocationService sessionRevocationService;
+
     private final int PAGE_SIZE_ADMIN = 9;
 
     /**
@@ -44,10 +49,11 @@ public class UserService implements UserDetailsService {
      * @return lista de perfiles
      */
     @Override
-    public UserDetails loadUserByUsername(String usernameOrEmail) throws ResponseStatusException {
-        return userRepository.findByUsername(usernameOrEmail)
-                .or(() -> userRepository.findByEmail(usernameOrEmail))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario o email no encontrado"));
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        String normalized = usernameOrEmail == null ? "" : usernameOrEmail.trim().toLowerCase(Locale.ROOT);
+        return userRepository.findByUsername(normalized)
+                .or(() -> userRepository.findByEmail(normalized))
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
     }
 
     /**
@@ -108,11 +114,16 @@ public class UserService implements UserDetailsService {
      */
     public User updateUserById(long id, UserDTO userDetails) throws ResponseStatusException {
         User userDB = userRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        String oldRole = userDB.getProfile().getType();
+        String oldUsername = userDB.getUsername();
         if (userDetails.getType() == null)
             userDetails.setType(userDB.getProfile().getType());
-        return userRepository.save(
-                validateUserDTOAndReturnUserModified(userDB, userDetails)
-        );
+        User updated = userRepository.save(validateUserDTOAndReturnUserModified(userDB, userDetails));
+        if (!Objects.equals(oldRole, updated.getProfile().getType())
+                || !Objects.equals(oldUsername, updated.getUsername())) {
+            sessionRevocationService.revoke(updated, oldUsername);
+        }
+        return updated;
     }
 
     /**
@@ -126,9 +137,14 @@ public class UserService implements UserDetailsService {
     public User updateUserByUsername(UserDTO userDetails, String oldUsername) throws ResponseStatusException {
         User userDB = userRepository.findByUsername(oldUsername)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-        return userRepository.save(
-                validateUserDTOAndReturnUserModified(userDB, userDetails)
-        );
+        String oldRole = userDB.getProfile().getType();
+        String actualOldUsername = userDB.getUsername();
+        User updated = userRepository.save(validateUserDTOAndReturnUserModified(userDB, userDetails));
+        if (!Objects.equals(oldRole, updated.getProfile().getType())
+                || !Objects.equals(actualOldUsername, updated.getUsername())) {
+            sessionRevocationService.revoke(updated, actualOldUsername);
+        }
+        return updated;
     }
 
     /**
@@ -140,6 +156,9 @@ public class UserService implements UserDetailsService {
      * @throws ResponseStatusException CONFLICT si el username o email ya existen
      */
     private User validateUserDTOAndReturnUserModified(User user, UserDTO userDetails) throws ResponseStatusException {
+
+        if (userDetails.getUsername() != null) userDetails.setUsername(userDetails.getUsername().trim().toLowerCase(Locale.ROOT));
+        if (userDetails.getEmail() != null) userDetails.setEmail(userDetails.getEmail().trim().toLowerCase(Locale.ROOT));
 
         if (!Objects.equals(user.getUsername(), userDetails.getUsername())
                 && userRepository.existsByUsername(userDetails.getUsername())) {
@@ -162,7 +181,11 @@ public class UserService implements UserDetailsService {
      */
     public void deleteUserById(long id) throws ResponseStatusException {
         var userOpt = userRepository.findById(id);
-        userRepository.save(validateUserForDelete(userOpt));
+        User user = userOpt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        String oldUsername = user.getUsername();
+        User deleted = validateUserForDelete(userOpt);
+        sessionRevocationService.revoke(deleted, oldUsername);
+        userRepository.save(deleted);
     }
 
     /**
@@ -173,7 +196,11 @@ public class UserService implements UserDetailsService {
      */
     public void deleteUserByUsername(String username) throws ResponseStatusException {
         var userOpt = userRepository.findByUsername(username);
-        userRepository.save(validateUserForDelete(userOpt));
+        User user = userOpt.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        String oldUsername = user.getUsername();
+        User deleted = validateUserForDelete(userOpt);
+        sessionRevocationService.revoke(deleted, oldUsername);
+        userRepository.save(deleted);
     }
 
     /**
