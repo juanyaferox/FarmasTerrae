@@ -31,6 +31,7 @@
             </p>
 
             <div class="er-actions">
+                <a th:if="${errorCode == 401}" th:href="@{/auth}" class="ft-btn ft-btn--mint">Iniciar sesión</a>
                 <a th:href="@{/}" class="ft-btn ft-btn--mint">Volver al inicio</a>
                 <a th:href="@{/products/categories}" class="ft-btn ft-btn--ghost">Explorar catálogo</a>
             </div>

@@ -16,6 +16,7 @@
     <link rel="stylesheet"
           th:if="${cssPath != null and cssPath != '/dist/output.css' and cssPath != '/css/layout.css'}"
           th:href="@{${cssPath}}">
+    <script th:src="@{/js/image-fallback.js}" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 </head>
 </html>
