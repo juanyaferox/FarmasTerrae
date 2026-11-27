@@ -101,7 +101,8 @@ public class OrderController {
         // Intentar crear el pedido (esto verificará y confirmará las reservas de stock)
         redirectAttributes.addFlashAttribute(order);
 
-        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId() + "?success=true");
+        redirectAttributes.addFlashAttribute("orderSuccess", true);
+        return new ModelAndView("redirect:/user/dashboard/orders/" + order.getId());
     }
 
     // SIN USAR, ENFOQUE ORIGINAL PARA TENER UN PAGO MAS DETALLADO

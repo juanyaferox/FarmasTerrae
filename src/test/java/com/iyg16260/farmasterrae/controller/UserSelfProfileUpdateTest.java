@@ -274,7 +274,8 @@ class UserSelfProfileUpdateTest {
         assertThat(sessionRegistry.getSessionInformation(otherSessionId).isExpired()).isTrue();
         assertThat(persistentLoginRepository.findByUsername(oldUsername)).isEmpty();
         mockMvc.perform(get("/user/dashboard").cookie(rememberMe))
-                .andExpect(request().attribute("errorCode", 401));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Location", org.hamcrest.Matchers.endsWith("/auth")));
     }
 
     @Test

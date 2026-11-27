@@ -2,6 +2,7 @@ package com.iyg16260.farmasterrae.service;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class S3StorageService {
 
@@ -82,9 +84,11 @@ public class S3StorageService {
             return buildObjectUrl(key);
 
         } catch (IOException e) {
+            log.error("Error al procesar archivo para S3", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al procesar el archivo", e);
         } catch (S3Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir a S3: " + e.getMessage(), e);
+            log.error("Error al subir archivo a S3", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al subir el archivo", e);
         }
     }
 
@@ -121,8 +125,10 @@ public class S3StorageService {
             s3Client.deleteObject(deleteRequest);
 
         } catch (S3Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al eliminar de S3: " + e.getMessage(), e);
+            log.error("Error al eliminar archivo de S3", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al eliminar el archivo", e);
         } catch (Exception e) {
+            log.error("Error al procesar URL de archivo", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al procesar la URL del archivo", e);
         }
     }
@@ -152,7 +158,8 @@ public class S3StorageService {
             return s3Presigner.presignGetObject(presignRequest).url().toString();
 
         } catch (S3Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar URL firmada: " + e.getMessage(), e);
+            log.error("Error al generar URL firmada de S3", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar URL firmada", e);
         }
     }
 
@@ -190,6 +197,7 @@ public class S3StorageService {
             }
 
         } catch (URISyntaxException e) {
+            log.error("Error al interpretar URL de imagen", e);
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al obtener la imagen");
         }
 

@@ -108,7 +108,7 @@ public final class GenericSpecification {
         Class<?> expectedType = path.getJavaType();
         if (!expectedType.isInstance(keyObject)) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error al realizar la búsqueda en el parámetro: " + attributeName);
+                    "Campo de búsqueda inválido");
         }
     }
 

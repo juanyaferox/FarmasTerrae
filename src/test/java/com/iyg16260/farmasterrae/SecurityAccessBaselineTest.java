@@ -28,9 +28,12 @@ import jakarta.servlet.http.Cookie;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.mock.web.MockHttpSession;
+import java.net.URI;
+import java.util.UUID;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,15 +66,15 @@ class SecurityAccessBaselineTest {
     @ValueSource(strings = {"/admin/dashboard", "/user/dashboard", "/order", "/auth/changePassword"})
     void protectedRoutesRejectAnonymousUsers(String path) throws Exception {
         mockMvc.perform(get(path))
-                .andExpect(request().attribute("errorCode", 401))
-                .andExpect(forwardedUrl("/common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.endsWith("/auth")));
     }
 
     @Test
     @WithMockUser(roles = "USER")
     void regularUserCannotAccessAdminDashboard() throws Exception {
         mockMvc.perform(get("/admin/dashboard"))
-                .andExpect(request().attribute("errorCode", 403))
+                .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/common/error"));
     }
 
@@ -85,15 +88,58 @@ class SecurityAccessBaselineTest {
     @Test
     void postWithoutCsrfTokenIsRejected() throws Exception {
         mockMvc.perform(post("/auth/register"))
-                .andExpect(request().attribute("errorCode", 403))
+                .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/common/error"));
     }
 
     @Test
     void unmappedRouteRequiresAuthentication() throws Exception {
         mockMvc.perform(get("/unmapped-private-route"))
-                .andExpect(request().attribute("errorCode", 401))
-                .andExpect(forwardedUrl("/common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.endsWith("/auth")));
+    }
+
+
+    @Test
+    void anonymousOrderRequestReturnsToOrderAfterLogin() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 6);
+        User account = new User();
+        account.setUsername("order" + suffix);
+        account.setEmail("order" + suffix + "@example.com");
+        account.setPassword(passwordEncoder.encode("StrongPassword9!"));
+        account.setProfile(profileRepository.findByType("USER"));
+        userRepository.save(account);
+
+        var requestedOrder = mockMvc.perform(get("/order"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.endsWith("/auth")))
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) requestedOrder.getRequest().getSession(false);
+
+        mockMvc.perform(post("/auth").session(session).with(csrf())
+                        .param("username", account.getUsername())
+                        .param("password", "StrongPassword9!"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/order")));
+    }
+
+    @Test
+    void reflectedImagePayloadIsNotIncludedInErrorFlash() throws Exception {
+        mockMvc.perform(get(URI.create("http://localhost/cart/add/%3Cimg%20src=x%20onerror=alert(1)%3E"))
+                        .header("Referer", "http://localhost/cart"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", "/cart"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash()
+                        .attribute("errorMessage", "Producto no encontrado"));
+    }
+
+    @Test
+    void securityHeadersArePresentOnApplicationResponses() throws Exception {
+        mockMvc.perform(get("/auth"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Security-Policy", org.hamcrest.Matchers.containsString("frame-ancestors 'self'")))
+                .andExpect(header().string("Referrer-Policy", "strict-origin-when-cross-origin"))
+                .andExpect(header().string("Permissions-Policy", "geolocation=(), microphone=(), camera=()"));
     }
 
     @Test
@@ -165,8 +211,8 @@ class SecurityAccessBaselineTest {
 
         // Old remember-me cookie must NOT authenticate as newcomer
         mockMvc.perform(get("/user/dashboard").cookie(new Cookie("remember-me", cookieVal)))
-                .andExpect(request().attribute("errorCode", 401))
-                .andExpect(forwardedUrl("/common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.endsWith("/auth")));
     }
 
     @Test

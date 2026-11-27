@@ -47,14 +47,12 @@ public class ProductsController {
     }
 
     @GetMapping ("/{reference}")
-    public ModelAndView getProductDetails(@PathVariable String reference,
-                                          @RequestParam (defaultValue = "false", required = false) boolean added) {
+    public ModelAndView getProductDetails(@PathVariable String reference) {
         ProductDTO product = productsService.getProductDTOByReference(reference);
         List<ReviewDTO> reviewList = productsService.getReviewsFromProduct(reference);
         return new ModelAndView("products/product-details")
                 .addObject("product", product)
-                .addObject("reviews", reviewList)
-                .addObject("added", added);
+                .addObject("reviews", reviewList);
     }
 
 }

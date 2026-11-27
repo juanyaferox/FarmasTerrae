@@ -107,7 +107,7 @@ public class ProductsService {
     public Product getProductByReference(String reference) throws ResponseStatusException {
         return productRepository.findByReference(reference)
                 .orElseThrow(() -> new ResponseStatusException
-                        (HttpStatus.NOT_FOUND, "Product not found with referece: " + reference));
+                        (HttpStatus.NOT_FOUND, "Producto no encontrado"));
     }
 
     /**
@@ -132,7 +132,7 @@ public class ProductsService {
     public ProductDTO updateProduct(ProductDTO productDTO, String oldReference, MultipartFile image) throws ResponseStatusException {
         Product product = productMapper.productDTOToProduct(productDTO);
         Product oldProduct = productRepository.findByReference(oldReference).orElseThrow(() -> new ResponseStatusException
-                (HttpStatus.NOT_FOUND, "Producto no encontrado con esta referencia: " + oldReference));
+                (HttpStatus.NOT_FOUND, "Producto no encontrado"));
 
         if (!Objects.equals(product.getReference(), oldReference) && productRepository.existsByReference(product.getReference()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
@@ -176,7 +176,7 @@ public class ProductsService {
 
         if (productRepository.existsByReference(product.getReference())) {
             throw new ResponseStatusException
-                    (HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia: " + product.getReference());
+                    (HttpStatus.BAD_REQUEST, "Ya existe un producto con esa referencia");
         }
 
         if (image != null && !image.isEmpty()) {

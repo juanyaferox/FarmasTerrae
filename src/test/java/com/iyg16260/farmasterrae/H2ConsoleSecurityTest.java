@@ -11,7 +11,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -30,15 +29,15 @@ class H2ConsoleSecurityTest {
     @Test
     void anonymousUsersCannotOpenTheConsole() throws Exception {
         mockMvc.perform(get("/h2-console/"))
-                .andExpect(request().attribute("errorCode", 401))
-                .andExpect(forwardedUrl("/common/error"));
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.endsWith("/auth")));
     }
 
     @Test
     @WithMockUser (roles = "USER")
     void regularUsersCannotOpenTheConsole() throws Exception {
         mockMvc.perform(get("/h2-console/"))
-                .andExpect(request().attribute("errorCode", 403))
+                .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/common/error"));
     }
 
@@ -60,7 +59,7 @@ class H2ConsoleSecurityTest {
     @Test
     void otherFormsStillRequireCsrfTokens() throws Exception {
         mockMvc.perform(post("/auth/register"))
-                .andExpect(request().attribute("errorCode", 403))
+                .andExpect(status().isForbidden())
                 .andExpect(forwardedUrl("/common/error"));
     }
 }

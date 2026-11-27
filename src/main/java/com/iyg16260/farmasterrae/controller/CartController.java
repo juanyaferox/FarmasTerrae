@@ -13,6 +13,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import org.springframework.web.util.UriUtils;
 
 @Controller
 @RequestMapping ("/cart")
@@ -42,9 +44,14 @@ public class CartController {
      */
     @GetMapping ("/add/{reference}")
     public String addToCart(@PathVariable String reference, HttpSession session, RedirectAttributes ra) {
-        cartService.addProductToCart(reference, session);
-
-        return "redirect:/products/" + reference + "?added=true";
+        boolean added = cartService.addProductToCart(reference, session);
+        String encodedReference = UriUtils.encodePathSegment(reference, StandardCharsets.UTF_8);
+        if (added) {
+            ra.addFlashAttribute("added", true);
+        } else {
+            ra.addFlashAttribute("errorMessage", "No hay stock disponible para añadir este producto.");
+        }
+        return "redirect:/products/" + encodedReference;
     }
 
     /**

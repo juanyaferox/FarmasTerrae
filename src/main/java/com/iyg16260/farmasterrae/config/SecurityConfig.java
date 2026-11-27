@@ -14,6 +14,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
@@ -60,7 +62,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated());
         if (h2ConsoleEnabled) http.csrf(csrf -> csrf.ignoringRequestMatchers(h2Pattern))
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
-        http.formLogin(form -> form.loginPage("/auth").defaultSuccessUrl("/", true).permitAll())
+        http.headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:9000; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"))
+                .referrerPolicy(referrer -> referrer.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                .permissionsPolicy(policy -> policy.policy("geolocation=(), microphone=(), camera=()")));
+        http.formLogin(form -> form.loginPage("/auth").defaultSuccessUrl("/", false).permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/auth?logout")
                         .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "remember-me").permitAll())
@@ -68,14 +74,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionFixation().migrateSession()
                         .maximumSessions(1).sessionRegistry(sessionRegistry).expiredUrl("/auth?expired"));
         http.exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, authEx) -> {
-                    req.setAttribute("errorCode", 401);
-                    req.setAttribute("errorMessageLabel", "Debes iniciar sesión");
-                    req.getRequestDispatcher("/common/error").forward(req, res);
-                })
+                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/auth"))
                 .accessDeniedHandler((req, res, deniedEx) -> {
+                    if (res.isCommitted()) return;
+                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                     req.setAttribute("errorCode", 403);
-                    req.setAttribute("errorMessageLabel", "Acceso denegado");
+                    req.setAttribute("errorMessageLabel", "No tienes permisos para acceder a este recurso.");
                     req.getRequestDispatcher("/common/error").forward(req, res);
                 }));
         return http.build();

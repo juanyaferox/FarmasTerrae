@@ -113,7 +113,6 @@
                     <div class="ud-product-cell">
                         <img th:src="${reviewImg}"
                              th:data-fallback="@{/assets/img/placeholder.svg}"
-                             onerror="this.onerror=null;this.src=this.dataset.fallback"
                              alt="" class="ft-table__thumb" width="52" height="52" loading="lazy"/>
                         <div>
                             <span class="ud-product-cell__name" th:text="${review.productName}">Producto</span>
@@ -236,8 +235,7 @@
                             <span class="ud-radio-body">
                                 <img th:src="${product.imagePath != null and !#strings.isEmpty(product.imagePath)} ? @{${product.imagePath}} : @{/assets/img/placeholder.svg}"
                                      th:data-fallback="@{/assets/img/placeholder.svg}"
-                                     onerror="this.onerror=null;this.src=this.dataset.fallback"
-                                     alt="" class="ud-radio-thumb" width="48" height="48" loading="lazy"/>
+                                             alt="" class="ud-radio-thumb" width="48" height="48" loading="lazy"/>
                                 <span>
                                     <span class="ft-radio-card__title" th:text="${product.name}">Producto</span>
                                     <span class="ft-radio-card__desc"><span class="ft-code-tag" th:text="|REF ${product.reference}|">REF</span></span>

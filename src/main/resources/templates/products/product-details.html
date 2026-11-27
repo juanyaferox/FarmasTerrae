@@ -52,16 +52,6 @@
                         </svg>
                         <span>¡Producto añadido al carrito con éxito!</span>
                     </div>
-                    <!-- Error al añadir (?error=...) -->
-                    <div th:if="${param.error != null}" class="ft-alert ft-alert--danger" role="alert">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <span th:text="${param.error[0]}">Error al añadir el producto al carrito.</span>
-                    </div>
-
                     <div>
                         <div class="pg-pdp-codes">
                             <span class="ft-code-tag" th:text="${'REF ' + product.reference}">REF</span>

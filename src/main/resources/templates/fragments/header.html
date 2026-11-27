@@ -109,13 +109,14 @@
     </header>
 
     <!-- Mensajes flash (Alpine.js, autocierre a los 10 s; sin x-cloak para permanecer visibles incluso si falla el CDN) -->
-    <div class="ft-toast-stack" th:if="${errorMessage != null or successMessage != null}">
-        <div th:if="${errorMessage}" x-data="{ show: true }"
+    <div class="ft-toast-stack" th:if="${errorMessage != null or successMessage != null or (errorMessages != null and !#lists.isEmpty(errorMessages))}">
+        <div th:if="${errorMessage != null or (errorMessages != null and !#lists.isEmpty(errorMessages))}" x-data="{ show: true }"
              x-init="setTimeout(() => show = false, 10000)"
              x-show="show"
              role="alert"
              class="ft-toast ft-toast--error">
-            <span th:utext="${errorMessage}"></span>
+            <span x-ignore th:text="${errorMessage}"></span>
+            <ul x-ignore th:if="${errorMessages != null and !#lists.isEmpty(errorMessages)}" class="ml-4 list-disc"><li th:each="err : ${errorMessages}" th:text="${err}"></li></ul>
             <button type="button" class="ft-toast__close" @click="show = false"
                     aria-label="Cerrar mensaje">×</button>
         </div>
@@ -124,7 +125,7 @@
              x-show="show"
              role="status"
              class="ft-toast ft-toast--success">
-            <span th:text="${successMessage}"></span>
+            <span x-ignore th:text="${successMessage}"></span>
             <button type="button" class="ft-toast__close" @click="show = false"
                     aria-label="Cerrar mensaje">×</button>
         </div>
