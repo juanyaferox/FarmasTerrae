@@ -24,9 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.forwardedUrl;
 
 /**
  * {@code @PreAuthorize("hasRole('ADMIN')")} on the admin user mutations holds even when a caller gets past the
@@ -107,8 +106,7 @@ class UserServiceMethodSecurityTest {
                         .with(user("probe_user").roles("USER")).with(csrf())
                         .param("username", target.getUsername()))
                 .andExpect(status().isForbidden())
-                .andExpect(view().name("common/error"))
-                .andExpect(model().attribute("errorCode", 403));
+                .andExpect(forwardedUrl("/common/error"));
 
         assertTargetUntouched();
     }
