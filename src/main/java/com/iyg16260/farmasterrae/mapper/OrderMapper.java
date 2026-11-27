@@ -19,6 +19,7 @@ public abstract class OrderMapper {
     @Autowired
     ProductMapper productMapper;
 
+    @Mapping (target = "products", ignore = true)
     @Mapping (target = "createdAt", source = "createdAt", qualifiedByName = "formatDateDMY")
     @Mapping (target = "updatedAt", source = "updatedAt", qualifiedByName = "formatDateDMY")
     public abstract OrderDetailsDTO orderToOrderDetailsDTO(Order order);

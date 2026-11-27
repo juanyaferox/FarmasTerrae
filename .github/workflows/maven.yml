@@ -4,7 +4,9 @@ on:
   push:
     branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -15,10 +17,11 @@ jobs:
         uses: actions/checkout@v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v3.14.1
+        uses: actions/setup-java@v4
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
-      - name: Build without tests, force UTF-8 encoding
-        run: mvn clean package -DskipTests -Dfile.encoding=UTF-8
+      - name: Verify with tests
+        run: ./mvnw -B verify

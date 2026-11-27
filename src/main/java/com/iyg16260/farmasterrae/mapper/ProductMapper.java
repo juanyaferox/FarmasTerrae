@@ -29,6 +29,10 @@ public abstract class ProductMapper {
     public abstract ProductPageDTO productToProductPageDTO(Product product);
 
     @Mapping (target = "price", source = "price", qualifiedByName = "formatPriceToCents")
+    @Mapping (target = "id", ignore = true)
+    @Mapping (target = "userModified", ignore = true)
+    @Mapping (target = "orderDetails", ignore = true)
+    @Mapping (target = "reviewList", ignore = true)
     public abstract Product productDTOToProduct(ProductDTO productDTO);
 
     @AfterMapping
