@@ -1,25 +1,36 @@
-version: "3.8"
+# Local full stack: MySQL + Spring Boot (`prodminio` profile) + MinIO (S3-compatible storage).
+# Every published port is bound to 127.0.0.1, so nothing is reachable from other machines.
+#   docker compose -f docker-compose.help.yml up --build
+# The official minio/minio and minio/mc images are no longer published, so this uses the
+# community-maintained drop-in builds from Pigsty (https://github.com/pgsty/minio).
 
 services:
 
   # 1) Servicio de base de datos MySQL
   db:
-    image: mysql:8.0
+    image: mysql:8.0.46
     container_name: mysql_farmasterrae
     restart: always
     environment:
-      MYSQL_DATABASE: "${DB_NAME}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: "${DB_NAME:?Set DB_NAME in .env}"
+      MYSQL_USER: "${DB_USERNAME:?Set DB_USERNAME in .env}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}"
+      # The image defaults MYSQL_ROOT_HOST to "%" (root reachable from any host); keep root local
+      MYSQL_ROOT_HOST: localhost
     volumes:
       - db_data:/var/lib/mysql
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     networks:
       - backend
-    command: --default-authentication-plugin=mysql_native_password --bind-address=0.0.0.0
+    healthcheck:
+      # TCP ping: the temporary server used during first-time initialisation listens on the socket only
+      test: ["CMD", "mysqladmin", "ping", "--host=127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
 
   # 2) Servicio de la aplicación Spring Boot
   app:
@@ -29,49 +40,68 @@ services:
     container_name: spring_farmasterrae
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     environment:
-      - SPRING_PROFILES_ACTIVE=prodminio
-      - DB_NAME
-      - DB_USERNAME
-      - DB_PASSWORD
-      - EMAIL
-      - PASSWORD
+      SPRING_PROFILES_ACTIVE: prodminio
+      # An empty value would override the Spring fallback, so default it here as well
+      SECRET_KEY: "${SECRET_KEY:-local-docker-only-remember-me-key}"
+      DB_NAME: "${DB_NAME}"
+      DB_USERNAME: "${DB_USERNAME}"
+      DB_PASSWORD: "${DB_PASSWORD}"
+      EMAIL: "${EMAIL:-}"
+      PASSWORD: "${PASSWORD:-}"
+      # The app signs S3 requests with the MinIO credentials
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-minioadmin}"
+      AWS_PUBLIC_ENDPOINT: "${AWS_PUBLIC_ENDPOINT:-http://localhost:9000}"
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     networks:
       - backend
 
   # 3) Servidor MinIO (almacenamiento S3-compatible)
   minio:
-    image: minio/minio
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
     container_name: minio
     restart: always
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-      MINIO_BUCKET: farmasterrae
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-minioadmin}"
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
     command: server /data --console-address ":9001"
     networks:
       - backend
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
 
+  # Creates the bucket once MinIO is healthy. The bucket stays private: the app serves images
+  # through presigned URLs, so anonymous access is explicitly removed.
   minio-init:
-    image: minio/mc
+    image: pgsty/mc:RELEASE.2026-11-12T00-00-00Z
     container_name: minio_init
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-minioadmin}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-minioadmin}"
     entrypoint: >
       /bin/sh -c "
-        sleep 10;
-        mc alias set local http://minio:9000 minioadmin minioadmin &&
-        mc mb local/farmasterrae --ignore-existing &&
-        mc policy set public local/farmasterrae;
+        mc alias set local http://minio:9000 \"$${MINIO_ROOT_USER}\" \"$${MINIO_ROOT_PASSWORD}\" &&
+        mc mb --ignore-existing local/farmasterrae &&
+        mc anonymous set none local/farmasterrae
       "
+    restart: "no"
     networks:
       - backend
 
