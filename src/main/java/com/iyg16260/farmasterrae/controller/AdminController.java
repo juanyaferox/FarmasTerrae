@@ -11,6 +11,7 @@ import com.iyg16260.farmasterrae.service.ProductsService;
 import com.iyg16260.farmasterrae.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,10 +20,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequestMapping ("/admin")
 public class AdminController {
+
+    /** Secciones que existen en {@code admin/dashboard.html} */
+    private static final Set<String> SECTIONS = Set.of("products", "orders", "users");
 
     @Autowired
     OrderService orderService;
@@ -40,6 +45,13 @@ public class AdminController {
                                      @RequestParam (required = false) String sort,
                                      @RequestParam (defaultValue = "asc") String dir,
                                      @RequestParam (required = false) String search) {
+        if (section != null && !SECTIONS.contains(section)) {
+            ModelAndView notFound = new ModelAndView("common/error");
+            notFound.setStatus(HttpStatus.NOT_FOUND);
+            notFound.addObject("errorCode", HttpStatus.NOT_FOUND.value());
+            notFound.addObject("errorMessageLabel", "Sección no encontrada");
+            return notFound;
+        }
 
         ModelAndView model = new ModelAndView("admin/dashboard")
                 .addObject("section", section);
