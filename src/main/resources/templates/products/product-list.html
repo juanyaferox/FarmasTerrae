@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/head :: head('FarmasTerrae - Productos', '/css/layout.css')}"></head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
@@ -37,25 +37,25 @@
                          th:with="activeCategory=${param.category != null ? param.category[0] : ''}">
                         <a th:href="@{/products}" class="ft-chip"
                            th:classappend="${#strings.isEmpty(activeCategory)} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${#strings.isEmpty(activeCategory)}">Todos</a>
+                           th:aria-current="${#strings.isEmpty(activeCategory) ? 'page' : null}">Todos</a>
                         <a th:href="@{/products(category='MEDICINE')}" class="ft-chip"
                            th:classappend="${activeCategory == 'MEDICINE'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'MEDICINE'}">Medicamentos</a>
+                           th:aria-current="${activeCategory == 'MEDICINE' ? 'page' : null}">Medicamentos</a>
                         <a th:href="@{/products(category='VITAMIN')}" class="ft-chip"
                            th:classappend="${activeCategory == 'VITAMIN'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'VITAMIN'}">Vitaminas y Suplementos</a>
+                           th:aria-current="${activeCategory == 'VITAMIN' ? 'page' : null}">Vitaminas y Suplementos</a>
                         <a th:href="@{/products(category='CARE')}" class="ft-chip"
                            th:classappend="${activeCategory == 'CARE'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'CARE'}">Cuidado Personal</a>
+                           th:aria-current="${activeCategory == 'CARE' ? 'page' : null}">Cuidado Personal</a>
                         <a th:href="@{/products(category='FIRST_AID')}" class="ft-chip"
                            th:classappend="${activeCategory == 'FIRST_AID'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'FIRST_AID'}">Primeros Auxilios</a>
+                           th:aria-current="${activeCategory == 'FIRST_AID' ? 'page' : null}">Primeros Auxilios</a>
                         <a th:href="@{/products(category='BEAUTY')}" class="ft-chip"
                            th:classappend="${activeCategory == 'BEAUTY'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'BEAUTY'}">Belleza y Cuidado de la Piel</a>
+                           th:aria-current="${activeCategory == 'BEAUTY' ? 'page' : null}">Belleza y Cuidado de la Piel</a>
                         <a th:href="@{/products(category='BABY')}" class="ft-chip"
                            th:classappend="${activeCategory == 'BABY'} ? 'ft-chip--active' : ''"
-                           th:attr="aria-pressed=${activeCategory == 'BABY'}">Productos para Bebés</a>
+                           th:aria-current="${activeCategory == 'BABY' ? 'page' : null}">Productos para Bebés</a>
                     </div>
                 </nav>
             </div>

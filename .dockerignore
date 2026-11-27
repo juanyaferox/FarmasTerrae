@@ -24,8 +24,9 @@ logs/
 .vscode/
 *.iml
 
-# Docs and deployment files that are not part of the build
+# Docs, frontend tooling and deployment files that are not part of the build
 docs/
+frontend/
 README*.md
 HELP.md
 Dockerfile

@@ -22,11 +22,16 @@ public class DashboardOrderController {
 
     private final String ORDER_PATH = "redirect:/admin/dashboard/orders";
 
+    /**
+     * Detalle de un pedido desde el panel de administración. Reutiliza la vista del cliente, pero con la
+     * navegación del panel y sin las acciones propias del comprador (p. ej. escribir una reseña)
+     */
     @GetMapping ("/{idOrder}")
     public ModelAndView getOrder(@PathVariable long idOrder, @AuthenticationPrincipal User user) {
         OrderDetailsDTO orderDetails = orderService.getOrder(user.getId(), idOrder);
         return new ModelAndView("user/order-details")
-                .addObject("order", orderDetails);
+                .addObject("order", orderDetails)
+                .addObject("isAdminView", true);
     }
 
     @PutMapping

@@ -44,5 +44,7 @@ build/
 .vscode/
 
 ### NODE JS ###
-/src/main/resources/static/node_modules/
+# Tailwind/PostCSS tooling lives outside the served static folder
+/frontend/node_modules/
+/frontend/dist/
 

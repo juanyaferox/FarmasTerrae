@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html th:attr="lang=${#locale.language}" xmlns:th="http://www.thymeleaf.org">
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
 <head th:fragment="head(title, cssPath)">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,9 +14,10 @@
     <link rel="stylesheet" th:href="@{/css/layout.css}">
     <link rel="stylesheet" th:href="@{/css/pages.css}">
     <link rel="stylesheet"
-          th:if="${cssPath != null and cssPath != '/dist/output.css' and cssPath != '/css/layout.css'}"
+          th:if="${cssPath != null and cssPath != '/css/layout.css'}"
           th:href="@{${cssPath}}">
     <script th:src="@{/js/image-fallback.js}" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <!-- Alpine.js 3.14.9 servido desde la propia aplicación (sin CDN): versión fija y cubierta por la CSP 'self' -->
+    <script th:src="@{/js/vendor/alpine-3.14.9.min.js}" defer></script>
 </head>
 </html>

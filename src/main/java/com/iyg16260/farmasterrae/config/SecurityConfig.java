@@ -26,6 +26,15 @@ import org.springframework.util.StringUtils;
 // AccessDeniedException, which GlobalExceptionHandler already turns into a 403.
 @Configuration @EnableWebSecurity @EnableMethodSecurity
 public class SecurityConfig {
+    /**
+     * Alpine.js and the fonts are served from /js/vendor and /assets/fonts, so no third-party origin is allowed
+     * for scripts, styles or fonts. Alpine evaluates its x-data/@click expressions with new Function(), which is
+     * why script-src still needs 'unsafe-eval'; img-src keeps https: for signed S3 URLs and MinIO for local runs.
+     */
+    static final String CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' 'unsafe-eval'; "
+            + "style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob: https: http://localhost:9000; "
+            + "frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
+
     @Value("${spring.h2.console.enabled:false}") private boolean h2ConsoleEnabled;
     @Value("${spring.h2.console.path:/h2-console}") private String h2ConsolePath;
     @Value("${app.security}") private String securityKey;
@@ -62,9 +71,9 @@ public class SecurityConfig {
         if (h2ConsoleEnabled) http.csrf(csrf -> csrf.ignoringRequestMatchers(h2Pattern))
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
         http.headers(headers -> headers
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https: http://localhost:9000; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(CONTENT_SECURITY_POLICY))
                 .referrerPolicy(referrer -> referrer.policy(org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                .permissionsPolicy(policy -> policy.policy("geolocation=(), microphone=(), camera=()")));
+                .permissionsPolicyHeader(policy -> policy.policy("geolocation=(), microphone=(), camera=()")));
         http.formLogin(form -> form.loginPage("/auth").defaultSuccessUrl("/", false).permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").logoutSuccessUrl("/auth?logout")
                         .invalidateHttpSession(true).deleteCookies("JSESSIONID", "remember-me").permitAll())
