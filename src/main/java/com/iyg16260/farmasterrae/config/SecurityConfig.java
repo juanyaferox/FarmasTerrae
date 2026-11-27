@@ -11,13 +11,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.util.StringUtils;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value ("${app.env:dev}") // por defecto desarollo
-    private String appEnv;
+    /** Only the dev profile enables the H2 console (H2 is not even on the production classpath). */
+    @Value ("${spring.h2.console.enabled:false}")
+    private boolean h2ConsoleEnabled;
+
+    @Value ("${spring.h2.console.path:/h2-console}")
+    private String h2ConsolePath;
 
     @Value ("${app.security}")
     private String securityKey;
@@ -30,19 +35,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    UserDetailsService userDetailsService) throws Exception {
+        String h2ConsolePattern = StringUtils.trimTrailingCharacter(h2ConsolePath, '/') + "/**";
         http
                 .userDetailsService(userDetailsService)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // Never public, whichever profile enables the console
+                        .requestMatchers(h2ConsolePattern).hasRole("ADMIN")
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/auth/changePassword/**").authenticated()
                         .requestMatchers("/order/**").authenticated()
                         .anyRequest().permitAll()
                 );
-        // Configuración para H2
-        if ("dev".equals(appEnv)) {
+        // Configuración para H2: the console posts forms without CSRF tokens and renders in frames
+        if (h2ConsoleEnabled) {
             http.csrf(csrf ->
-                            csrf.ignoringRequestMatchers("/h2-console/**"))
+                            csrf.ignoringRequestMatchers(h2ConsolePattern))
                     .headers(headers ->
                             headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
         }

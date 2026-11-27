@@ -90,10 +90,12 @@
             <artifactId>mapstruct</artifactId>
             <version>1.6.3</version>
         </dependency>
+        <!-- Test-only by default so the production JAR never ships H2; see the `dev` profile below -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.3.232</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
@@ -182,5 +184,28 @@
             </resource>
         </resources>
     </build>
+
+    <profiles>
+        <!--
+            Local development with the in-memory H2 database:
+                ./mvnw -Pdev spring-boot:run
+            Puts H2 on the runtime classpath and activates the `dev` Spring profile.
+            Never package a deployable JAR with this profile.
+        -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <spring-boot.run.profiles>dev</spring-boot.run.profiles>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <version>2.3.232</version>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 
 </project>
