@@ -47,7 +47,8 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prodminio
       # An empty value would override the Spring fallback, so default it here as well
-      SECRET_KEY: "${SECRET_KEY:-local-docker-only-remember-me-key}"
+      SECRET_KEY: "${SECRET_KEY:-local-docker-only-remember-me-key-32-characters-minimum}"
+      APP_BASE_URL: "${APP_BASE_URL:-http://localhost}"
       DB_NAME: "${DB_NAME}"
       DB_USERNAME: "${DB_USERNAME}"
       DB_PASSWORD: "${DB_PASSWORD}"

@@ -44,6 +44,7 @@ services:
       # Variables del .env (unset ones fall back to the defaults in application-prod.properties)
       - SPRING_PROFILES_ACTIVE
       - SECRET_KEY
+      - APP_BASE_URL=${APP_BASE_URL:-https://localhost}
       - DB_NAME
       - DB_HOST
       - DB_PORT
