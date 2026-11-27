@@ -53,6 +53,7 @@
 
                     <!-- POST /order/confirm → OrderController.getPayment (@Valid PaymentDetailsDTO) -->
                     <form th:action="@{/order/confirm}" th:object="${paymentDetails}" method="post" class="ft-form-stack">
+                        <input type="hidden" name="checkoutToken" th:value="${checkoutToken}"/>
                         <div class="ft-field">
                             <label for="fullName" class="ft-label">
                                 Nombre Completo <span class="ft-required" aria-hidden="true">*</span>
@@ -140,7 +141,7 @@
                     </form>
                 </div>
 
-                <!-- Columna derecha: resumen de productos y total (paymentDetails.amount) -->
+                <!-- Columna derecha: resumen de productos y total (totalAmount) -->
                 <aside class="ft-summary-card" aria-labelledby="summary-title"
                        th:with="unitCount=${#aggregates.sum(products.values())}">
                     <div class="ft-eyebrow">Resumen ·
@@ -173,7 +174,7 @@
                             <dt>Total</dt>
                             <dd style="margin: 0;">
                                 <span class="ft-price-now ft-tabular"
-                                      th:text="${#numbers.formatDecimal(paymentDetails.amount, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>
+                                      th:text="${#numbers.formatDecimal(totalAmount, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>
                             </dd>
                         </div>
                     </dl>

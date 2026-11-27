@@ -127,11 +127,13 @@
                                     <td>
                                         <div class="ft-stepper" role="group"
                                              th:attr="aria-label='Cantidad de ' + ${entry.key.name}">
-                                            <a th:href="@{/cart/decrease/{ref}(ref=${entry.key.reference})}"
-                                               class="ft-stepper__link" aria-label="Reducir cantidad">−</a>
+                                            <form th:action="@{/cart/decrease/{ref}(ref=${entry.key.reference})}" method="post" class="ft-inline-form">
+                                                <button type="submit" class="ft-stepper__link" aria-label="Reducir cantidad">−</button>
+                                            </form>
                                             <span class="ft-stepper__val ft-tabular" th:text="${entry.value}">1</span>
-                                            <a th:href="@{/cart/increase/{ref}(ref=${entry.key.reference})}"
-                                               class="ft-stepper__link" aria-label="Aumentar cantidad">+</a>
+                                            <form th:action="@{/cart/increase/{ref}(ref=${entry.key.reference})}" method="post" class="ft-inline-form">
+                                                <button type="submit" class="ft-stepper__link" aria-label="Aumentar cantidad">+</button>
+                                            </form>
                                         </div>
                                     </td>
                                     <td>
@@ -139,10 +141,11 @@
                                               th:text="${#numbers.formatDecimal(entry.key.price * entry.value, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</span>
                                     </td>
                                     <td>
-                                        <a th:href="@{/cart/remove/{ref}(ref=${entry.key.reference})}"
-                                           class="ft-btn ft-btn--sm ft-btn--danger">
-                                            Eliminar<span class="ft-sr-only" th:text="' ' + ${entry.key.name}"></span>
-                                        </a>
+                                        <form th:action="@{/cart/remove/{ref}(ref=${entry.key.reference})}" method="post" class="ft-inline-form">
+                                            <button type="submit" class="ft-btn ft-btn--sm ft-btn--danger">
+                                                Eliminar<span class="ft-sr-only" th:text="' ' + ${entry.key.name}"></span>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                                 </tbody>
@@ -235,7 +238,7 @@
                     </aside>
                 </div>
 
-                <!-- Modal Alpine: confirmar vaciado del carrito (GET /cart/clear) -->
+                <!-- Modal Alpine: confirmar vaciado del carrito (POST /cart/clear) -->
                 <div x-show="openClearModal" x-cloak class="ft-modal ft-modal--alpine" role="dialog" aria-modal="true"
                      aria-labelledby="modal-vaciar-title">
                     <div class="ft-modal__backdrop" @click="openClearModal = false"></div>
@@ -249,7 +252,9 @@
                         <p class="ct-modal__body">Esta acción no se puede deshacer.</p>
                         <div class="ft-modal__foot">
                             <button type="button" class="ft-btn ft-btn--ghost ft-btn--sm" @click="openClearModal = false">Cancelar</button>
-                            <a th:href="@{/cart/clear}" class="ft-btn ft-btn--danger">Vaciar carrito</a>
+                            <form th:action="@{/cart/clear}" method="post" class="ft-inline-form">
+                                <button type="submit" class="ft-btn ft-btn--danger">Vaciar carrito</button>
+                            </form>
                         </div>
                     </div>
                 </div>
