@@ -50,6 +50,19 @@ Use the `ADMIN_BOOTSTRAP_*` variables to create the first administrator.
 If a production database was seeded by an older version, it may still contain the demo accounts (`admin_juan`, `admin_maria`, `cliente_*`).
 Delete or disable them, and change their passwords.
 
+## Schema upgrades (`validate` mode)
+
+If you upgrade an existing production database with `HIBERNATE_DDL_AUTO=validate`, apply the schema additions before restarting:
+
+```sql
+ALTER TABLE products ADD COLUMN deletedAt DATETIME NULL;
+
+-- Check for duplicate (userId, productId) reviews before adding the unique constraint:
+SELECT userId, productId, COUNT(*) FROM reviews GROUP BY userId, productId HAVING COUNT(*) > 1;
+-- Once duplicates (if any) are cleaned up:
+ALTER TABLE reviews ADD CONSTRAINT uk_reviews_user_product UNIQUE (userId, productId);
+```
+
 ## TLS certificates
 
 Nginx reads `ssl/farmasterrae.crt` (certificate plus chain) and `ssl/farmasterrae.key` from the read-only `./ssl` mount.

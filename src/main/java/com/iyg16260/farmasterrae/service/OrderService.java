@@ -337,7 +337,7 @@ public class OrderService {
     @Transactional (readOnly = true)
     public Set<Product> getProductsFromUserOrders(User user) {
 
-        return orderRepository.findByUser(user).stream()
+        return orderRepository.findByUserAndStatus(user, SaleStatus.COMPLETED).stream()
                 .flatMap(o -> o.getOrderDetails().stream()
                         .map(OrderDetails::getProduct))
                 .collect(Collectors.toSet());

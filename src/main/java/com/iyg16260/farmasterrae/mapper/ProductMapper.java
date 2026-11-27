@@ -4,17 +4,11 @@ import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductPageDTO;
 import com.iyg16260.farmasterrae.model.Product;
 import com.iyg16260.farmasterrae.service.S3StorageService;
-import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Duration;
 
 @Mapper (componentModel = "spring")
 public abstract class ProductMapper {
@@ -22,8 +16,6 @@ public abstract class ProductMapper {
     @Autowired
     protected S3StorageService s3StorageService;
 
-    private static final Duration DEFAULT_URL_DURATION = Duration.ofHours(2);
-    private static final Logger log = LoggerFactory.getLogger(ProductMapper.class);
 
     @Mapping (target = "price", source = "price", qualifiedByName = "formatPrice")
     public abstract ProductDTO productToProductDTO(Product product);
@@ -37,44 +29,27 @@ public abstract class ProductMapper {
     @Mapping (target = "userModified", ignore = true)
     @Mapping (target = "orderDetails", ignore = true)
     @Mapping (target = "reviewList", ignore = true)
+    @Mapping (target = "imagePath", ignore = true)
+    @Mapping (target = "deletedAt", ignore = true)
     public abstract Product productDTOToProduct(ProductDTO productDTO);
 
     @AfterMapping
     protected void addSignedUrl(Product product, @MappingTarget ProductDTO dto) {
-        dto.setImagePath(generateSignedUrl(dto.getImagePath(), product.getReference()));
+        dto.setImagePath(s3StorageService.resolveImageUrl(dto.getImagePath()));
     }
 
     @AfterMapping
     protected void addSignedUrl(Product product, @MappingTarget ProductPageDTO dto) {
-        dto.setImagePath(generateSignedUrl(dto.getImagePath(), product.getReference()));
-    }
-
-    String resolveImageUrl(String imagePath) {
-        return generateSignedUrl(imagePath, null);
-    }
-
-    private String generateSignedUrl(String imagePath, String reference) {
-        if (StringUtils.isNotBlank(imagePath)) {
-            try {
-                String key = s3StorageService.extractKeyFromUrl(imagePath);
-                if (key != null) {
-                    return s3StorageService.generatePresignedUrl(key, DEFAULT_URL_DURATION);
-                }
-            } catch (Exception e) {
-                log.error("Error generando URL firmada para producto", e);
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar URL firmada");
-            }
-        }
-        return imagePath; // fallback
+        dto.setImagePath(s3StorageService.resolveImageUrl(dto.getImagePath()));
     }
 
     @Named ("formatPrice")
     protected BigDecimal formatPrice(Integer price) {
-        return BigDecimal.valueOf(price).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        return price == null ? null : BigDecimal.valueOf(price).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
     }
 
     @Named ("formatPriceToCents")
     protected Integer formatPriceToCents(BigDecimal price) {
-        return price.multiply(BigDecimal.valueOf(100)).intValue();
+        return price == null ? null : price.setScale(2, RoundingMode.HALF_UP).movePointRight(2).intValueExact();
     }
 }

@@ -109,5 +109,5 @@ INSERT INTO products (
 (96, 'Delineador de Ojos', 'Lápiz kajal negro intenso', 895, 100, 'DELIN-OJOS', 1, 'BEAUTY'),
 (97, 'Polvos Compactos', 'Polvos matificantes con espejo y borla', 1650, 70, 'POLV-COMP', 1, 'BEAUTY'),
 (98, 'Colorete en Polvo', 'Colorete satinado tono melocotón', 1390, 85, 'COLOR-POLV', 1, 'BEAUTY'),
-(99, 'Esmalte de Uñas', 'Laca de uñas secado rápido 10ml', 695, 120, 'ESMAL-UÑAS', 1, 'BEAUTY'),
+(99, 'Esmalte de Uñas', 'Laca de uñas secado rápido 10ml', 695, 120, 'ESMAL-UNAS', 1, 'BEAUTY'),
 (100, 'Desmaquillante Bifásico', 'Desmaquillador ojos y labios 125ml', 1175, 95, 'DESM-BIFAS', 1, 'BEAUTY');

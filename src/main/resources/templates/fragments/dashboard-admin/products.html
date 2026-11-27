@@ -307,9 +307,9 @@
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
                             </span>
-                            <input id="create-product-image" name="imageFile" type="file" accept="image/*"
+                            <input id="create-product-image" name="imageFile" type="file" accept="image/jpeg,image/png"
                                    aria-describedby="create-product-image-hint" @change="validateImageSize($event)"/>
-                            <span id="create-product-image-hint" class="ft-hint">Opcional · Tamaño máximo: 10 MB.</span>
+                            <span id="create-product-image-hint" class="ft-hint">Opcional · JPEG o PNG · Tamaño máximo: 10 MB.</span>
                             <span class="ft-hint" style="color: var(--ft-danger);" role="alert"
                                   x-show="imageError" x-text="imageError"></span>
                         </div>
@@ -328,7 +328,7 @@
                     </div>
                     <div class="ft-field">
                         <label for="create-product-price" class="ft-label">Precio (€) <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input id="create-product-price" name="price" type="number" step="0.01" min="0" inputmode="decimal"
+                        <input id="create-product-price" name="price" type="number" step="0.01" min="0.01" inputmode="decimal"
                                class="ft-input ft-tabular" placeholder="0.00" required/>
                     </div>
                     <div class="ft-field">
@@ -381,7 +381,7 @@
                     <div class="ft-field">
                         <label for="edit-product-reference" class="ft-label">Referencia <span class="ft-required" aria-hidden="true">*</span></label>
                         <input id="edit-product-reference" x-ref="editReference" name="reference" type="text"
-                               class="ft-input ft-mono" x-model="editProduct.reference" required/>
+                               class="ft-input ft-mono" x-model="editProduct.reference" readonly required/>
                     </div>
                     <div class="ft-field">
                         <label for="edit-product-name" class="ft-label">Nombre <span class="ft-required" aria-hidden="true">*</span></label>
@@ -398,20 +398,20 @@
                                 <template x-if="previewUrl">
                                     <span class="ft-adm-preview__tag ft-adm-preview__tag--new">Nueva</span>
                                 </template>
-                                <template x-if="!previewUrl &amp;&amp; editProduct.imagePath">
+                                <template x-if="!previewUrl &amp;&amp; editProduct.imagePath &amp;&amp; editProduct.imagePath !== '/assets/img/placeholder.svg'">
                                     <img :src="editProduct.imagePath" alt="Imagen actual del producto"/>
                                 </template>
-                                <template x-if="!previewUrl &amp;&amp; editProduct.imagePath">
+                                <template x-if="!previewUrl &amp;&amp; editProduct.imagePath &amp;&amp; editProduct.imagePath !== '/assets/img/placeholder.svg'">
                                     <span class="ft-adm-preview__tag">Actual</span>
                                 </template>
-                                <template x-if="!previewUrl &amp;&amp; !editProduct.imagePath">
+                                <template x-if="!previewUrl &amp;&amp; (!editProduct.imagePath || editProduct.imagePath === '/assets/img/placeholder.svg')">
                                     <span>Sin imagen</span>
                                 </template>
                             </span>
                             <div>
                                 <p class="ft-adm-cell__name" x-text="editProduct.name"></p>
                                 <p class="ft-adm-cell__sub"
-                                   x-text="previewUrl ? 'Nueva imagen lista para subir.' : (editProduct.imagePath ? 'Imagen actual del producto.' : 'Este producto no tiene imagen.')"></p>
+                                   x-text="previewUrl ? 'Nueva imagen lista para subir.' : (editProduct.imagePath &amp;&amp; editProduct.imagePath !== '/assets/img/placeholder.svg' ? 'Imagen actual del producto.' : 'Este producto no tiene imagen.')"></p>
                             </div>
                         </div>
                     </div>
@@ -426,9 +426,9 @@
                                     <line x1="12" y1="3" x2="12" y2="15"></line>
                                 </svg>
                             </span>
-                            <input id="edit-product-image" x-ref="editImage" name="imageFile" type="file" accept="image/*"
+                            <input id="edit-product-image" x-ref="editImage" name="imageFile" type="file" accept="image/jpeg,image/png"
                                    aria-describedby="edit-product-image-hint" @change="validateImageSize($event)"/>
-                            <span id="edit-product-image-hint" class="ft-hint">Déjalo vacío para conservar la imagen actual · Tamaño máximo: 10 MB.</span>
+                            <span id="edit-product-image-hint" class="ft-hint">Déjalo vacío para conservar la imagen actual · JPEG o PNG · Tamaño máximo: 10 MB.</span>
                             <span class="ft-hint" style="color: var(--ft-danger);" role="alert"
                                   x-show="imageError" x-text="imageError"></span>
                         </div>
@@ -440,7 +440,7 @@
                     </div>
                     <div class="ft-field">
                         <label for="edit-product-price" class="ft-label">Precio (€) <span class="ft-required" aria-hidden="true">*</span></label>
-                        <input id="edit-product-price" name="price" type="number" step="0.01" min="0" inputmode="decimal"
+                        <input id="edit-product-price" name="price" type="number" step="0.01" min="0.01" inputmode="decimal"
                                class="ft-input ft-tabular" x-model="editProduct.price" required/>
                     </div>
                     <div class="ft-field">

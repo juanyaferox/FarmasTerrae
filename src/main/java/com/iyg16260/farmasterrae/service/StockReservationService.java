@@ -51,59 +51,100 @@ public class StockReservationService {
         this.clock = clock != null ? clock : Clock.systemUTC();
     }
 
+    public enum ReservationResult {
+        RESERVED,
+        RESERVED_AFTER_PRUNING,
+        INSUFFICIENT_STOCK
+    }
+
     /**
      * Crea o actualiza una reserva de stock para los productos en el carrito.
      * Si algún producto no cabe o excede el límite por sesión, conserva intacta cualquier reserva previa.
      *
      * @param session La sesión HTTP que contiene el carrito
      * @param cart    El carrito con los productos
-     * @return true si la reserva fue exitosa, false si algún producto no tiene suficiente stock o excede el límite
+     * @return true si la reserva fue exitosa sin eliminar productos archivados
      */
     @Transactional (readOnly = true)
     public boolean reserveStockForCart(HttpSession session, SessionCart cart) {
+        return reserveStockForCartWithResult(session, cart) == ReservationResult.RESERVED;
+    }
+
+    /**
+     * Crea o actualiza una reserva de stock distinguiendo entre éxito limpio, éxito tras retirar
+     * productos archivados/inexistentes y falta de stock o límite superado.
+     */
+    @Transactional (readOnly = true)
+    public ReservationResult reserveStockForCartWithResult(HttpSession session, SessionCart cart) {
         Map<String, Integer> cartProducts = cart != null ? cart.getProducts() : Map.of();
 
         synchronized (reservationLock) {
             String existingReservationId = getReservationId(session);
             if (cartProducts.isEmpty()) {
-                if (existingReservationId != null) {
-                    stockReservations.remove(existingReservationId);
-                    reservationTimes.remove(existingReservationId);
-                }
-                session.removeAttribute(RESERVATION_TIME_KEY);
-                return true;
+                clearReservationLocked(session, existingReservationId);
+                return ReservationResult.RESERVED;
             }
 
             String reservationId = existingReservationId != null ? existingReservationId : UUID.randomUUID().toString();
             LocalDateTime now = LocalDateTime.now(clock);
             Map<String, Integer> candidateReservation = new HashMap<>();
+            List<String> unavailableRefs = new ArrayList<>();
 
             for (Map.Entry<String, Integer> entry : cartProducts.entrySet()) {
                 String productRef = entry.getKey();
                 Integer requestedObj = entry.getValue();
                 if (requestedObj == null || requestedObj <= 0 || requestedObj > maxReservedPerProduct) {
-                    return false;
+                    return ReservationResult.INSUFFICIENT_STOCK;
                 }
                 int requestedAmount = requestedObj;
 
-                Product product = productRepository.findByReference(productRef)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+                Product product = productRepository.findByReferenceAndDeletedAtIsNull(productRef).orElse(null);
+                if (product == null) {
+                    unavailableRefs.add(productRef);
+                    continue;
+                }
 
                 int availableStock = getAvailableStockLocked(product, reservationId, now);
                 if (availableStock < requestedAmount) {
-                    return false;
+                    return ReservationResult.INSUFFICIENT_STOCK;
                 }
 
                 candidateReservation.put(productRef, requestedAmount);
             }
 
-            if (existingReservationId == null) {
+            for (String unavailableRef : unavailableRefs) {
+                cart.deleteAllSameProduct(unavailableRef);
+            }
+            boolean removedUnavailableProduct = !unavailableRefs.isEmpty();
+            if (removedUnavailableProduct && session != null) {
+                session.setAttribute(CartService.REMOVED_PRODUCT_NOTICE, true);
+            }
+
+            if (candidateReservation.isEmpty()) {
+                clearReservationLocked(session, existingReservationId);
+                return removedUnavailableProduct ? ReservationResult.RESERVED_AFTER_PRUNING : ReservationResult.RESERVED;
+            }
+
+            if (existingReservationId == null && session != null) {
                 session.setAttribute(RESERVATION_ID_KEY, reservationId);
             }
             stockReservations.put(reservationId, Map.copyOf(candidateReservation));
             reservationTimes.put(reservationId, now);
-            session.setAttribute(RESERVATION_TIME_KEY, now);
-            return true;
+            if (session != null) {
+                session.setAttribute(RESERVATION_TIME_KEY, now);
+            }
+            return removedUnavailableProduct ? ReservationResult.RESERVED_AFTER_PRUNING : ReservationResult.RESERVED;
+        }
+    }
+
+    private void clearReservationLocked(HttpSession session, String existingReservationId) {
+        if (existingReservationId != null) {
+            stockReservations.remove(existingReservationId);
+            reservationTimes.remove(existingReservationId);
+        }
+        if (session != null) {
+            session.removeAttribute(RESERVATION_TIME_KEY);
+            session.removeAttribute(RESERVATION_ID_KEY);
         }
     }
 

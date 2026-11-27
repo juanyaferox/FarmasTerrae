@@ -25,13 +25,13 @@ Server-rendered online pharmacy e-commerce platform built with Java 21, Spring B
 
 - **Post-Hibernate Liquibase Data Seeding** — `LiquibaseRunnerConfig` disables default `LiquibaseAutoConfiguration` in `prod` and `prodminio`, triggering `SpringLiquibase` from a `CommandLineRunner` *after* Hibernate completes schema synchronization to seed datasets from `db/changelog/data-only-changelog.yaml`. Demo fixtures require the `dev` context (used by `prodminio`); `prod` seeds only the `ADMIN`/`USER` profiles, and `AdminBootstrapRunner` creates the first administrator from `ADMIN_BOOTSTRAP_*` variables.
 
-- **Server-Side Image Pipeline & Cloud Storage** — `ImageCompressionService` validates uploads (up to 10 MB), downscales proportionally to at most `1200×800` via bicubic interpolation, flattens alpha channels onto white RGB, and encodes 85% JPEG. `S3StorageService` stores assets in AWS S3 (IAM instance role in `prod`) or local MinIO, while `ProductMapper` resolves 2-hour presigned URLs automatically in `@AfterMapping` hooks.
+- **Server-Side Image Pipeline & Cloud Storage** — `ImageCompressionService` validates JPEG/PNG uploads (magic bytes, pixel dimensions, up to 10 MB), downscales proportionally to at most `1200×800` via bicubic interpolation, flattens alpha channels onto white RGB, and encodes 85% JPEG. `S3StorageService` stores assets under `product-images/` in AWS S3 (IAM instance role in `prod`) or local MinIO and caches short-lived presigned URLs with placeholder fallback for mappers.
 
 - **Composable JPA Specifications** — `GenericSpecification` builds multi-field, case-insensitive `LIKE` and type-validated `EQUAL` Criteria predicates across nested entity paths using automatic `LEFT JOIN` traversal.
 
 - **Temporary Checkout Stock Reservations** — `StockReservationService` holds session cart quantities for 15 minutes (`stock.reservation.timeout.minutes`) to reduce overselling during checkout and commits real inventory deductions on order confirmation.
 
-- **Privacy-Aware Soft Deletion** — `UserService` preserves historical order integrity when accounts are removed by anonymizing `username` and `email`, clearing phone and address, recording `deletedAt`, filtering transparently via `@Where(clause = "deletedAt IS NULL")`, and blocking deletion of the final administrator.
+- **Privacy-Aware Soft Deletion** — `UserService` preserves historical order integrity when accounts are removed by anonymizing `username` and `email`, clearing phone and address, recording `deletedAt`, filtering transparently via `@SQLRestriction("deletedAt IS NULL")`, and blocking deletion of the final administrator.
 
 - **Correlated Global Error Auditing** — `GlobalExceptionHandler` pairs a servlet `Filter` with `@ControllerAdvice` to tag unhandled errors with a unique UUID `errorId` alongside user identity, client IP (`X-Forwarded-For`), URI, HTTP method, and session metadata.
 

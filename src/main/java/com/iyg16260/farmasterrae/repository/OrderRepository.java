@@ -22,6 +22,8 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
 
     List<Order> findByUser(User user);
 
+    List<Order> findByUserAndStatus(User user, SaleStatus status);
+
     Optional<Order> findByIdAndUser_Id(Long id, Long userId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

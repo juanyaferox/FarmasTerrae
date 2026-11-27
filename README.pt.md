@@ -25,13 +25,13 @@ Plataforma de e-commerce para farmácia online renderizada no servidor, desenvol
 
 - **Seeding com Liquibase pós-Hibernate** — `LiquibaseRunnerConfig` desativa `LiquibaseAutoConfiguration` em `prod` e `prodminio`, executando `SpringLiquibase` através de um `CommandLineRunner` *depois* de o Hibernate sincronizar o esquema para carregar dados a partir de `db/changelog/data-only-changelog.yaml`. Os dados de demonstração exigem o contexto `dev` (usado por `prodminio`); `prod` carrega apenas os perfis `ADMIN`/`USER`, e `AdminBootstrapRunner` cria o primeiro administrador a partir das variáveis `ADMIN_BOOTSTRAP_*`.
 
-- **Pipeline de imagens no servidor e armazenamento cloud** — `ImageCompressionService` valida uploads (até 10 MB), redimensiona proporcionalmente até `1200×800` por interpolação bicúbica, achata transparências sobre fundo branco RGB e codifica em JPEG a 85%. `S3StorageService` guarda os ficheiros na AWS S3 (IAM instance role em `prod`) ou MinIO local, enquanto `ProductMapper` gera URLs pré-assinados de 2 horas automaticamente em hooks `@AfterMapping`.
+- **Pipeline de imagens no servidor e armazenamento cloud** — `ImageCompressionService` valida uploads JPEG/PNG (assinaturas mágicas, dimensões e até 10 MB), redimensiona proporcionalmente até `1200×800` por interpolação bicúbica, achata transparências sobre fundo branco RGB e codifica em JPEG a 85%. `S3StorageService` guarda os ficheiros em `product-images/` na AWS S3 (IAM instance role em `prod`) ou MinIO local e faz cache de URLs pré-assinados de curta duração com fallback para placeholder.
 
 - **JPA Specifications reutilizáveis** — `GenericSpecification` constrói predicados Criteria `LIKE` insensíveis a maiúsculas e comparações `EQUAL` validadas por tipo em caminhos aninhados com `LEFT JOIN` automático.
 
 - **Reserva temporária de stock no checkout** — `StockReservationService` reserva o inventário do carrinho durante 15 minutos (`stock.reservation.timeout.minutes`) para reduzir vendas sem stock durante o pagamento e deduz o stock real na confirmação da encomenda.
 
-- **Eliminação lógica orientada à privacidade** — `UserService` preserva a integridade do histórico de encomendas na remoção de contas ao anonimizar `username` e `email`, limpar telefone e morada, registar `deletedAt`, filtrar com `@Where(clause = "deletedAt IS NULL")` e bloquear a remoção do último administrador.
+- **Eliminação lógica orientada à privacidade** — `UserService` preserva a integridade do histórico de encomendas na remoção de contas ao anonimizar `username` e `email`, limpar telefone e morada, registar `deletedAt`, filtrar com `@SQLRestriction("deletedAt IS NULL")` e bloquear a remoção do último administrador.
 
 - **Auditoria global de erros correlacionados** — `GlobalExceptionHandler` combina um `Filter` de servlet com `@ControllerAdvice` para associar cada erro não tratado a um UUID `errorId` único junto com utilizador, IP do cliente (`X-Forwarded-For`), URI, método HTTP e sessão.
 

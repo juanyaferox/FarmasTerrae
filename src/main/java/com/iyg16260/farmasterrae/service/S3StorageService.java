@@ -1,6 +1,5 @@
 package com.iyg16260.farmasterrae.service;
 
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,10 +22,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.UUID;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.time.Instant;
 
 @Slf4j
 @Service
 public class S3StorageService {
+    private static final String IMAGE_PREFIX = "product-images/";
+    private static final String PLACEHOLDER = "/assets/img/placeholder.svg";
+    private static final Duration PRESIGN_TTL = Duration.ofMinutes(15);
+    private static final Duration PRESIGN_DURATION = Duration.ofMinutes(30);
+    private final Map<String, CachedUrl> signedUrls = new LinkedHashMap<>(128, 0.75f, true);
+    private record CachedUrl(String url, Instant expiresAt) { }
 
     @Autowired
     private S3Client s3Client;
@@ -36,9 +44,6 @@ public class S3StorageService {
 
     @Value ("${aws.s3.bucket-name}")
     private String bucketName;
-
-    @Value ("${aws.region}")
-    private String region;
 
     @Value ("${aws.s3.endpoint:}")
     private String s3Endpoint;
@@ -62,8 +67,7 @@ public class S3StorageService {
             }
 
             // Generar nombre único para evitar colisiones
-            String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-            String fileName = UUID.randomUUID().toString() + "." + extension;
+            String fileName = UUID.randomUUID() + ".jpg";
 
             // Añadir la carpeta si se especificó
             String key = folder != null && !folder.isEmpty()
@@ -74,14 +78,14 @@ public class S3StorageService {
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                     .bucket(bucketName)
                     .key(key)
-                    .contentType(file.getContentType())
+                    .contentType("image/jpeg")
                     .build();
 
             // Subir el archivo
             s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
             // Construir y devolver la URL
-            return buildObjectUrl(key);
+            return key;
 
         } catch (IOException e) {
             log.error("Error al procesar archivo para S3", e);
@@ -93,27 +97,14 @@ public class S3StorageService {
     }
 
     /**
-     * URL stored for an uploaded object: path-style on the public address of a custom endpoint
-     * (MinIO), otherwise the virtual-hosted AWS S3 URL. Images are always served through presigned
-     * URLs, so the bucket can stay private.
-     */
-    private String buildObjectUrl(String key) {
-        if (StringUtils.hasText(s3Endpoint)) {
-            String base = StringUtils.hasText(s3PublicEndpoint) ? s3PublicEndpoint : s3Endpoint;
-            return StringUtils.trimTrailingCharacter(base.trim(), '/') + "/" + bucketName + "/" + key;
-        }
-        return "https://" + bucketName + ".s3." + region + ".amazonaws.com/" + key;
-    }
-
-    /**
      * Elimina un archivo de S3 basado en su URL
      *
      * @param fileUrl La URL completa del archivo a eliminar
      */
     public void deleteFile(String fileUrl) {
         try {
-            // Extraer la clave del archivo desde la URL
-            String key = fileUrl.substring(fileUrl.indexOf(bucketName) + bucketName.length() + 1);
+            String key = extractKeyFromUrl(fileUrl);
+            if (key == null) return;
 
             // Configurar la petición de eliminación
             DeleteObjectRequest deleteRequest = DeleteObjectRequest.builder()
@@ -123,6 +114,7 @@ public class S3StorageService {
 
             // Eliminar el archivo
             s3Client.deleteObject(deleteRequest);
+            synchronized (signedUrls) { signedUrls.remove(key); }
 
         } catch (S3Exception e) {
             log.error("Error al eliminar archivo de S3", e);
@@ -142,6 +134,9 @@ public class S3StorageService {
      */
     public String generatePresignedUrl(String key, Duration duration) {
         try {
+            if (key == null || !key.startsWith(IMAGE_PREFIX) || key.contains("..") || key.contains("\\")) {
+                throw new IllegalArgumentException("Invalid product image key");
+            }
             // Construye la petición de descarga
             GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                     .bucket(bucketName)
@@ -168,39 +163,82 @@ public class S3StorageService {
             return null;
         }
 
-        // Si ya es solo la clave
         if (!fileUrl.startsWith("http")) {
-            return fileUrl;
+            return validImageKey(fileUrl) ? fileUrl : null;
         }
 
         try {
             URI uri = new URI(fileUrl);
             String host = uri.getHost();
             String path = uri.getPath();
+            if (path == null) return null;
             String normalizedPath = path.startsWith("/") ? path.substring(1) : path;
 
-            if (host != null && host.startsWith(bucketName + ".s3.")) {
-                return normalizedPath;
+            if (host != null && (host.equals(bucketName + ".s3.amazonaws.com")
+                    || (host.startsWith(bucketName + ".s3.") && host.endsWith(".amazonaws.com")))) {
+                return validImageKey(normalizedPath) ? normalizedPath : null;
             }
 
             if (host != null && (host.equals("s3.amazonaws.com")
                     || (host.startsWith("s3.") && host.endsWith(".amazonaws.com")))) {
                 String[] parts = normalizedPath.split("/", 2);
                 if (parts.length == 2 && parts[0].equals(bucketName)) {
-                    return parts[1];
+                    return validImageKey(parts[1]) ? parts[1] : null;
                 }
             }
 
             String[] parts = normalizedPath.split("/", 2);
-            if (parts.length == 2 && parts[0].equals(bucketName)) {
-                return parts[1];
+            if (isConfiguredEndpoint(uri) && parts.length == 2 && parts[0].equals(bucketName)) {
+                return validImageKey(parts[1]) ? parts[1] : null;
             }
 
         } catch (URISyntaxException e) {
-            log.error("Error al interpretar URL de imagen", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al obtener la imagen");
+            log.warn("Could not interpret image URL", e);
+            return null;
         }
 
-        return fileUrl;
+        return null;
+    }
+
+    public String resolveImageUrl(String imagePath) {
+        if (!StringUtils.hasText(imagePath)) return PLACEHOLDER;
+        String key = extractKeyFromUrl(imagePath);
+        if (key == null) return PLACEHOLDER;
+        Instant now = Instant.now();
+        synchronized (signedUrls) {
+            CachedUrl cached = signedUrls.get(key);
+            if (cached != null && cached.expiresAt().isAfter(now)) return cached.url();
+        }
+        try {
+            String url = generatePresignedUrl(key, PRESIGN_DURATION);
+            synchronized (signedUrls) {
+                signedUrls.put(key, new CachedUrl(url, now.plus(PRESIGN_TTL)));
+                while (signedUrls.size() > 1000) signedUrls.remove(signedUrls.keySet().iterator().next());
+            }
+            return url;
+        } catch (Exception e) {
+            log.warn("Could not sign product image {}; using placeholder", key, e);
+            return PLACEHOLDER;
+        }
+    }
+
+    private boolean validImageKey(String key) {
+        return key != null && key.startsWith(IMAGE_PREFIX) && key.length() > IMAGE_PREFIX.length()
+                && !key.contains("..") && !key.contains("\\") && !key.startsWith("/");
+    }
+
+    private boolean isConfiguredEndpoint(URI uri) {
+        return matchesEndpoint(uri, s3Endpoint) || matchesEndpoint(uri, s3PublicEndpoint);
+    }
+
+    private boolean matchesEndpoint(URI candidate, String endpoint) {
+        if (!StringUtils.hasText(endpoint)) return false;
+        try {
+            URI configured = URI.create(endpoint);
+            return configured.getHost() != null && configured.getHost().equalsIgnoreCase(candidate.getHost())
+                    && configured.getPort() == candidate.getPort();
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
     }
 }

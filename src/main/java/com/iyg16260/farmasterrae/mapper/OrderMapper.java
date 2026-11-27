@@ -8,6 +8,7 @@ import com.iyg16260.farmasterrae.enums.SaleStatus;
 import com.iyg16260.farmasterrae.model.Order;
 import com.iyg16260.farmasterrae.model.OrderDetails;
 import com.iyg16260.farmasterrae.model.Product;
+import com.iyg16260.farmasterrae.service.S3StorageService;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -31,7 +32,7 @@ public abstract class OrderMapper {
     private static final ZoneId MADRID_ZONE = ZoneId.of("Europe/Madrid");
 
     @Autowired
-    ProductMapper productMapper;
+    S3StorageService s3StorageService;
 
     @Mapping (target = "items", ignore = true)
     @Mapping (target = "status", source = "status", qualifiedByName = "formatStatus")
@@ -66,7 +67,7 @@ public abstract class OrderMapper {
         String productName = od.getProductName() != null
                 ? od.getProductName()
                 : (product != null ? product.getName() : null);
-        String imagePath = product != null ? productMapper.resolveImageUrl(product.getImagePath()) : null;
+        String imagePath = product != null ? s3StorageService.resolveImageUrl(product.getImagePath()) : null;
         Integer unitPriceCents = od.getUnitPriceCents() != null
                 ? od.getUnitPriceCents()
                 : (product != null ? product.getPrice() : null);

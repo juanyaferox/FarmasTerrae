@@ -1,19 +1,26 @@
 package com.iyg16260.farmasterrae.service;
 
 import com.iyg16260.farmasterrae.utils.ByteArrayMultipartFile;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReadParam;
+import javax.imageio.ImageReader;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Locale;
 
 @Service
 public class ImageCompressionService {
@@ -21,22 +28,61 @@ public class ImageCompressionService {
     // Configuración recomendada
     private static final int MAX_WIDTH = 1200;
     private static final int MAX_HEIGHT = 800;
+    private static final int MAX_INPUT_DIMENSION = 8000;
+    private static final long MAX_INPUT_PIXELS = 25_000_000L;
     private static final float COMPRESSION_QUALITY = 0.85f;
 
     /**
-     * Comprime una imagen y la devuelve como MultipartFile en formato JPEG
+     * Valida y comprime una imagen JPEG o PNG y la devuelve como MultipartFile en formato JPEG.
      *
      * @param originalFile La imagen original a comprimir
      * @return MultipartFile con la imagen comprimida en formato JPEG
-     * @throws IOException              Si hay errores en el procesamiento de la imagen
-     * @throws IllegalArgumentException Si el archivo no es válido
+     * @throws IOException             Si hay errores al codificar el resultado
+     * @throws ResponseStatusException BAD_REQUEST si el archivo no es una imagen JPEG/PNG válida o supera los límites
      */
     public MultipartFile compressImage(MultipartFile originalFile) throws IOException {
         validateFile(originalFile);
-
-        BufferedImage originalImage = ImageIO.read(originalFile.getInputStream());
+        byte[] bytes = originalFile.getBytes();
+        String format = detectFormat(bytes);
+        if (format == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de imagen no soportado. Usa JPEG o PNG.");
+        }
+        BufferedImage originalImage;
+        try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) {
+                throw badImage();
+            }
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(input, true, true);
+                String readerFormat = reader.getFormatName().toLowerCase(Locale.ROOT);
+                if (!(readerFormat.equals(format) || (format.equals("jpeg") && readerFormat.equals("jpg")))) {
+                    throw badImage();
+                }
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                if (width <= 0 || height <= 0
+                        || width > MAX_INPUT_DIMENSION || height > MAX_INPUT_DIMENSION
+                        || (long) width * height > MAX_INPUT_PIXELS) {
+                    throw badImage();
+                }
+                ImageReadParam readParam = reader.getDefaultReadParam();
+                int subsampling = Math.max(1, Math.min(width / MAX_WIDTH, height / MAX_HEIGHT));
+                if (subsampling > 1) {
+                    readParam.setSourceSubsampling(subsampling, subsampling, 0, 0);
+                }
+                originalImage = reader.read(0, readParam);
+            } finally {
+                reader.dispose();
+            }
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen no es válida", e);
+        }
         if (originalImage == null) {
-            throw new IOException("No se pudo leer la imagen. Formato no soportado.");
+            throw badImage();
         }
 
         // Procesar la imagen
@@ -54,18 +100,33 @@ public class ImageCompressionService {
 
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("El archivo está vacío o es nulo");
-        }
-
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new IllegalArgumentException("El archivo no es una imagen válida");
+            throw badImage();
         }
 
         // Validar tamaño máximo (ej: 10MB)
         if (file.getSize() > 10 * 1024 * 1024) {
-            throw new IllegalArgumentException("La imagen es demasiado grande (máximo 10MB)");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen es demasiado grande (máximo 10MB)");
         }
+    }
+
+    private String detectFormat(byte[] b) {
+        if (b.length >= 3
+                && (b[0] & 0xff) == 0xff
+                && (b[1] & 0xff) == 0xd8
+                && (b[2] & 0xff) == 0xff) {
+            return "jpeg";
+        }
+        if (b.length >= 8
+                && (b[0] & 0xff) == 0x89
+                && b[1] == 'P' && b[2] == 'N' && b[3] == 'G'
+                && b[4] == 13 && b[5] == 10 && b[6] == 26 && b[7] == 10) {
+            return "png";
+        }
+        return null;
+    }
+
+    private ResponseStatusException badImage() {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, "La imagen no es válida");
     }
 
     private BufferedImage processImage(BufferedImage originalImage) {

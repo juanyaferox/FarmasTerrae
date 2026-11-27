@@ -1,5 +1,7 @@
 package com.iyg16260.farmasterrae.service;
 
+import com.iyg16260.farmasterrae.dto.user.CreateReviewDTO;
+import com.iyg16260.farmasterrae.dto.user.UpdateReviewDTO;
 import com.iyg16260.farmasterrae.dto.products.ProductDTO;
 import com.iyg16260.farmasterrae.dto.user.ReviewDTO;
 import com.iyg16260.farmasterrae.mapper.ProductMapper;
@@ -14,10 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class ReviewService {
@@ -60,49 +64,6 @@ public class ReviewService {
     }
 
     /**
-     * Obtiene una review específica por su id y valida el acceso del usuario
-     *
-     * @param idUser   id del usuario que solicita la review
-     * @param idReview id de la review a obtener
-     * @return review DTO
-     * @throws ResponseStatusException NOT_FOUND si no se encuentra la review, FORBIDDEN si no tiene permisos
-     */
-    public ReviewDTO getReview(long idUser, long idReview) throws ResponseStatusException {
-
-        Review review = getReviewDB(idReview);
-
-        obtainAndvalidateReview(idReview, idUser);
-
-        return reviewMapper.reviewToReviewDTO(review);
-    }
-
-    /**
-     * Obtiene una review por id desde la base de datos
-     *
-     * @param idReview id de la review
-     * @return review encontrada
-     * @throws ResponseStatusException NOT_FOUND si no se encuentra la review
-     */
-    private Review getReviewDB(long idReview) throws ResponseStatusException {
-        return reviewRepository.findById(idReview)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
-    }
-
-    /**
-     * Obtiene el producto asociado a una review
-     * Importante: solo llamar después de validar el acceso con getReview
-     *
-     * @param idReview id de la review
-     * @return producto DTO asociado a la review
-     * @throws ResponseStatusException si no se encuentra la review
-     */
-    @Transactional
-    public ProductDTO getProductFromReview(long idReview) throws ResponseStatusException {
-        Review review = getReviewDB(idReview);
-        return productsService.getProductDTOByReference(review.getProduct().getReference());
-    }
-
-    /**
      * Elimina una review por su id validando el acceso del usuario
      *
      * @param idReview id de la review a eliminar
@@ -124,16 +85,28 @@ public class ReviewService {
      * @return review guardada
      * @throws ResponseStatusException si no se encuentra el producto
      */
-    public Review setReview(ReviewDTO reviewDTO, User user) throws ResponseStatusException {
+    public Review setReview(CreateReviewDTO reviewDTO, User user) throws ResponseStatusException {
 
         Product product =
                 productsService.getProductByReference(reviewDTO.getProductReference());
 
-        Review review = reviewMapper.reviewDTOToReview(reviewDTO);
+        if (!orderService.getProductsFromUserOrders(user).stream().anyMatch(p -> p.getId().equals(product.getId()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo puedes reseñar productos de pedidos completados");
+        }
+        if (reviewRepository.existsByUser_IdAndProduct_Id(user.getId(), product.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya has reseñado este producto");
+        }
+
+        Review review = reviewMapper.createReviewDTOToReview(reviewDTO);
+        review.setId(null);
         review.setProduct(product);
         review.setUser(user);
 
-        return reviewRepository.save(review);
+        try {
+            return reviewRepository.save(review);
+        } catch (DataIntegrityViolationException duplicate) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya has reseñado este producto", duplicate);
+        }
     }
 
     /**
@@ -144,11 +117,11 @@ public class ReviewService {
      * @return review actualizada
      * @throws ResponseStatusException FORBIDDEN si no tiene permisos
      */
-    public Review updateReview(ReviewDTO reviewDTO, User user) throws ResponseStatusException {
+    public Review updateReview(UpdateReviewDTO reviewDTO, User user) throws ResponseStatusException {
 
         Review review = obtainAndvalidateReview(reviewDTO.getId(), user.getId());
 
-        reviewMapper.updateReviewFromReviewDTO(reviewDTO, review);
+        reviewMapper.updateReviewFromUpdateDTO(reviewDTO, review);
 
         return reviewRepository.save(review);
     }
@@ -179,14 +152,13 @@ public class ReviewService {
      * @param user usuario del que obtener los productos
      * @return lista de productos DTO disponibles para reseñar
      */
-    @Transactional
+    @Transactional (readOnly = true)
     public List<ProductDTO> getProductForReview(User user) {
-
+        Set<Long> reviewedProductIds = reviewRepository.findReviewedProductIdsByUserId(user.getId());
         return orderService.getProductsFromUserOrders(user).stream()
-                .filter(product -> product.getReviewList().stream()
-                        .noneMatch(review -> review.getUser().equals(user)
-                        )
-                ).map(productMapper::productToProductDTO)
+                .filter(product -> product != null && product.getDeletedAt() == null)
+                .filter(product -> !reviewedProductIds.contains(product.getId()))
+                .map(productMapper::productToProductDTO)
                 .toList();
     }
 }
