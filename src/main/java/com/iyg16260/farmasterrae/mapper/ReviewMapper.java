@@ -13,7 +13,11 @@ public interface ReviewMapper {
     @Mapping (target = "productName", source = "product.name")
     ReviewDTO reviewToReviewDTO(Review review);
 
+    @Mapping (target = "product", ignore = true)
+    @Mapping (target = "user", ignore = true)
     Review reviewDTOToReview(ReviewDTO reviewDTO);
 
+    @Mapping (target = "product", ignore = true)
+    @Mapping (target = "user", ignore = true)
     void updateReviewFromReviewDTO(ReviewDTO reviewDTO, @MappingTarget Review review);
 }
